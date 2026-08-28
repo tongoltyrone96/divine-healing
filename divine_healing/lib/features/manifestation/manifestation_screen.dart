@@ -92,9 +92,20 @@ class _ManifestationScreenState extends ConsumerState<ManifestationScreen> {
   }
 
   Widget _stepChild() {
-    if (_step == 0) return _UnderstandingStep(onNext: () => _goto(1));
+    if (_step == 0) {
+      return _WrittenStep(
+        index: 0,
+        onNext: () => _goto(1),
+        nextLabel: 'Continue to Inner Work',
+      );
+    }
     if (_step == 1) {
-      return _InnerWorkStep(onBack: () => _goto(0), onNext: () => _goto(2));
+      return _WrittenStep(
+        index: 1,
+        onBack: () => _goto(0),
+        onNext: () => _goto(2),
+        nextLabel: 'Start the Exercise',
+      );
     }
     return FutureBuilder<List<_FormField>>(
       future: _fields,
@@ -252,99 +263,128 @@ class _ManifestationScreenState extends ConsumerState<ManifestationScreen> {
 }
 
 // ============================================================
-// Step 1 — Understanding
+// Steps 1 & 2 — the written screens
+//
+// Rendered from assets/content/manifestation_journey.json rather than from
+// strings in this file. The copy had been transcribed by hand and lost
+// material doing it: a 641-character paragraph was gone entirely and the
+// survivors had clauses trimmed. data/11_extract_manifestation.js pulls the
+// current wording straight out of the original page.
 // ============================================================
-class _UnderstandingStep extends StatelessWidget {
-  const _UnderstandingStep({required this.onNext});
+class _WrittenStep extends StatelessWidget {
+  const _WrittenStep({
+    required this.index,
+    required this.onNext,
+    this.onBack,
+    required this.nextLabel,
+  });
+
+  /// Which screen of the journey to show: 0 = Understanding, 1 = Inner Work.
+  final int index;
   final VoidCallback onNext;
+  final VoidCallback? onBack;
+  final String nextLabel;
+
+  Future<_JourneyScreen> _load() async {
+    final raw =
+        await rootBundle.loadString('assets/content/manifestation_journey.json');
+    final map = json.decode(raw) as Map<String, dynamic>;
+    final screens = (map['screens'] as List).cast<Map<String, dynamic>>();
+    return _JourneyScreen.fromJson(screens[index]);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      children: [
-        _SectionHeader(
-          title: 'Understanding Manifestation',
-          subtitle:
-              'Learn how your beliefs, focus, and perception shape the life you experience.',
-        ),
-        const SizedBox(height: 16),
-        _AccentQuote(
-          text:
-              'Manifestation is the process of becoming aware of your beliefs, focusing on what you want, and aligning your inner world with the life you desire.',
-        ),
-        const SizedBox(height: 14),
-        _BodyParagraph(
-          "You are manifesting 24/7. The life you are living is based on what you have created. You can learn to work with this and create a life you desire — one that fulfils you and makes you happy. The life you are living is shaped by your beliefs and where you place your attention.",
-        ),
-        _BodyParagraph(
-          "Life is a mirror of your inner being. If you focus on what you want, rather than what you dislike, you will attract more of it. People often sit in victimhood and think they can't achieve great things. This mindset keeps you stuck. You can achieve anything, and it all starts with inner work.",
-        ),
-        _BodyParagraph(
-          "Most people live based on the past. We cling to it so much that it creates a false perception of reality. The first step is to become aware. Once you realise that you are the only one holding yourself back, it becomes much easier to feel motivated to do the work and change.",
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: onNext,
-            icon: const Icon(Icons.arrow_forward, size: 18),
-            label: const Text('Continue to Inner Work'),
-          ),
-        ),
-      ],
+    return FutureBuilder<_JourneyScreen>(
+      future: _load(),
+      builder: (context, snap) {
+        if (!snap.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final screen = snap.data!;
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          children: [
+            _SectionHeader(title: screen.title, subtitle: screen.description),
+            const SizedBox(height: 16),
+            for (final p in screen.paragraphs)
+              if (p.quote)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: _AccentQuote(text: p.text),
+                )
+              else
+                _BodyParagraph(p.text),
+            const SizedBox(height: 16),
+            if (onBack == null)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: onNext,
+                  icon: const Icon(Icons.arrow_forward, size: 18),
+                  label: Text(nextLabel),
+                ),
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: onBack,
+                      icon: const Icon(Icons.arrow_back, size: 18),
+                      label: const Text('Back'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: onNext,
+                      icon: const Icon(Icons.arrow_forward, size: 18),
+                      label: Text(nextLabel),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        );
+      },
     );
   }
 }
 
-// ============================================================
-// Step 2 — Inner Work
-// ============================================================
-class _InnerWorkStep extends StatelessWidget {
-  const _InnerWorkStep({required this.onBack, required this.onNext});
-  final VoidCallback onBack;
-  final VoidCallback onNext;
+/// One paragraph, and whether the original set it as a pull-quote.
+class _JourneyParagraph {
+  const _JourneyParagraph({required this.text, required this.quote});
 
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      children: [
-        _SectionHeader(
-          title: 'The Inner Work',
-          subtitle:
-              'Why self-worth, belief, and inner work are essential before manifestation can fully align.',
-        ),
-        const SizedBox(height: 16),
-        _BodyParagraph(
-          "The most important part of manifesting is believing in yourself and believing that you are worthy. If you do not work on your inner being first, it will not work. Everything starts from within. Shadow work can tie in very well with this — it can help you get to the bottom of your beliefs, creating a wider range of possibilities for your future.",
-        ),
-        _BodyParagraph(
-          "Once you know your worth and live with confidence and love for yourself, you will attract great things. You will know that your dreams and goals are achievable because you deserve them. If you believe everything is hard for you, that's the reality you'll keep perceiving. Change the belief and your perception widens.",
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: onBack,
-                icon: const Icon(Icons.arrow_back, size: 18),
-                label: const Text('Back'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: onNext,
-                icon: const Icon(Icons.arrow_forward, size: 18),
-                label: const Text('Start Exercise'),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+  final String text;
+  final bool quote;
+
+  factory _JourneyParagraph.fromJson(Map<String, dynamic> j) =>
+      _JourneyParagraph(
+        text: j['text'] as String,
+        quote: (j['quote'] as bool?) ?? false,
+      );
+}
+
+class _JourneyScreen {
+  const _JourneyScreen({
+    required this.title,
+    required this.description,
+    required this.paragraphs,
+  });
+
+  final String title;
+  final String description;
+  final List<_JourneyParagraph> paragraphs;
+
+  factory _JourneyScreen.fromJson(Map<String, dynamic> j) => _JourneyScreen(
+        title: j['title'] as String,
+        description: j['description'] as String,
+        paragraphs: (j['paragraphs'] as List)
+            .cast<Map<String, dynamic>>()
+            .map(_JourneyParagraph.fromJson)
+            .toList(),
+      );
 }
 
 // ============================================================

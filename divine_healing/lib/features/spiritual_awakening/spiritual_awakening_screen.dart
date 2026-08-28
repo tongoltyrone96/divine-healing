@@ -54,6 +54,13 @@ class _SpiritualAwakeningScreenState extends State<SpiritualAwakeningScreen> {
             children: [
               _hero(d.heroText),
               const SizedBox(height: 20),
+              if (d.overview.isNotEmpty) ...[
+                _JourneyCard(
+                  heading: 'What Awakening Is',
+                  body: d.overview.join('\n\n'),
+                ),
+                const SizedBox(height: 12),
+              ],
               for (final section in d.journey) ...[
                 _JourneyCard(heading: section.heading, body: section.body),
                 const SizedBox(height: 12),
@@ -79,6 +86,7 @@ class _SpiritualAwakeningScreenState extends State<SpiritualAwakeningScreen> {
                 iconColor: DHColors.strawberryBlush,
                 items: d.reflectionPrompts,
                 numbered: true,
+                intro: d.reflectionIntro,
               ),
               const SizedBox(height: 12),
               _FaqCard(faqs: d.faqs),
@@ -163,6 +171,7 @@ class _ListCard extends StatelessWidget {
     required this.iconColor,
     required this.items,
     this.numbered = false,
+    this.intro,
   });
 
   final String title;
@@ -170,6 +179,8 @@ class _ListCard extends StatelessWidget {
   final Color iconColor;
   final List<String> items;
   final bool numbered;
+  /// Lead-in line from the original page, shown above the list.
+  final String? intro;
 
   @override
   Widget build(BuildContext context) {
@@ -201,6 +212,10 @@ class _ListCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
+          if (intro != null) ...[
+            Text(intro!, style: DHTypography.body(size: 13, height: 1.5)),
+            const SizedBox(height: 10),
+          ],
           for (var i = 0; i < items.length; i++)
             Padding(
               padding: const EdgeInsets.only(bottom: 6),
@@ -372,6 +387,8 @@ class _JourneyCard extends StatelessWidget {
 class _SAData {
   const _SAData({
     required this.heroText,
+    required this.overview,
+    required this.reflectionIntro,
     required this.journey,
     required this.benefits,
     required this.whatToExpect,
@@ -380,6 +397,10 @@ class _SAData {
   });
 
   final String heroText;
+  /// The Overview tab's plain-language definition of awakening — the first
+  /// thing a newcomer reads, and absent until now.
+  final List<String> overview;
+  final String? reflectionIntro;
   /// The original page's "The Journey" tab — Strawberry Hope's long-form
   /// writing, which the first content extraction dropped entirely.
   final List<({String heading, String body})> journey;
@@ -394,6 +415,8 @@ class _SAData {
         ((j['journey'] as List?) ?? const []).cast<Map<String, dynamic>>();
     return _SAData(
       heroText: j['hero_text'] as String,
+      overview: ((j['overview'] as List?) ?? const []).cast<String>(),
+      reflectionIntro: j['reflection_intro'] as String?,
       journey: journeyRaw
           .map((b) => (heading: b['heading'] as String, body: b['body'] as String))
           .toList(),

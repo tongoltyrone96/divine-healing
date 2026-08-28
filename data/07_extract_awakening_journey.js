@@ -13,6 +13,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { stringLiterals } = require('./lib/prose');
 
 const SRC = path.join(__dirname, 'content', 'SpiritualAwakening_source.js');
 const OUT = path.join(__dirname, 'content', 'spiritual_awakening.json');
@@ -94,6 +95,28 @@ if (!blocks.length) {
 const heroBlock = blocks.find((b) => b.heading === null);
 const journey = blocks.filter((b) => b.heading !== null);
 
+// --- the Overview tab's own two paragraphs --------------------------------
+// They sit in TabsContent value="medium", ahead of Benefits and What to
+// Expect, and were never picked up — they are the plain-language definition
+// of awakening, which is the first thing a newcomer reads.
+const overview = [];
+const overviewTab = src.indexOf('TabsContent, { value: "medium"');
+const faqTab = src.indexOf('TabsContent, { value: "faq"');
+if (overviewTab >= 0 && faqTab > overviewTab) {
+  for (const lit of stringLiterals(src)) {
+    if (lit.start < overviewTab || lit.start > faqTab) continue;
+    const v = lit.value.trim();
+    if (v.split(/\s+/).length >= 20) overview.push(v);
+  }
+}
+
+/// One-off UI copy that is neither a section nor a list: the label above the
+/// prompts and the line under the CTA that leads to them.
+function findLine(prefix) {
+  const hit = stringLiterals(src).find((l) => l.value.trim().startsWith(prefix));
+  return hit ? hit.value.trim() : null;
+}
+
 // --- keep everything the previous extraction got right ---------------------
 const previous = JSON.parse(fs.readFileSync(OUT, 'utf8'));
 
@@ -105,12 +128,20 @@ const out = {
     'Reflection prompts sit below the tabs.',
   hero_text: heroBlock ? heroBlock.body : previous.hero_text,
   journey,
+  overview,
+  reflection_intro: findLine('Choose a prompt and write freely'),
+  reflection_cta: findLine('Use the reflection prompts to deepen'),
   benefits: previous.benefits,
   what_to_expect: previous.what_to_expect,
   faqs: previous.faqs,
   reflection_prompts: previous.reflection_prompts,
   note: previous.note,
 };
+
+if (overview.length < 2) {
+  console.error(`Expected 2 Overview paragraphs, found ${overview.length}.`);
+  process.exit(1);
+}
 
 fs.writeFileSync(OUT, JSON.stringify(out, null, 2) + '\n', 'utf8');
 fs.copyFileSync(OUT, ASSET);

@@ -27,7 +27,11 @@ const SEARCH_ROOTS = [
 const MIN_CHARS = 45;
 const MIN_WORDS = 7;
 
-const normalize = (s) => s.replace(/\s+/g, ' ').trim().toLowerCase();
+// Backslashes are stripped because the app side is read as raw file text:
+// a quoted line like "What version of me has achieved these things?" is
+// stored in JSON as \" and would never match the source's plain quote.
+const normalize = (s) =>
+  s.replace(/\\/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
 
 function collectAppText() {
   const chunks = [];
@@ -59,6 +63,13 @@ function isPresent(passage) {
   return appText.includes(probe);
 }
 
+// Strings that live in the page source but are not the client's copy: browser
+// fallbacks and the like. Listed explicitly so the audit can reach zero and a
+// real regression is never lost in known noise.
+const NOT_COPY = new Set([
+  'your browser does not support the audio element.',
+]);
+
 const sources = fs
   .readdirSync(CONTENT_DIR)
   .filter((f) => f.endsWith('_source.js'))
@@ -77,7 +88,8 @@ for (const file of sources) {
     (s) =>
       s.length >= MIN_CHARS &&
       s.trim().split(/\s+/).length >= MIN_WORDS &&
-      isProse(s),
+      isProse(s) &&
+      !NOT_COPY.has(normalize(s)),
   );
 
   const missing = passages.filter((p) => !isPresent(p));

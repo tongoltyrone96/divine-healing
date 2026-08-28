@@ -1,0 +1,72 @@
+{
+  "source": "apps/spiritual-healing/client/pages/ManifestationJourney.tsx",
+  "description": "The written screens of the Manifestation journey, shown before the 5-field exercise (which lives in manifestation_form.json).",
+  "screens": [
+    {
+      "title": "Understanding Manifestation",
+      "description": "Learn how your beliefs, focus, and perception shape the life you experience.",
+      "paragraphs": [
+        {
+          "text": "Manifestation is the process of becoming aware of your beliefs, focusing on what you want, and aligning your inner world with the life you desire.",
+          "quote": false
+        },
+        {
+          "text": "You are manifesting 24/7. The life you are living is based on what you have created. You can learn to work with this and create a life you desire — one that fulfils you and makes you happy. The life you are living is shaped by your beliefs and where you place your attention. If you are living a life you don't enjoy, perhaps you spend your days complaining, wishing things were easier, and continuing the same routine. How can you expect anything to change?",
+          "quote": false
+        },
+        {
+          "text": "Life is a mirror of your inner being. If you focus on what you want in life, rather than what you dislike, you will attract more of it. People often sit in victimhood and think they can't achieve great things because those aren't the cards they were dealt. This mindset keeps you stuck. You can achieve anything, and it all starts with inner work.",
+          "quote": false
+        },
+        {
+          "text": "Most people live based on the past. We cling to the past so much that it creates a false perception of reality. We see things in a limited way, even though life has so many possibilities. Instead, we narrow things down and assume the worst. The first step is to become aware. Once you realise that you are the only one holding yourself back, it becomes much easier to feel motivated to do the work and change. Because that is the truth: you are the only one holding yourself back. You need to take accountability and realise that you can have the life you want.",
+          "quote": false
+        },
+        {
+          "text": "For example, people who grow up without much money may stay in the same town, living a life similar to everyone around them. They may believe they can't achieve great success and that they will struggle for the rest of their lives, barely getting by and not feeling fulfilled. This is often because it is all they know. On the other hand, if someone grows up around money and has a successful family, even if they do not receive direct help, they may see from their environment that success is possible and go on to achieve great success themselves. The cycle repeats unless you choose to expand your awareness. Anyone is capable of success.",
+          "quote": false
+        }
+      ]
+    },
+    {
+      "title": "The Inner Work",
+      "description": "Explore why self-worth, belief, and inner work are essential before manifestation can fully align.",
+      "paragraphs": [
+        {
+          "text": "The most important part of manifesting is believing in yourself and believing that you are worthy. That is why if you do not work on your inner being first, it will not work. Everything starts from within. Shadow work can tie in very well with this. It can help you get to the bottom of your beliefs so you are not stuck in the past, creating a wider range of possibilities for your future. You are not going to be able to achieve your manifestations if, deep down, you feel unworthy. You need to do the work so you know your own value and worth — then the rest comes much more easily.",
+          "quote": false
+        },
+        {
+          "text": "Once you know your worth and live with confidence and love for yourself, you will attract great things in your life. You will now know that your dreams and goals are achievable because you deserve them. If you have the belief that everything is so hard for you, then that's the reality that you're going to keep perceiving. You will see life through that lens no matter what, as that's your belief, unless you decide to make a change. Then your perception widens and you realise that was never the truth all along. That goes for all beliefs.",
+          "quote": false
+        }
+      ]
+    },
+    {
+      "title": "Manifestation Exercise",
+      "description": "Write down what you want, why you want it, and who you need to become to receive it.",
+      "paragraphs": [
+        {
+          "text": "The best approach to achieving your manifestation is first, write down a list of things you want and why. Then write down:",
+          "quote": false
+        },
+        {
+          "text": "\"What version of me has achieved these things?\"",
+          "quote": true
+        },
+        {
+          "text": "This version of me prioritises themselves, they speak up for themselves, they take risks, they nourish their body, they aren't afraid to make mistakes.",
+          "quote": false
+        },
+        {
+          "text": "It all starts from within. Once you see that list, it makes it more comprehensible for your mind. All you have to do is look at that second list and say:",
+          "quote": false
+        },
+        {
+          "text": "\"I just have to become this person, and then my manifestations will naturally come with that.\"",
+          "quote": true
+        }
+      ]
+    }
+  ]
+}
