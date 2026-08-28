@@ -253,12 +253,33 @@ Splash / Home / Module page / Meditation player / Journaling screen — detailed
 - **7-day free trial** on Monthly + Annual subs.
 - **Currency**: CAD everywhere.
 
-## Client Account Setup Status (2026-08-25)
+## Client Account Setup Status
 
-- **Stripe**: client has no account. Needs to sign up. Blocks M2.
-- **Apple Developer**: client wants Tyrone to start "when you can" — but signup requires her identity + credit card. Explained in the follow-up. Client action needed.
-- **Google Play**: same as Apple. Client action needed.
-- **Supabase**: client is OK with using it. Waiting for her to create a free account + share the API keys.
+- **Stripe**: DONE. Live keys received 2026-08-27; products, payment links and the
+  webhook are provisioned (see `data/10_*`–`15_*`).
+- **Supabase**: DONE. Project `buzdtsupgmytqokgfsbn`, schema + RLS applied, 24 rows
+  and 22 audio objects loaded.
+- **Apple Developer**: ENROLLED 2026-08-26. Welcome mail sent to gstsaver@me.com, so
+  the membership is active — what the client describes as "being processed" is most
+  likely the Paid Applications Agreement, which sits in Processing while tax and
+  banking details are reviewed.
+  - The mail opens "Hello Mark", so the **account holder's name is not Strawberry
+    Hope**. Confirm whether the team is Individual or Organization: an Individual
+    team lists the app under the holder's legal name on the store, which is probably
+    not the brand she wants shown.
+  - **App Store Small Business Program**: opt in. Drops Apple's cut from 30% to 15%
+    under $1M/yr, which on CAD $19/mo is the difference between viable and not.
+  - Still needed from her: Team ID, an App Store Connect invite for
+    tongoltyrone84@gmail.com (Admin or App Manager), the signed Paid Applications
+    Agreement, and tax + banking details.
+- **Google Play**: NOT STARTED. USD $25 one-time, and the identity verification now
+  takes days, so this is the long pole. Client action needed.
+
+## Booking
+
+Confirmed by the client 2026-08-28: **https://divine-healing-106774.square.site**
+Recovered from the Glide bundle before she confirmed it; wired into
+`booking_screen.dart`.
 
 ## Live Deployment (M1 Preview)
 

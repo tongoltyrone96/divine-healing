@@ -60,3 +60,9 @@ local.properties
 # ---------- Misc ----------
 *.log
 Thumbs.db
+
+# ---------- Client correspondence ----------
+# Forwarded mail carries the client's address and full delivery headers.
+# Useful to read, not ours to publish.
+*.msg
+*.eml
