@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../models/content_session.dart';
+import '../../repositories/content_repository.dart';
 import '../../providers/audio_providers.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/content_providers.dart';
@@ -10,8 +11,8 @@ import '../../providers/subscription_providers.dart';
 import '../../providers/user_data_providers.dart';
 import '../../theme.dart';
 
-/// Session detail with a real audio player backed by `just_audio` and
-/// streaming from the public `sh-audio` bucket on Supabase Storage.
+/// Session detail with a real audio player backed by `just_audio`, streaming
+/// from the private `sh-audio` bucket on Supabase Storage via signed URLs.
 class ContentDetailScreen extends ConsumerStatefulWidget {
   const ContentDetailScreen({super.key, required this.contentId});
   final int contentId;
@@ -53,6 +54,15 @@ class _ContentDetailScreenState extends ConsumerState<ContentDetailScreen> {
           throw StateError('Audio URL unavailable for this session.');
         }
         await playerService.setTrack(sessionId: session.id, url: url);
+      } on AudioAccessDeniedException {
+        // Storage had the final say and refused. Our local subscription
+        // state was stale, so re-read it and show the paywall rather than a
+        // misleading "something went wrong".
+        if (!mounted) return;
+        setState(() => _audioLoading = false);
+        ref.invalidate(subscriptionStatusProvider);
+        _promptPaywall();
+        return;
       } catch (e) {
         if (mounted) {
           setState(() {
