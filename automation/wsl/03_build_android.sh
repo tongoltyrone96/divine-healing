@@ -35,6 +35,14 @@ done
 
 cd "$PROJECT"
 
+# .dart_tool/package_config.json records absolute paths into the pub cache,
+# so the copy the Windows side leaves behind points at
+# C:\Users\...\Pub\Cache and every package "is not a type" here. The two
+# operating systems cannot share one, and it is gitignored, so each side
+# regenerates it. Cheap once the packages are cached.
+echo "Resolving packages for this platform"
+flutter pub get
+
 # Same contract as run_local.ps1 on the Windows side: forward only the keys
 # lib/config/env.dart declares. .env also holds a live Stripe secret, which is
 # for the server-side scripts and must never reach a client build.

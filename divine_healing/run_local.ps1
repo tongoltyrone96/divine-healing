@@ -49,4 +49,9 @@ Write-Host "Loaded $($defines.Count) client-safe env vars from .env" -Foreground
 if ($skipped.Count -gt 0) {
   Write-Host "Withheld from the build (server-side only): $($skipped -join ', ')" -ForegroundColor DarkGray
 }
+# The Android build runs under WSL (see automation/wsl/), and its `pub get`
+# rewrites .dart_tool/package_config.json with Linux paths into ~/.pub-cache.
+# Those do not exist here, so resolve again for Windows before building.
+& 'C:/src/flutter/bin/flutter.bat' pub get
+
 & 'C:/src/flutter/bin/flutter.bat' @FlutterArgs @defines
