@@ -96,15 +96,31 @@ PY
   STAGE=$(mktemp -d)
   python3 - "$ZIP" "$STAGE" <<'PY'
 import os, stat, sys, zipfile
+
 src, dest = sys.argv[1], sys.argv[2]
+
 with zipfile.ZipFile(src) as z:
     for info in z.infolist():
-        z.extract(info, dest)
-        # zipfile drops the mode, and the NDK is unusable without its compilers
-        # and linkers staying executable.
         mode = info.external_attr >> 16
+        target = os.path.join(dest, info.filename)
+
+        # zipfile has no idea about symlinks and writes them out as ordinary
+        # files whose contents are the link target. The NDK ships clang as a
+        # link to clang-19, so getting this wrong produces a "compiler" that is
+        # a one-line text file, and the build fails with
+        # "clang: 1: clang-19: not found" — which points nowhere near the cause.
+        if stat.S_ISLNK(mode):
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+            if os.path.lexists(target):
+                os.remove(target)
+            os.symlink(z.read(info).decode(), target)
+            continue
+
+        z.extract(info, dest)
+        # The mode is dropped too, and an NDK whose compilers and linkers are
+        # not executable installs perfectly and then cannot build anything.
         if mode:
-            os.chmod(os.path.join(dest, info.filename), stat.S_IMODE(mode))
+            os.chmod(target, stat.S_IMODE(mode))
 PY
 
   # These archives wrap everything in a single directory (android-ndk-r28c,
