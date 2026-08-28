@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/user_data_providers.dart';
 import '../../theme.dart';
+import 'explanation_step.dart';
 
 /// Shadow Work — 3-step wizard: Explanation → Meditation → Reflection.
 ///
@@ -177,7 +178,7 @@ class _ShadowWorkScreenState extends ConsumerState<ShadowWorkScreen> {
   }
 
   Widget _stepChild() {
-    if (_step == 0) return _ExplanationStep(onNext: () => _goto(1));
+    if (_step == 0) return ExplanationStep(onNext: () => _goto(1));
     if (_step == 1) {
       return _MeditationStep(
         playing: _playing,
@@ -277,151 +278,6 @@ class _ShadowWorkScreenState extends ConsumerState<ShadowWorkScreen> {
               )),
     );
   }
-}
-
-// ============================================================
-// Step 1 — Explanation
-// ============================================================
-class _ExplanationStep extends StatelessWidget {
-  const _ExplanationStep({required this.onNext});
-  final VoidCallback onNext;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: DHColors.sunlightGold.withOpacity(0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.flash_on,
-                  color: DHColors.sunlightGold, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('SHADOW WORK',
-                      style: DHTypography.caption(color: DHColors.mossGreen)),
-                  Text(
-                    'What Shadow Work Really Is',
-                    style:
-                        DHTypography.heading(size: 20, weight: FontWeight.w600),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        _card([
-          _p("Shadow work is the gentle practice of exploring the parts of yourself that you have hidden, ignored, judged, or learned to feel ashamed of. These hidden parts are not bad — they are simply unacknowledged. They often hold the very qualities you think you lack. If you feel unworthy, your worthiness sits in your shadow. If you feel unattractive, your beauty sits in your shadow."),
-          _p("Shadow work is not about blaming yourself or criticising who you are. It is about becoming aware of what you have been carrying, understanding where it came from, and slowly choosing something different for yourself."),
-        ]),
-        const SizedBox(height: 12),
-        _sectionCard(
-          title: 'Why We React Without Knowing Why',
-          body:
-              "Many of us respond to situations automatically — getting defensive, anxious, upset, angry, or shutting down — without understanding the deeper reason. Often it is connected to something much older. Shadow work helps you pause and explore the deeper layers beneath your reactions.",
-        ),
-        const SizedBox(height: 12),
-        _sectionCardWithList(
-          title: 'How Shadow Work Helps You Understand Yourself',
-          intro: 'When something triggers you, gently explore it by asking:',
-          items: const [
-            'What exactly is triggering me?',
-            'Where does this feeling come from?',
-            'When was the first time I felt this?',
-            'What belief did I create from that moment?',
-            'What part of me still feels unsafe, unseen, or unheard?',
-          ],
-          outro:
-              'Even asking these questions begins to shift your awareness. You stop reacting from old pain and start responding from clarity.',
-        ),
-        const SizedBox(height: 12),
-        _sectionCard(
-          title: 'How Childhood Shapes Your Beliefs',
-          body:
-              "Most of our core beliefs were formed when we were children. As kids, we did not have the awareness to question things — we simply absorbed everything around us. These beliefs become part of our shadow and continue shaping our adult behaviour.",
-        ),
-        const SizedBox(height: 20),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: onNext,
-            icon: const Icon(Icons.headphones, size: 18),
-            label: const Text('Start Meditation'),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _p(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: Text(text,
-            style: DHTypography.body(
-                size: 13, height: 1.6, color: DHColors.secondary)),
-      );
-
-  Widget _card(List<Widget> children) => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(DHRadius.card),
-          border: Border.all(color: DHColors.sunlightGold.withOpacity(0.3)),
-          boxShadow: DHShadows.card,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: children,
-        ),
-      );
-
-  Widget _sectionCard({required String title, required String body}) => _card([
-        Text(title, style: DHTypography.heading(size: 14)),
-        const SizedBox(height: 8),
-        _p(body),
-      ]);
-
-  Widget _sectionCardWithList({
-    required String title,
-    required String intro,
-    required List<String> items,
-    required String outro,
-  }) =>
-      _card([
-        Text(title, style: DHTypography.heading(size: 14)),
-        const SizedBox(height: 8),
-        _p(intro),
-        for (final it in items)
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 6),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(top: 6, right: 8),
-                  child: Icon(Icons.circle,
-                      size: 6, color: DHColors.sunlightGold),
-                ),
-                Expanded(
-                  child: Text(it,
-                      style: DHTypography.body(
-                          size: 13, height: 1.55, color: DHColors.secondary)),
-                ),
-              ],
-            ),
-          ),
-        const SizedBox(height: 8),
-        _p(outro),
-      ]);
 }
 
 // ============================================================

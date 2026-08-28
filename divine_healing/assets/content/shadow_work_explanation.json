@@ -1,0 +1,119 @@
+{
+  "source": "apps/spiritual-healing/client/pages/ShadowWorkJourney.tsx",
+  "description": "The Explanation step of the Shadow Work journey — the same copy for every shadow work session, shown before the meditation and the reflection prompts.",
+  "intro": [
+    "Shadow work is the gentle practice of exploring the parts of yourself that you have hidden, ignored, judged, or learned to feel ashamed of. These hidden parts are not bad — they are simply unacknowledged. They often hold the very qualities you think you lack. If you feel unworthy, your worthiness sits in your shadow. If you feel unattractive, your beauty sits in your shadow. If you feel too much, the part of you that feels safe being fully seen sits in your shadow too.",
+    "Shadow work is not about blaming yourself or criticising who you are. It is about becoming aware of what you have been carrying, understanding where it came from, and slowly choosing something different for yourself."
+  ],
+  "sections": [
+    {
+      "title": "Why We React Without Knowing Why",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Many of us respond to situations automatically — getting defensive, anxious, upset, angry, or shutting down — without understanding the deeper reason. In the moment, it feels like the reaction is about what is happening right now. But often, it is connected to something much older. Shadow work helps you pause and explore the deeper layers beneath your reactions."
+        }
+      ]
+    },
+    {
+      "title": "How Shadow Work Helps You Understand Yourself",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "When something triggers you, you gently explore it by asking yourself:"
+        },
+        {
+          "type": "bullets",
+          "items": [
+            "What exactly is triggering me?",
+            "Where does this feeling come from?",
+            "When was the first time I felt this?",
+            "What belief did I create from that moment?",
+            "What part of me still feels unsafe, unseen, or unheard?"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Even asking these questions begins to shift your awareness. You stop reacting from old pain and start responding from clarity."
+        }
+      ]
+    },
+    {
+      "title": "How Childhood Shapes Your Beliefs",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Most of our core beliefs were formed when we were children. As kids, we did not have the awareness to question things — we simply absorbed everything around us. If someone criticised us, ignored us, compared us, or made us feel like we had to earn love, we often created beliefs from those moments without realising it. These beliefs become part of our shadow and continue shaping our adult behaviour."
+        }
+      ]
+    },
+    {
+      "title": "A Simple Example",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "You might believe you are not smart because you got bad grades as a child. But bad grades do not mean you are not intelligent. They might mean:"
+        },
+        {
+          "type": "bullets",
+          "items": [
+            "the environment did not suit you",
+            "the topic was not for you",
+            "you were not interested",
+            "you needed things explained differently",
+            "you were dealing with something else at the time"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Once you see the truth, you can replace the old belief with a new one: I am smart. This is shadow work — noticing old beliefs and choosing new ones."
+        }
+      ]
+    },
+    {
+      "title": "How Childhood Experiences Create Adult Patterns",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Sometimes one comment from childhood becomes a belief you carry into adulthood. This can turn into:"
+        },
+        {
+          "type": "bullets",
+          "items": [
+            "over explaining",
+            "apologising when you did nothing wrong",
+            "people pleasing",
+            "feeling responsible for others emotions",
+            "trying to keep everyone happy"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Shadow work helps you see where these patterns came from so you can separate what is yours from what is not yours."
+        }
+      ]
+    },
+    {
+      "title": "What You Start to Notice",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "As you continue shadow work, you may begin noticing:"
+        },
+        {
+          "type": "bullets",
+          "items": [
+            "how you speak to yourself",
+            "the people you attract",
+            "repeating situations",
+            "recurring emotional patterns"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "The goal is not perfection. The goal is awareness — the ability to pause, understand yourself, and choose a different response. This is how you stop living from old wounds and start living from a place of clarity, compassion, and understanding."
+        }
+      ]
+    }
+  ]
+}
