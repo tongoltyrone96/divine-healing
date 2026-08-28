@@ -1,0 +1,76 @@
+{
+  "source": "apps/spiritual-healing/client/pages/ReikiJourney.tsx",
+  "description": "Reiki page. Four screens in the original: What is Reiki?, What to Expect in a Reiki Session, Benefits of Reiki, and Common Questions.",
+  "what_is_reiki": {
+    "title": "What is Reiki?",
+    "paragraphs": [
+      "The word Rei means universal, and the word Ki means life force energy. If your energy is low or there are restrictions in its flow, you are more vulnerable to illness and disease. When it is balanced, your energy is free-flowing, and you are less likely to get sick.",
+      "Reiki is defined as spiritually guided life energy. It is an extremely powerful healing energy and a form of healing that can be used to heal oneself. Once a person is attuned to Reiki, they are permanently linked to the Reiki source.",
+      "Reiki is done by either placing hands on another person or oneself, or by hovering the hands over the body. This can also be done remotely or at a distance — it works in the same way, but the practitioner imagines the person being there and follows the same procedure.",
+      "The Reiki energy flows through the hands, allowing healing to occur. The individual receiving the Reiki must allow and receive it with the intention of being cleansed."
+    ]
+  },
+  "what_to_expect": {
+    "title": "What to Expect in a Reiki Session",
+    "paragraphs": [
+      "A Reiki session is calm, peaceful, and deeply relaxing. You remain fully clothed while lying comfortably on a massage table or sitting in a chair. The practitioner places their hands lightly on or just above your body in a series of positions, allowing healing energy to flow where it is needed.",
+      "Some people feel very calm, others feel energised — every session is unique. Reiki continues working even after the session ends, supporting your body and emotions in the hours and days that follow."
+    ],
+    "experience_label": "Most people experience:",
+    "experiences": [
+      "warmth or tingling",
+      "deep relaxation",
+      "emotional release",
+      "a sense of peace or clarity",
+      "gentle shifts in energy"
+    ]
+  },
+  "benefits": {
+    "title": "Benefits of Reiki",
+    "items": [
+      "Reduces stress and anxiety",
+      "Supports emotional healing",
+      "Promotes deep relaxation",
+      "Helps release energetic blockages",
+      "Encourages mental clarity",
+      "Balances the nervous system",
+      "Enhances sleep quality",
+      "Supports the body's natural healing processes",
+      "Helps with grounding and inner peace",
+      "Complements other healing or therapeutic practices"
+    ]
+  },
+  "faqs": {
+    "title": "Common Questions",
+    "items": [
+      {
+        "q": "Can Reiki be done remotely (phone or video session)?",
+        "a": "Yes. Reiki can be sent and received across any distance. The practitioner connects energetically to the recipient, imagines them present, and follows the same process as an in-person session. The Reiki energy flows just as effectively — distance does not reduce its power or impact."
+      },
+      {
+        "q": "Is Reiki safe?",
+        "a": "Yes. Reiki is gentle, non-invasive, and safe for all ages."
+      },
+      {
+        "q": "Do I need to believe in Reiki for it to work?",
+        "a": "No. Reiki works regardless of belief — simply being open to relaxation is enough."
+      },
+      {
+        "q": "What does Reiki feel like?",
+        "a": "Warmth, tingling, calmness, emotional release, or deep relaxation. Some people feel subtle sensations, others feel strong shifts."
+      },
+      {
+        "q": "Can Reiki help with stress or anxiety?",
+        "a": "Yes. Reiki is widely used to calm the nervous system and reduce emotional tension."
+      },
+      {
+        "q": "How long is a session?",
+        "a": "Typically 20-60 minutes, depending on the practitioner."
+      },
+      {
+        "q": "Can Reiki be combined with other healing practices?",
+        "a": "Absolutely. Reiki works beautifully alongside meditation, breathwork, counselling, and shadow work."
+      }
+    ]
+  }
+}

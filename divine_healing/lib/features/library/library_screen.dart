@@ -278,6 +278,10 @@ class _SessionCard extends StatelessWidget {
         // Shadow work sessions have a 3-step wizard, not a plain player.
         if (s.category == 'shadow_work') {
           context.push('/shadow-work/${s.id}');
+        } else if (s.category == 'reiki') {
+          // Reiki is written content, not a track — the detail screen would
+          // show a title and nothing else.
+          context.push('/reiki');
         } else {
           context.push('/content/${s.id}');
         }

@@ -12,6 +12,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { stringLiterals, isProse } = require('./lib/prose');
 
 const CONTENT_DIR = path.join(__dirname, 'content');
 const APP = path.join(__dirname, '..', 'divine_healing');
@@ -20,67 +21,11 @@ const SEARCH_ROOTS = [
   path.join(APP, 'assets', 'content'),
 ];
 
-// Prose, not markup. A length floor is not enough on its own: the bundle is
-// full of long Tailwind class lists that read as many "words". Those never
-// contain sentence punctuation and always lead with utility-class tokens, so
-// that pair separates them reliably.
+// Length and word-count floors keep headings and labels out of the report;
+// telling prose from Tailwind class lists is lib/prose.js's job, and it is
+// shared with the extractors so the two cannot disagree about what counts.
 const MIN_CHARS = 45;
 const MIN_WORDS = 7;
-
-const CSS_TOKEN = /(^|\s)(flex|grid|block|inline|hidden|absolute|relative|w-|h-|size-|min-|max-|p[xytblr]?-|m[xytblr]?-|gap-|space-|rounded|border|bg-|text-[a-z]|font-|leading-|tracking-|shadow|ring-|opacity-|transition|duration-|animate-|overflow-|items-|justify-|self-|col-|row-|z-|cursor-|placeholder:|md:|sm:|lg:)/;
-
-function isMarkup(s) {
-  // Template interpolation only ever appears in className expressions here.
-  if (s.includes('${')) return true;
-  if (!CSS_TOKEN.test(s)) return false;
-  // A class list can still contain a dot ("mt-0.5"), so require punctuation
-  // that actually terminates a word before calling it prose.
-  return !/[a-z][.?!](\s|$)/.test(s);
-}
-
-function readStringLiterals(src) {
-  const out = [];
-  const escapes = { n: '\n', t: '\t', r: '\r', '"': '"', "'": "'", '`': '`', '\\': '\\' };
-  let i = 0;
-  while (i < src.length) {
-    const c = src[i];
-    if (c !== '"' && c !== "'" && c !== '`') {
-      i += 1;
-      continue;
-    }
-    const quote = c;
-    let value = '';
-    let j = i + 1;
-    let closed = false;
-    while (j < src.length) {
-      const ch = src[j];
-      if (ch === '\\') {
-        const next = src[j + 1];
-        if (next === 'u') {
-          value += String.fromCharCode(parseInt(src.substr(j + 2, 4), 16));
-          j += 6;
-          continue;
-        }
-        value += escapes[next] !== undefined ? escapes[next] : next;
-        j += 2;
-        continue;
-      }
-      if (ch === quote) {
-        closed = true;
-        break;
-      }
-      value += ch;
-      j += 1;
-    }
-    if (!closed) {
-      i += 1;
-      continue;
-    }
-    out.push(value);
-    i = j + 1;
-  }
-  return out;
-}
 
 const normalize = (s) => s.replace(/\s+/g, ' ').trim().toLowerCase();
 
@@ -124,15 +69,15 @@ let missingChars = 0;
 
 for (const file of sources) {
   const page = file.replace('_source.js', '');
-  const literals = readStringLiterals(
+  const literals = stringLiterals(
     fs.readFileSync(path.join(CONTENT_DIR, file), 'utf8'),
-  );
+  ).map((l) => l.value);
 
   const passages = [...new Set(literals)].filter(
     (s) =>
       s.length >= MIN_CHARS &&
       s.trim().split(/\s+/).length >= MIN_WORDS &&
-      !isMarkup(s),
+      isProse(s),
   );
 
   const missing = passages.filter((p) => !isPresent(p));

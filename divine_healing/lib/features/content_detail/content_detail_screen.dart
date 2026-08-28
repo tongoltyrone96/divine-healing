@@ -205,6 +205,16 @@ class _ContentDetailScreenState extends ConsumerState<ContentDetailScreen> {
   }
 
   Widget _bottomCta(ContentSession s) {
+    if (s.category == 'reiki') {
+      return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: () => context.push('/reiki'),
+          icon: const Icon(Icons.menu_book_outlined, size: 20),
+          label: const Text('Read about Reiki'),
+        ),
+      );
+    }
     if (s.category == 'shadow_work') {
       return SizedBox(
         width: double.infinity,

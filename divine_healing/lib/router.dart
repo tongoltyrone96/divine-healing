@@ -12,6 +12,7 @@ import 'features/home/home_screen.dart';
 import 'features/library/library_screen.dart';
 import 'features/profile/profile_screen.dart';
 import 'features/chakras/chakras_screen.dart';
+import 'features/reiki/reiki_screen.dart';
 import 'features/breathing/breathing_screen.dart';
 import 'features/affirmations/affirmations_screen.dart';
 import 'features/spiritual_awakening/spiritual_awakening_screen.dart';
@@ -112,6 +113,10 @@ GoRouter buildRouter() {
       GoRoute(
         path: '/chakras',
         builder: (_, __) => const ChakrasScreen(),
+      ),
+      GoRoute(
+        path: '/reiki',
+        builder: (_, __) => const ReikiScreen(),
       ),
       GoRoute(
         path: '/affirmations',
