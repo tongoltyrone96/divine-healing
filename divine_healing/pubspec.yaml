@@ -17,7 +17,8 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # --- UI / typography ---
-  google_fonts: ^6.2.1
+  # google_fonts removed: it fetches from fonts.gstatic.com at runtime, which
+  # fails offline and on flaky connections. The fonts are bundled instead.
   flutter_svg: ^2.0.10+1
 
   # --- Routing & state ---
@@ -79,6 +80,23 @@ flutter:
     - assets/icons/
     - assets/logo/
     # audio NOT bundled — served from Supabase Storage to keep app size small
+
+  # Bundled rather than fetched at runtime. package:google_fonts downloads from
+  # fonts.gstatic.com on first use, which threw an unhandled exception on a real
+  # device and dropped the app to the platform default typeface. These are the
+  # variable cuts, so one file per family covers every weight the app asks for
+  # (see DHTypography). Fetched by automation/fetch_fonts.js; OFL licences sit
+  # beside them.
+  fonts:
+    - family: Playfair Display
+      fonts:
+        - asset: assets/fonts/PlayfairDisplay-Variable.ttf
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/Nunito-Variable.ttf
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Variable.ttf
 
 # ============================================================================
 # Splash & Launcher Icon Generators — run once after design assets are in

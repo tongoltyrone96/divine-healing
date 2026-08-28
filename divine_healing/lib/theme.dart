@@ -10,7 +10,6 @@
 //   - Google Fonts vs bundled — see notes below
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class DHColors {
   DHColors._();
@@ -58,12 +57,23 @@ class DHColors {
 class DHTypography {
   DHTypography._();
 
-  // Client offered two pairs; awaiting confirmation. Recommended: Playfair + Nunito.
+  // Playfair Display for headings, Nunito for body, Inter for buttons —
+  // confirmed by the client 2026-08-25.
   //
-  // Google Fonts approach = zero-download install, always fresh, network-dependent at first launch.
-  // Alternative: bundle .ttf in pubspec assets for offline-first (recommended for meditation app).
+  // Bundled, not fetched. package:google_fonts pulled these from
+  // fonts.gstatic.com on first use, which on a real device threw an unhandled
+  // exception and left the app in the platform default face. People open a
+  // meditation app offline; the typography should not depend on a network.
   //
-  // For now use Google Fonts; swap to bundled fonts before v1 release.
+  // The bundled files are the variable cuts, so a weight is applied through
+  // FontVariation rather than by picking the nearest static instance. Set both
+  // that and fontWeight: the variation is what actually renders, while
+  // fontWeight keeps Flutter's own metrics and fallback behaviour correct.
+
+  /// Applies [weight] to a variable font. `wght` is the axis every one of
+  /// these three families exposes.
+  static List<FontVariation> _wght(FontWeight weight) =>
+      [FontVariation('wght', weight.value.toDouble())];
 
   static TextStyle heading({
     double size = 28,
@@ -71,9 +81,11 @@ class DHTypography {
     Color color = DHColors.primary,
     double? letterSpacing,
   }) =>
-      GoogleFonts.playfairDisplay(
+      TextStyle(
+        fontFamily: 'Playfair Display',
         fontSize: size,
         fontWeight: weight,
+        fontVariations: _wght(weight),
         color: color,
         letterSpacing: letterSpacing ?? -0.2,
       );
@@ -84,9 +96,11 @@ class DHTypography {
     Color color = DHColors.primary,
     double height = 1.5,
   }) =>
-      GoogleFonts.nunito(
+      TextStyle(
+        fontFamily: 'Nunito',
         fontSize: size,
         fontWeight: weight,
+        fontVariations: _wght(weight),
         color: color,
         height: height,
       );
@@ -96,9 +110,11 @@ class DHTypography {
     FontWeight weight = FontWeight.w600,
     Color color = Colors.white,
   }) =>
-      GoogleFonts.inter(
+      TextStyle(
+        fontFamily: 'Inter',
         fontSize: size,
         fontWeight: weight,
+        fontVariations: _wght(weight),
         color: color,
         letterSpacing: 0.2,
       );
@@ -106,11 +122,14 @@ class DHTypography {
   static TextStyle caption({
     double size = 12,
     Color color = DHColors.secondary,
+    FontWeight weight = FontWeight.w500,
   }) =>
-      GoogleFonts.nunito(
+      TextStyle(
+        fontFamily: 'Nunito',
         fontSize: size,
         color: color,
-        fontWeight: FontWeight.w500,
+        fontWeight: weight,
+        fontVariations: _wght(weight),
       );
 }
 
