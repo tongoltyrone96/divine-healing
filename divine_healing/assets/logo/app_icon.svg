@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5C846E"/>
+      <stop offset="0.55" stop-color="#4A6F5A"/>
+      <stop offset="1" stop-color="#3E5D4B"/>
+    </linearGradient>
+    <linearGradient id="leafGrad" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#9BC5AA"/>
+      <stop offset="1" stop-color="#6A9880"/>
+    </linearGradient>
+    <radialGradient id="moonGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFF7DA" stop-opacity="1"/>
+      <stop offset="0.55" stop-color="#E7C77A" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#E7C77A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="blushHalo" cx="0.5" cy="0.55" r="0.5">
+      <stop offset="0" stop-color="#D96A7B" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#D96A7B" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="moonBody" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFF7DA"/>
+      <stop offset="0.55" stop-color="#F3E1A5"/>
+      <stop offset="1" stop-color="#E7C77A"/>
+    </linearGradient>
+    <radialGradient id="sparkleGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFF7DA"/>
+      <stop offset="1" stop-color="#E7C77A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Full-bleed background (iOS/Android will apply rounded corners at ~180px radius) -->
+  <rect width="1024" height="1024" fill="url(#bgGrad)"/>
+
+  <!-- Subtle Strawberry Blush halo behind moon area -->
+  <circle cx="512" cy="560" r="380" fill="url(#blushHalo)"/>
+
+  <!-- Inset gold rim (safe inside iOS rounded mask ~156px inset) -->
+  <rect x="72" y="72" width="880" height="880" rx="180" ry="180"
+        fill="none" stroke="#E7C77A" stroke-width="6" opacity="0.85"/>
+  <rect x="82" y="82" width="860" height="860" rx="172" ry="172"
+        fill="none" stroke="#E7C77A" stroke-width="1.5" opacity="0.5"/>
+
+  <!-- Center logo group (crescent + leaf + sparkles) — scaled ~2.9x from 200x200 -->
+  <g transform="translate(220, 220) scale(2.9)">
+    <g transform="rotate(-6 100 100)">
+      <path d="M100 22
+               C 145 35, 155 130, 100 178
+               C 45 130, 55 35, 100 22 Z"
+            fill="url(#leafGrad)"/>
+      <path d="M100 32 L100 172"
+            stroke="#E7C77A" stroke-width="1.4" stroke-linecap="round" opacity="0.65"/>
+      <path d="M100 62 Q 85 74, 70 82" stroke="#E7C77A" stroke-width="1" stroke-linecap="round" opacity="0.4" fill="none"/>
+      <path d="M100 94 Q 82 106, 64 114" stroke="#E7C77A" stroke-width="1" stroke-linecap="round" opacity="0.4" fill="none"/>
+      <path d="M100 128 Q 85 138, 74 145" stroke="#E7C77A" stroke-width="1" stroke-linecap="round" opacity="0.4" fill="none"/>
+      <path d="M100 62 Q 115 74, 130 82" stroke="#E7C77A" stroke-width="1" stroke-linecap="round" opacity="0.4" fill="none"/>
+      <path d="M100 94 Q 118 106, 136 114" stroke="#E7C77A" stroke-width="1" stroke-linecap="round" opacity="0.4" fill="none"/>
+      <path d="M100 128 Q 115 138, 126 145" stroke="#E7C77A" stroke-width="1" stroke-linecap="round" opacity="0.4" fill="none"/>
+    </g>
+
+    <circle cx="100" cy="100" r="46" fill="url(#moonGlow)"/>
+
+    <path d="M 107 64.69
+             A 36 36 0 1 1 107 135.31
+             A 36 36 0 0 1 107 64.69 Z"
+          fill="url(#moonBody)"/>
+
+    <!-- Moon inner highlights -->
+    <circle cx="122" cy="94" r="1.6" fill="#FFF7DA" opacity="0.95"/>
+    <circle cx="118" cy="108" r="1.1" fill="#FFF7DA" opacity="0.8"/>
+
+    <!-- Large gold sparkles -->
+    <g>
+      <circle cx="46" cy="70" r="6" fill="url(#sparkleGlow)"/>
+      <path d="M46 62 L48 68 L54 70 L48 72 L46 78 L44 72 L38 70 L44 68 Z" fill="#E7C77A"/>
+    </g>
+    <g>
+      <circle cx="158" cy="88" r="5" fill="url(#sparkleGlow)"/>
+      <path d="M158 82 L159.5 86.5 L164 88 L159.5 89.5 L158 94 L156.5 89.5 L152 88 L156.5 86.5 Z" fill="#E7C77A"/>
+    </g>
+
+    <!-- Strawberry Blush accent sparkles -->
+    <g>
+      <circle cx="54" cy="154" r="5" fill="#D96A7B" fill-opacity="0.25"/>
+      <path d="M54 148 L55.5 152.5 L60 154 L55.5 155.5 L54 160 L52.5 155.5 L48 154 L52.5 152.5 Z" fill="#D96A7B"/>
+    </g>
+    <g>
+      <path d="M148 148 L149 151 L152 152 L149 153 L148 156 L147 153 L144 152 L147 151 Z" fill="#D96A7B"/>
+    </g>
+
+    <!-- Smaller supporting sparkles -->
+    <path d="M170 130 L171 133 L174 134 L171 135 L170 138 L169 135 L166 134 L169 133 Z" fill="#E7C77A" opacity="0.7"/>
+    <path d="M32 108 L33 111 L36 112 L33 113 L32 116 L31 113 L28 112 L31 111 Z" fill="#E7C77A" opacity="0.7"/>
+    <path d="M78 32 L78.8 34.2 L81 35 L78.8 35.8 L78 38 L77.2 35.8 L75 35 L77.2 34.2 Z" fill="#E7C77A" opacity="0.65"/>
+
+    <!-- Distant stars -->
+    <circle cx="26" cy="88" r="1.6" fill="#E7C77A" opacity="0.7"/>
+    <circle cx="176" cy="60" r="1.8" fill="#E7C77A" opacity="0.75"/>
+    <circle cx="180" cy="106" r="1.3" fill="#E7C77A" opacity="0.65"/>
+    <circle cx="20" cy="140" r="1.4" fill="#E7C77A" opacity="0.65"/>
+    <circle cx="88" cy="18" r="1.3" fill="#E7C77A" opacity="0.6"/>
+    <circle cx="115" cy="182" r="1.4" fill="#E7C77A" opacity="0.6"/>
+    <circle cx="184" cy="150" r="1.2" fill="#E7C77A" opacity="0.55"/>
+    <circle cx="14" cy="60" r="1.1" fill="#E7C77A" opacity="0.55"/>
+  </g>
+</svg>

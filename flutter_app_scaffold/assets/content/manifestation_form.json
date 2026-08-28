@@ -1,0 +1,41 @@
+{
+  "source": "apps/spiritual-healing/client/pages/ManifestationJourney.tsx (var QUESTIONS)",
+  "description": "5-field manifestation exercise. User fills in all 5 fields, saved to sh_manifestation_responses. Journey has 3 steps: Understanding Manifestation (intro text), The Inner Work (intro text), then this Exercise.",
+  "fields": [
+    {
+      "key": "what_to_manifest",
+      "label": "What do you want to manifest?",
+      "type": "textarea",
+      "placeholder": "Write your answer here..."
+    },
+    {
+      "key": "why_you_want_it",
+      "label": "Why do you want this?",
+      "type": "textarea",
+      "placeholder": "Write your answer here..."
+    },
+    {
+      "key": "version_achieved",
+      "label": "What version of you has already achieved this?",
+      "type": "textarea",
+      "placeholder": "Write your answer here..."
+    },
+    {
+      "key": "does_differently",
+      "label": "What does this version of you do differently?",
+      "type": "textarea",
+      "placeholder": "Write your answer here..."
+    },
+    {
+      "key": "one_action",
+      "label": "What is one action you can take today to become this version of yourself?",
+      "type": "textarea",
+      "placeholder": "Write your answer here..."
+    }
+  ],
+  "journey_screens": [
+    { "step": 1, "name": "Understanding Manifestation", "type": "intro_text" },
+    { "step": 2, "name": "The Inner Work", "type": "intro_text" },
+    { "step": 3, "name": "Exercise", "type": "form" }
+  ]
+}

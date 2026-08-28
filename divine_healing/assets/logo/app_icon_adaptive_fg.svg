@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="fgLeaf" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#9BC5AA"/>
+      <stop offset="1" stop-color="#6A9880"/>
+    </linearGradient>
+    <radialGradient id="fgMoonGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFF7DA" stop-opacity="1"/>
+      <stop offset="0.55" stop-color="#E7C77A" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#E7C77A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="fgMoonBody" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFF7DA"/>
+      <stop offset="0.55" stop-color="#F3E1A5"/>
+      <stop offset="1" stop-color="#E7C77A"/>
+    </linearGradient>
+    <radialGradient id="fgSparkleGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFF7DA"/>
+      <stop offset="1" stop-color="#E7C77A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Android adaptive foreground: transparent bg, logo at ~66% of canvas (leaves 17% padding
+       on each side per Android adaptive icon guidelines to survive circle/squircle masks). -->
+  <g transform="translate(342, 342) scale(1.7)">
+    <g transform="rotate(-6 100 100)">
+      <path d="M100 22
+               C 145 35, 155 130, 100 178
+               C 45 130, 55 35, 100 22 Z"
+            fill="url(#fgLeaf)"/>
+      <path d="M100 32 L100 172"
+            stroke="#E7C77A" stroke-width="1.4" stroke-linecap="round" opacity="0.65"/>
+      <path d="M100 62 Q 85 74, 70 82" stroke="#E7C77A" stroke-width="1" stroke-linecap="round" opacity="0.4" fill="none"/>
+      <path d="M100 94 Q 82 106, 64 114" stroke="#E7C77A" stroke-width="1" stroke-linecap="round" opacity="0.4" fill="none"/>
+      <path d="M100 128 Q 85 138, 74 145" stroke="#E7C77A" stroke-width="1" stroke-linecap="round" opacity="0.4" fill="none"/>
+      <path d="M100 62 Q 115 74, 130 82" stroke="#E7C77A" stroke-width="1" stroke-linecap="round" opacity="0.4" fill="none"/>
+      <path d="M100 94 Q 118 106, 136 114" stroke="#E7C77A" stroke-width="1" stroke-linecap="round" opacity="0.4" fill="none"/>
+      <path d="M100 128 Q 115 138, 126 145" stroke="#E7C77A" stroke-width="1" stroke-linecap="round" opacity="0.4" fill="none"/>
+    </g>
+
+    <circle cx="100" cy="100" r="46" fill="url(#fgMoonGlow)"/>
+
+    <path d="M 107 64.69
+             A 36 36 0 1 1 107 135.31
+             A 36 36 0 0 1 107 64.69 Z"
+          fill="url(#fgMoonBody)"/>
+
+    <circle cx="122" cy="94" r="1.6" fill="#FFF7DA" opacity="0.95"/>
+    <circle cx="118" cy="108" r="1.1" fill="#FFF7DA" opacity="0.8"/>
+
+    <g>
+      <circle cx="46" cy="70" r="6" fill="url(#fgSparkleGlow)"/>
+      <path d="M46 62 L48 68 L54 70 L48 72 L46 78 L44 72 L38 70 L44 68 Z" fill="#E7C77A"/>
+    </g>
+    <g>
+      <circle cx="158" cy="88" r="5" fill="url(#fgSparkleGlow)"/>
+      <path d="M158 82 L159.5 86.5 L164 88 L159.5 89.5 L158 94 L156.5 89.5 L152 88 L156.5 86.5 Z" fill="#E7C77A"/>
+    </g>
+
+    <g>
+      <path d="M54 148 L55.5 152.5 L60 154 L55.5 155.5 L54 160 L52.5 155.5 L48 154 L52.5 152.5 Z" fill="#D96A7B"/>
+    </g>
+    <path d="M148 148 L149 151 L152 152 L149 153 L148 156 L147 153 L144 152 L147 151 Z" fill="#D96A7B"/>
+  </g>
+</svg>

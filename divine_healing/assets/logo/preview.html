@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Divine Healing — Logo Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Nunito:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 40px 20px;
+    font-family: 'Nunito', -apple-system, Segoe UI, sans-serif;
+    background: #EEF1EE;
+    color: #4A6F5A;
+  }
+  h1 { font-family: 'Playfair Display', Georgia, serif; margin: 0 0 4px; font-weight: 600; }
+  .subtitle { color: #7BA68E; margin-bottom: 32px; }
+  .section-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 20px;
+    margin: 48px 0 16px;
+    color: #4A6F5A;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-title::before { content: ''; display: inline-block; width: 40px; height: 1px; background: #E7C77A; }
+
+  .phone-row { display: flex; gap: 32px; flex-wrap: wrap; justify-content: center; }
+  .phone {
+    width: 320px;
+    height: 660px;
+    background: #000;
+    border-radius: 44px;
+    padding: 12px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    position: relative;
+  }
+  .phone-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 34px;
+    overflow: hidden;
+    position: relative;
+  }
+  .notch {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    width: 100px; height: 26px; background: #000; border-radius: 999px; z-index: 10;
+  }
+  .caption { text-align: center; font-size: 12px; color: #7BA68E; margin-top: 12px; letter-spacing: 0.5px; text-transform: uppercase; }
+
+  .splash {
+    height: 100%;
+    background: linear-gradient(180deg, #C9D8C5 0%, #4A6F5A 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #fff; padding: 40px 20px;
+  }
+  .splash h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 34px; margin: 32px 0 6px; font-weight: 600; }
+  .splash .sub { font-size: 14px; opacity: 0.9; }
+  .splash .gold-line { width: 40px; height: 1px; background: #E7C77A; margin: 20px 0 0; }
+
+  .home {
+    height: 100%; background: #F3F7F3;
+    display: flex; flex-direction: column;
+  }
+  .home-header {
+    padding: 44px 20px 20px; display: flex; align-items: center; gap: 12px;
+    background: linear-gradient(180deg, #C9D8C555, transparent);
+  }
+  .home-header img { width: 44px; height: 44px; }
+  .home-header .greet { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; color: #4A6F5A; }
+  .home-header .greet .sub { display: block; font-family: 'Nunito', sans-serif; font-size: 12px; color: #7BA68E; margin-top: 2px; }
+  .home-hero {
+    margin: 8px 20px 20px; padding: 24px; text-align: center;
+    background: linear-gradient(135deg, #F3F7F3 0%, #E8DCCB 100%);
+    border-radius: 20px; border: 1px solid #E7C77A55;
+  }
+  .home-hero img { width: 72px; height: 72px; }
+  .home-hero h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; margin: 12px 0 4px; color: #4A6F5A; }
+  .home-hero p { font-size: 13px; color: #7BA68E; margin: 0 0 16px; }
+  .btn {
+    background: #4A6F5A; color: #fff; border: 1px solid #E7C77A;
+    padding: 10px 20px; border-radius: 999px; font-family: 'Nunito', sans-serif;
+    font-weight: 600; font-size: 13px; cursor: pointer; display: inline-block;
+  }
+  .home-cards { padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .home-card {
+    background: #fff; border: 1px solid #E7C77A33; border-radius: 16px; padding: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .home-card .ico { width: 40px; height: 40px; background: #F3F7F3; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+  .home-card .ico img { width: 24px; height: 24px; }
+  .home-card .name { font-family: 'Playfair Display', Georgia, serif; font-weight: 600; font-size: 15px; color: #4A6F5A; }
+  .home-card .desc { font-size: 11px; color: #7BA68E; margin-top: 2px; }
+  .home-tabs {
+    margin-top: auto; padding: 12px 20px 24px; display: flex; justify-content: space-around;
+    background: #fff; border-top: 1px solid #C9D8C5;
+  }
+  .home-tabs .tab { text-align: center; font-size: 10px; color: #7BA68E; }
+  .home-tabs .tab.active { color: #4A6F5A; font-weight: 600; }
+  .home-tabs .tab img { width: 22px; height: 22px; display: block; margin: 0 auto 4px; }
+
+  .icons { display: flex; gap: 32px; align-items: flex-end; flex-wrap: wrap; justify-content: center; padding: 32px; background: #fff; border-radius: 16px; }
+  .icon-tile { text-align: center; }
+  .icon-tile .box {
+    background: #4A6F5A; border-radius: 22%; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    border: 2px solid #E7C77A;
+  }
+  .icon-tile .box.big  { width: 180px; height: 180px; }
+  .icon-tile .box.med  { width: 120px; height: 120px; }
+  .icon-tile .box.small { width: 60px;  height: 60px; }
+  .icon-tile .box img { width: 76%; height: 76%; }
+  .icon-tile .lbl { margin-top: 10px; font-size: 11px; color: #7BA68E; letter-spacing: 0.5px; text-transform: uppercase; }
+
+  .hero-card {
+    background: #fff; border: 2px solid #E7C77A; border-radius: 20px; padding: 40px; text-align: center;
+    max-width: 400px; margin: 0 auto;
+  }
+  .hero-card img { width: 200px; height: 200px; }
+  .hero-card .name { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; margin-top: 12px; color: #4A6F5A; }
+  .hero-card .meaning { font-size: 13px; color: #7BA68E; margin-top: 6px; }
+
+  .container { max-width: 1200px; margin: 0 auto; }
+  .note { text-align: center; margin-top: 8px; font-size: 12px; color: #7BA68E; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Divine Healing — Logo (Crescent Moon)</h1>
+  <div class="subtitle">Leaf cradling a waxing crescent moon, surrounded by twinkling fairy sparkles</div>
+
+  <div class="section-title">The Mark (with twinkle animation)</div>
+  <div class="hero-card">
+    <img src="logo_mark_crescent.svg" alt="Divine Healing logo">
+    <div class="name">Divine Healing</div>
+    <div class="meaning">Nature (leaf) + Soul/Moon (crescent) + Magic (fairy sparkles)</div>
+  </div>
+  <div class="note">Sparkles gently fade in and out over 2-4 seconds. Static rendering in Flutter will show all sparkles at full opacity.</div>
+
+  <div class="section-title">Splash Screen (app launch)</div>
+  <div class="phone-row">
+    <div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="phone-inner">
+          <div class="splash">
+            <img src="logo_mark_crescent.svg" width="160" height="160">
+            <h2>Divine Healing</h2>
+            <div class="sub">by Strawberry Hope</div>
+            <div class="gold-line"></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption">Splash</div>
+    </div>
+  </div>
+
+  <div class="section-title">Home Screen (logo in context)</div>
+  <div class="phone-row">
+    <div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="phone-inner">
+          <div class="home">
+            <div class="home-header">
+              <img src="logo_mark_crescent.svg" alt="logo">
+              <div class="greet">Welcome home<span class="sub">Divine Healing</span></div>
+            </div>
+            <div class="home-hero">
+              <img src="logo_mark_crescent.svg" alt="hero">
+              <h3>Heal. Grow. Awaken.</h3>
+              <p>Guided meditations, shadow work,<br>chakra healing and Reiki.</p>
+              <span class="btn">Explore Free Content</span>
+            </div>
+            <div class="home-cards">
+              <div class="home-card">
+                <div class="ico"><img src="logo_mark_crescent.svg"></div>
+                <div class="name">Meditations</div>
+                <div class="desc">Guided breath &amp; awareness</div>
+              </div>
+              <div class="home-card">
+                <div class="ico" style="background:#E8DCCB;"><img src="logo_mark_crescent.svg"></div>
+                <div class="name">Shadow Work</div>
+                <div class="desc">Reflect with prompts</div>
+              </div>
+            </div>
+            <div class="home-tabs">
+              <div class="tab active"><img src="logo_mark_crescent.svg"><div>Home</div></div>
+              <div class="tab"><img src="logo_mark_crescent.svg" style="opacity:0.5"><div>Library</div></div>
+              <div class="tab"><img src="logo_mark_crescent.svg" style="opacity:0.5"><div>Profile</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="caption">Home (all logo instances shown; card and tab icons will be replaced with category-specific icons later)</div>
+    </div>
+  </div>
+
+  <div class="section-title">App Icon (iOS / Android home screen)</div>
+  <div class="icons">
+    <div class="icon-tile">
+      <div class="box big"><img src="logo_mark_crescent.svg"></div>
+      <div class="lbl">1024px (App Store)</div>
+    </div>
+    <div class="icon-tile">
+      <div class="box med"><img src="logo_mark_crescent.svg"></div>
+      <div class="lbl">180px (iPhone home)</div>
+    </div>
+    <div class="icon-tile">
+      <div class="box small"><img src="logo_mark_crescent.svg"></div>
+      <div class="lbl">60px (Settings)</div>
+    </div>
+  </div>
+  <div class="note">Preview uses the standard mark on a Forest Green tile. Final app-icon variant will add gold rim and a Strawberry Blush accent per client's spec.</div>
+
+  <div class="section-title">Next steps to confirm</div>
+  <ol style="line-height:2; color:#4A6F5A;">
+    <li>Approve this version, or request further tweaks (sparkle density, moon size, leaf tilt).</li>
+    <li>Decide where to place the Strawberry Blush accent in the App Icon variant: outline / one sparkle / halo behind the moon.</li>
+    <li>Once approved, wire into Flutter Splash + Home hero and generate the launcher icon assets.</li>
+  </ol>
+</div>
+</body>
+</html>

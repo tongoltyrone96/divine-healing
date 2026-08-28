@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="dhLeafB" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#7BA68E"/>
+      <stop offset="1" stop-color="#4A6F5A"/>
+    </linearGradient>
+    <radialGradient id="dhMoonGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFF7DA" stop-opacity="0.9"/>
+      <stop offset="0.55" stop-color="#E7C77A" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#E7C77A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="dhMoonBody" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFF7DA"/>
+      <stop offset="0.55" stop-color="#F3E1A5"/>
+      <stop offset="1" stop-color="#E7C77A"/>
+    </linearGradient>
+    <radialGradient id="dhSparkleGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFF7DA"/>
+      <stop offset="1" stop-color="#E7C77A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <g transform="rotate(-6 100 100)">
+    <path d="M100 22
+             C 145 35, 155 130, 100 178
+             C 45 130, 55 35, 100 22 Z"
+          fill="url(#dhLeafB)"/>
+    <path d="M100 32 L100 172"
+          stroke="#E7C77A" stroke-width="1.4" stroke-linecap="round" opacity="0.55"/>
+    <path d="M100 62 Q 85 74, 70 82" stroke="#E7C77A" stroke-width="1" stroke-linecap="round" opacity="0.35" fill="none"/>
+    <path d="M100 94 Q 82 106, 64 114" stroke="#E7C77A" stroke-width="1" stroke-linecap="round" opacity="0.35" fill="none"/>
+    <path d="M100 128 Q 85 138, 74 145" stroke="#E7C77A" stroke-width="1" stroke-linecap="round" opacity="0.35" fill="none"/>
+    <path d="M100 62 Q 115 74, 130 82" stroke="#E7C77A" stroke-width="1" stroke-linecap="round" opacity="0.35" fill="none"/>
+    <path d="M100 94 Q 118 106, 136 114" stroke="#E7C77A" stroke-width="1" stroke-linecap="round" opacity="0.35" fill="none"/>
+    <path d="M100 128 Q 115 138, 126 145" stroke="#E7C77A" stroke-width="1" stroke-linecap="round" opacity="0.35" fill="none"/>
+  </g>
+
+  <circle cx="100" cy="100" r="46" fill="url(#dhMoonGlow)"/>
+
+  <path d="M 107 64.69
+           A 36 36 0 1 1 107 135.31
+           A 36 36 0 0 1 107 64.69 Z"
+        fill="url(#dhMoonBody)"/>
+
+  <circle cx="122" cy="94" r="1.6" fill="#FFF7DA" opacity="0.95"/>
+  <circle cx="118" cy="108" r="1.1" fill="#FFF7DA" opacity="0.8"/>
+  <circle cx="126" cy="102" r="0.9" fill="#FFF7DA" opacity="0.7"/>
+
+  <g fill="#E7C77A">
+    <g opacity="0.85">
+      <circle cx="46" cy="70" r="6" fill="url(#dhSparkleGlow)"/>
+      <path d="M46 62 L48 68 L54 70 L48 72 L46 78 L44 72 L38 70 L44 68 Z"/>
+      <animate attributeName="opacity" values="0.85;0.4;0.85" dur="3.2s" repeatCount="indefinite"/>
+    </g>
+    <g opacity="0.85">
+      <circle cx="158" cy="88" r="5" fill="url(#dhSparkleGlow)"/>
+      <path d="M158 82 L159.5 86.5 L164 88 L159.5 89.5 L158 94 L156.5 89.5 L152 88 L156.5 86.5 Z"/>
+      <animate attributeName="opacity" values="0.85;0.35;0.85" dur="2.6s" begin="0.6s" repeatCount="indefinite"/>
+    </g>
+    <g opacity="0.8">
+      <circle cx="54" cy="154" r="5" fill="url(#dhSparkleGlow)"/>
+      <path d="M54 148 L55.5 152.5 L60 154 L55.5 155.5 L54 160 L52.5 155.5 L48 154 L52.5 152.5 Z"/>
+      <animate attributeName="opacity" values="0.8;0.3;0.8" dur="3.8s" begin="1.2s" repeatCount="indefinite"/>
+    </g>
+
+    <g opacity="0.7">
+      <path d="M148 148 L149 151 L152 152 L149 153 L148 156 L147 153 L144 152 L147 151 Z"/>
+      <animate attributeName="opacity" values="0.7;0.2;0.7" dur="2.2s" begin="0.3s" repeatCount="indefinite"/>
+    </g>
+    <g opacity="0.7">
+      <path d="M170 130 L171 133 L174 134 L171 135 L170 138 L169 135 L166 134 L169 133 Z"/>
+      <animate attributeName="opacity" values="0.7;0.25;0.7" dur="2.8s" begin="1.5s" repeatCount="indefinite"/>
+    </g>
+    <g opacity="0.7">
+      <path d="M32 108 L33 111 L36 112 L33 113 L32 116 L31 113 L28 112 L31 111 Z"/>
+      <animate attributeName="opacity" values="0.7;0.2;0.7" dur="2.4s" begin="0.9s" repeatCount="indefinite"/>
+    </g>
+    <g opacity="0.65">
+      <path d="M78 32 L78.8 34.2 L81 35 L78.8 35.8 L78 38 L77.2 35.8 L75 35 L77.2 34.2 Z"/>
+      <animate attributeName="opacity" values="0.65;0.15;0.65" dur="3.0s" begin="1.8s" repeatCount="indefinite"/>
+    </g>
+
+    <circle cx="26" cy="88" r="1.4" opacity="0.7">
+      <animate attributeName="opacity" values="0.7;0.15;0.7" dur="2.5s" begin="0.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="176" cy="60" r="1.6" opacity="0.75">
+      <animate attributeName="opacity" values="0.75;0.2;0.75" dur="3.1s" begin="1.4s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="180" cy="106" r="1.2" opacity="0.65">
+      <animate attributeName="opacity" values="0.65;0.15;0.65" dur="2.7s" begin="0.7s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="20" cy="140" r="1.3" opacity="0.65">
+      <animate attributeName="opacity" values="0.65;0.15;0.65" dur="3.4s" begin="2.0s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="88" cy="18" r="1.2" opacity="0.6">
+      <animate attributeName="opacity" values="0.6;0.1;0.6" dur="2.9s" begin="1.1s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="115" cy="182" r="1.3" opacity="0.6">
+      <animate attributeName="opacity" values="0.6;0.15;0.6" dur="3.3s" begin="0.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="184" cy="150" r="1.1" opacity="0.55">
+      <animate attributeName="opacity" values="0.55;0.1;0.55" dur="2.6s" begin="1.7s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="14" cy="60" r="1.0" opacity="0.55">
+      <animate attributeName="opacity" values="0.55;0.1;0.55" dur="3.6s" begin="2.3s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>

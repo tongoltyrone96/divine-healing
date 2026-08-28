@@ -1,0 +1,61 @@
+{
+  "source": "apps/spiritual-healing/client/pages/SpiritualAwakening.tsx",
+  "description": "Spiritual Awakening page. Overview → Learn More (Benefits + What to Expect) → Reflection Prompts (7 journaling questions with FAQs)",
+  "hero_text": "We are powerful beings, and this human life is just an illusion designed to help us learn lessons. Becoming aware is already a huge step forward. The journey may be tough, but it is also the most fulfilling experience you can ever have.",
+  "benefits": [
+    "Deep inner peace",
+    "Emotional clarity",
+    "Stronger intuition",
+    "Detachment from fear",
+    "Greater presence and awareness",
+    "Feeling connected to life and nature",
+    "Understanding your purpose",
+    "Freedom from old conditioning",
+    "More compassion for yourself and others",
+    "A sense of unity and oneness"
+  ],
+  "what_to_expect": [
+    "Heightened emotions",
+    "Increased sensitivity",
+    "Feeling disconnected from old habits",
+    "Questioning beliefs and systems",
+    "Strong desire for truth",
+    "Moments of deep clarity",
+    "Periods of confusion or intensity",
+    "A growing sense of inner strength",
+    "Feeling different from others",
+    "A return to joy, wonder, and presence"
+  ],
+  "faqs": [
+    {
+      "q": "Is awakening scary?",
+      "a": "It can feel intense at times, but it ultimately brings clarity, peace, and freedom."
+    },
+    {
+      "q": "Why do I feel disconnected from people?",
+      "a": "Awakening shifts your perspective. You may outgrow old patterns or relationships."
+    },
+    {
+      "q": "Is awakening the same as religion?",
+      "a": "No. Awakening is a personal experience of inner truth, not a belief system."
+    },
+    {
+      "q": "Why do emotions feel stronger?",
+      "a": "You're becoming more aware and present. Emotions surface so they can be healed."
+    },
+    {
+      "q": "Does awakening ever end?",
+      "a": "It's a lifelong unfolding. You continue expanding, learning, and remembering who you are."
+    }
+  ],
+  "reflection_prompts": [
+    "What beliefs am I beginning to question?",
+    "What parts of myself am I rediscovering?",
+    "Where do I feel fear, and what is beneath it?",
+    "What emotions have been asking for my attention?",
+    "What feels more true to me now than before?",
+    "What am I ready to release?",
+    "What does my soul want me to know today?"
+  ],
+  "note": "Reflection prompts in Spiritual Awakening are SAVED LOCALLY only (client-side state). No API endpoint for persistence exists in current Glide app. Consider adding to Supabase schema if persistence needed."
+}

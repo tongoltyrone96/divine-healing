@@ -1,0 +1,136 @@
+[
+  {
+    "emoji": "🟥",
+    "name": "Box Breathing",
+    "subtitle": "4–4–4–4",
+    "color": "bg-red-50 border-red-200",
+    "accent": "text-red-700",
+    "description": "A simple, structured breathing pattern that calms the mind and stabilises the nervous system. Ideal for stress, overwhelm, or grounding.",
+    "steps": [
+      "Inhale for 4 seconds",
+      "Hold for 4 seconds",
+      "Exhale for 4 seconds",
+      "Hold for 4 seconds",
+      "Repeat for 4–8 rounds."
+    ],
+    "benefits": [
+      "Reduces anxiety",
+      "Improves focus",
+      "Creates emotional steadiness"
+    ]
+  },
+  {
+    "emoji": "🟧",
+    "name": "Wim Hof Breathing",
+    "subtitle": "Energising & activating",
+    "color": "bg-orange-50 border-orange-200",
+    "accent": "text-orange-700",
+    "description": "A powerful, energising breathwork method involving deep rhythmic breathing followed by breath retention. It activates the body, increases oxygen flow, and boosts mental clarity.",
+    "steps": [
+      "Take 30–40 deep breaths (inhale fully, exhale naturally)",
+      "After the final exhale, hold your breath until you feel the urge to breathe",
+      "Inhale deeply and hold for 10–15 seconds",
+      "Repeat 2–3 rounds."
+    ],
+    "benefits": [
+      "Increases energy",
+      "Enhances focus",
+      "Supports emotional release",
+      "Strengthens mind–body connection"
+    ]
+  },
+  {
+    "emoji": "🟨",
+    "name": "Physiological Sigh",
+    "subtitle": "The Sigh",
+    "color": "bg-yellow-50 border-yellow-200",
+    "accent": "text-yellow-700",
+    "description": "A natural nervous-system reset used by the body to release tension. It's one of the fastest ways to reduce stress.",
+    "steps": [
+      "Take one deep inhale",
+      "Take a second, shorter inhale on top of it",
+      "Exhale slowly and fully",
+      "Repeat 3–5 times."
+    ],
+    "benefits": [
+      "Rapid stress reduction",
+      "Calms the heart rate",
+      "Releases emotional pressure"
+    ]
+  },
+  {
+    "emoji": "🟩",
+    "name": "Coherent Breathing",
+    "subtitle": "5–5",
+    "color": "bg-green-50 border-green-200",
+    "accent": "text-green-700",
+    "description": "A smooth, even breathing pattern that synchronises heart and breath rhythms. Ideal for balance and emotional regulation.",
+    "steps": [
+      "Inhale for 5 seconds",
+      "Exhale for 5 seconds",
+      "Continue for 2–5 minutes."
+    ],
+    "benefits": [
+      "Balances the nervous system",
+      "Improves emotional clarity",
+      "Supports long-term calm"
+    ]
+  },
+  {
+    "emoji": "🟦",
+    "name": "Belly Breathing",
+    "subtitle": "Diaphragmatic",
+    "color": "bg-blue-50 border-blue-200",
+    "accent": "text-blue-700",
+    "description": "A grounding breath that activates the parasympathetic nervous system. Perfect for anxiety, overwhelm, or reconnecting with the body.",
+    "steps": [
+      "Place a hand on your belly",
+      "Inhale deeply into your lower abdomen",
+      "Exhale slowly",
+      "Repeat for 1–3 minutes."
+    ],
+    "benefits": [
+      "Reduces tension",
+      "Grounds the body",
+      "Supports emotional safety"
+    ]
+  },
+  {
+    "emoji": "🟪",
+    "name": "Double Inhale + Long Exhale",
+    "subtitle": "Nervous System Reset",
+    "color": "bg-purple-50 border-purple-200",
+    "accent": "text-purple-700",
+    "description": "A quick reset breath that releases built-up stress and helps the body return to a calm baseline.",
+    "steps": [
+      "Short inhale",
+      "Second deeper inhale",
+      "Long slow exhale",
+      "Repeat 3–6 rounds."
+    ],
+    "benefits": [
+      "Clears emotional pressure",
+      "Quickly calms the body",
+      "Helps regulate overwhelm"
+    ]
+  },
+  {
+    "emoji": "🟫",
+    "name": "4–7–8 Breathing",
+    "subtitle": "Deep relaxation",
+    "color": "bg-amber-50 border-amber-200",
+    "accent": "text-amber-800",
+    "description": "A soothing breath pattern that signals safety to the body and helps release tension.",
+    "steps": [
+      "Inhale for 4 seconds",
+      "Hold for 7 seconds",
+      "Exhale for 8 seconds",
+      "Repeat 4–6 rounds."
+    ],
+    "benefits": [
+      "Deep relaxation",
+      "Supports sleep",
+      "Reduces stress"
+    ]
+  }
+]

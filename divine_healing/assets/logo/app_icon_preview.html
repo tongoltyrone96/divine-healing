@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Divine Healing — App Icon Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Nunito:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 40px 20px;
+    font-family: 'Nunito', -apple-system, Segoe UI, sans-serif;
+    background: #EEF1EE;
+    color: #4A6F5A;
+  }
+  h1 { font-family: 'Playfair Display', Georgia, serif; margin: 0 0 4px; font-weight: 600; }
+  .subtitle { color: #7BA68E; margin-bottom: 32px; }
+  .section-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 20px;
+    margin: 48px 0 16px;
+    color: #4A6F5A;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-title::before { content: ''; display: inline-block; width: 40px; height: 1px; background: #E7C77A; }
+
+  .container { max-width: 1200px; margin: 0 auto; }
+  .note { text-align: center; margin-top: 8px; font-size: 12px; color: #7BA68E; }
+
+  /* Raw sizes */
+  .raw-sizes { display: flex; gap: 32px; align-items: flex-end; flex-wrap: wrap; justify-content: center; padding: 40px; background: #fff; border-radius: 16px; border: 1px solid #E7C77A33; }
+  .raw-sizes .tile { text-align: center; }
+  .raw-sizes .tile img { display: block; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+  .raw-sizes .tile.rounded img { border-radius: 22%; }
+  .raw-sizes .tile.circle img { border-radius: 50%; }
+  .raw-sizes .lbl { margin-top: 10px; font-size: 11px; color: #7BA68E; letter-spacing: 0.5px; text-transform: uppercase; }
+
+  /* iOS home mockup */
+  .ios-frame {
+    width: 380px;
+    height: 780px;
+    background: linear-gradient(180deg, #a5a1c8 0%, #6b95a5 50%, #4a6f5a 100%);
+    border-radius: 44px;
+    padding: 12px;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+  }
+  .ios-inner {
+    width: 100%; height: 100%;
+    border-radius: 34px;
+    padding: 60px 20px 20px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 22px 14px;
+    align-content: start;
+  }
+  .ios-app { text-align: center; }
+  .ios-app .icon {
+    width: 68px; height: 68px;
+    border-radius: 22%;
+    background: rgba(255,255,255,0.15);
+    margin: 0 auto;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+  }
+  .ios-app .icon img { width: 100%; height: 100%; border-radius: 22%; display: block; }
+  .ios-app .name { color: white; font-size: 11px; margin-top: 6px; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+  .ios-notch {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    width: 110px; height: 28px; background: #000; border-radius: 999px; z-index: 2;
+  }
+
+  /* Android home mockup */
+  .android-frame {
+    width: 380px;
+    height: 780px;
+    background: linear-gradient(160deg, #2b2f36 0%, #4a5060 100%);
+    border-radius: 36px;
+    padding: 14px;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+  }
+  .android-inner {
+    width: 100%; height: 100%;
+    border-radius: 26px;
+    padding: 60px 20px 20px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 22px 14px;
+    align-content: start;
+  }
+  .android-app { text-align: center; }
+  .android-app .icon {
+    width: 68px; height: 68px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    margin: 0 auto;
+    overflow: hidden;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+    position: relative;
+  }
+  .android-app .icon .bg { position: absolute; inset: 0; background: #4A6F5A; }
+  .android-app .icon .fg { position: absolute; inset: 0; }
+  .android-app .icon .fg img { width: 100%; height: 100%; display: block; }
+  .android-app .name { color: white; font-size: 11px; margin-top: 6px; }
+
+  .phone-row { display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; }
+  .phone-caption { text-align: center; font-size: 12px; color: #7BA68E; margin-top: 12px; letter-spacing: 0.5px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Divine Healing — App Icon</h1>
+  <div class="subtitle">Forest Green background · gold rim · crescent moon + leaf + fairy sparkles · Strawberry Blush accent sparkles</div>
+
+  <div class="section-title">Raw icon at store sizes</div>
+  <div class="raw-sizes">
+    <div class="tile">
+      <img src="app_icon.svg" width="240" height="240">
+      <div class="lbl">1024px (App Store / Play Store)</div>
+    </div>
+    <div class="tile rounded">
+      <img src="app_icon.svg" width="180" height="180">
+      <div class="lbl">iOS home (180px)</div>
+    </div>
+    <div class="tile rounded">
+      <img src="app_icon.svg" width="120" height="120">
+      <div class="lbl">iPad (120px)</div>
+    </div>
+    <div class="tile rounded">
+      <img src="app_icon.svg" width="60" height="60">
+      <div class="lbl">Settings (60px)</div>
+    </div>
+    <div class="tile rounded">
+      <img src="app_icon.svg" width="40" height="40">
+      <div class="lbl">Spotlight (40px)</div>
+    </div>
+  </div>
+  <div class="note">The full SVG on the left is the source. iOS crops it into a squircle automatically (previews on the right).</div>
+
+  <div class="section-title">iOS home screen mockup</div>
+  <div class="phone-row">
+    <div>
+      <div class="ios-frame">
+        <div class="ios-notch"></div>
+        <div class="ios-inner">
+          <div class="ios-app"><div class="icon" style="background:#3478f6;"></div><div class="name">Phone</div></div>
+          <div class="ios-app"><div class="icon" style="background:#34c759;"></div><div class="name">Messages</div></div>
+          <div class="ios-app"><div class="icon" style="background:#5ac8fa;"></div><div class="name">FaceTime</div></div>
+          <div class="ios-app"><div class="icon" style="background:#4A6F5A;"><img src="app_icon.svg"></div><div class="name">Divine Healing</div></div>
+          <div class="ios-app"><div class="icon" style="background:#ff3b30;"></div><div class="name">Music</div></div>
+          <div class="ios-app"><div class="icon" style="background:#af52de;"></div><div class="name">Photos</div></div>
+          <div class="ios-app"><div class="icon" style="background:#ff9500;"></div><div class="name">Notes</div></div>
+          <div class="ios-app"><div class="icon" style="background:#8e8e93;"></div><div class="name">Settings</div></div>
+        </div>
+      </div>
+      <div class="phone-caption">iOS — squircle mask, ~22% radius</div>
+    </div>
+
+    <div>
+      <div class="android-frame">
+        <div class="android-inner">
+          <div class="android-app"><div class="icon" style="background:#4285f4;"></div><div class="name">Chrome</div></div>
+          <div class="android-app"><div class="icon" style="background:#0f9d58;"></div><div class="name">Gmail</div></div>
+          <div class="android-app"><div class="icon" style="background:#f4b400;"></div><div class="name">Maps</div></div>
+          <div class="android-app">
+            <div class="icon">
+              <div class="bg"></div>
+              <div class="fg"><img src="app_icon_adaptive_fg.svg"></div>
+            </div>
+            <div class="name">Divine Healing</div>
+          </div>
+          <div class="android-app"><div class="icon" style="background:#db4437;"></div><div class="name">YouTube</div></div>
+          <div class="android-app"><div class="icon" style="background:#25d366;"></div><div class="name">WhatsApp</div></div>
+          <div class="android-app"><div class="icon" style="background:#1877f2;"></div><div class="name">Facebook</div></div>
+          <div class="android-app"><div class="icon" style="background:#e60023;"></div><div class="name">Pinterest</div></div>
+        </div>
+      </div>
+      <div class="phone-caption">Android — circle mask (uses adaptive foreground)</div>
+    </div>
+  </div>
+
+  <div class="section-title">Adaptive foreground (Android layered icon)</div>
+  <div class="raw-sizes">
+    <div class="tile">
+      <img src="app_icon_adaptive_fg.svg" width="180" height="180" style="background: repeating-conic-gradient(#f3f3f3 0 25%, #e5e5e5 0 50%) 50% / 20px 20px;">
+      <div class="lbl">Foreground on transparent</div>
+    </div>
+    <div class="tile circle">
+      <img src="app_icon.svg" width="180" height="180">
+      <div class="lbl">Full icon under circle mask</div>
+    </div>
+    <div class="tile" style="border-radius: 34%; overflow:hidden;">
+      <img src="app_icon.svg" width="180" height="180" style="border-radius: 34%;">
+      <div class="lbl">Squircle mask</div>
+    </div>
+  </div>
+  <div class="note">The adaptive foreground has 17% padding on each side so it survives circle, squircle, and teardrop masks used by different Android launchers.</div>
+
+  <div class="section-title">To confirm</div>
+  <ol style="line-height:2; color:#4A6F5A;">
+    <li>Approve the icon design, or request changes (rim thickness, sparkle density, blush accent position).</li>
+    <li>Once approved: convert SVG → PNG (1024x1024) and run <code>flutter_launcher_icons</code> to emit every iOS + Android size.</li>
+    <li>Optional: also swap the web favicon on the Vercel site so the browser tab shows the new logo.</li>
+  </ol>
+</div>
+</body>
+</html>

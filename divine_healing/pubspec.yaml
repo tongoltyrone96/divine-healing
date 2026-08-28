@@ -1,0 +1,114 @@
+# Divine Healing — Flutter dependency manifest
+# Copy to project root after `flutter create` (replaces auto-generated one)
+name: divine_healing
+description: Divine Healing — guided meditations, shadow work, reiki (Strawberry Hope)
+publish_to: 'none'
+# versionName+versionCode, both consumed by android/app/build.gradle.kts.
+# Bump the +N for every Play Store upload; the dotted part is the marketing version.
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+  flutter: '>=3.24.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # --- UI / typography ---
+  google_fonts: ^6.2.1
+  flutter_svg: ^2.0.10+1
+
+  # --- Routing & state ---
+  go_router: ^14.6.2
+  flutter_riverpod: ^2.6.1
+  # riverpod_annotation removed — using manual Provider() to avoid
+  # analyzer/riverpod_generator version conflict. Add back later if desired.
+
+  # --- Data models (immutable + JSON) ---
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+
+  # --- Backend (Supabase) ---
+  supabase_flutter: ^2.8.0
+
+  # --- Auth providers ---
+  google_sign_in: ^6.2.2
+  sign_in_with_apple: ^6.1.3      # iOS-required for App Store approval when Google is present
+
+  # --- Audio player (M2) ---
+  just_audio: ^0.9.42
+  audio_service: ^0.18.15
+  audio_session: ^0.1.21
+
+  # --- Payments (M2 — RevenueCat wraps Apple IAP + Google Billing + Stripe) ---
+  purchases_flutter: ^8.2.1
+
+  # --- Local storage & prefs ---
+  shared_preferences: ^2.3.3
+  path_provider: ^2.1.5
+
+  # --- Utilities ---
+  intl: ^0.19.0
+  url_launcher: ^6.3.1             # for Booking → Zoom/Square link
+  webview_flutter: ^4.10.0         # if Booking is embedded rather than launched externally
+  cached_network_image: ^3.4.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+  # Code generation for Freezed + JSON only (riverpod codegen removed)
+  build_runner: ^2.4.13
+  freezed: ^2.5.7
+  json_serializable: ^6.9.0
+
+  # Splash + Icon generators
+  flutter_native_splash: ^2.4.2
+  flutter_launcher_icons: ^0.14.1
+
+flutter:
+  uses-material-design: true
+  generate: true  # for l10n if we add multi-language later
+
+  assets:
+    - assets/content/                # static JSON (affirmations, chakras, etc.)
+    - assets/images/
+    - assets/icons/
+    - assets/logo/
+    # audio NOT bundled — served from Supabase Storage to keep app size small
+
+# ============================================================================
+# Splash & Launcher Icon Generators — run once after design assets are in
+# ============================================================================
+# flutter_native_splash: flutter pub run flutter_native_splash:create
+flutter_native_splash:
+  color: "#FCF5F8"                    # sageMist blush white — matches Flutter splash
+  color_dark: "#FCF5F8"
+  image: assets/logo/client_logo.png
+  image_dark: assets/logo/client_logo.png
+  android_12:
+    color: "#FCF5F8"
+    image: assets/logo/client_logo.png
+  ios: true
+  android: true
+  web: false
+  fullscreen: false
+
+# flutter_launcher_icons: flutter pub run flutter_launcher_icons
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/logo/client_logo.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
+  background_color_ios: "#FCF5F8"
+  adaptive_icon_background: "#FCF5F8"
+  adaptive_icon_foreground: "assets/logo/client_logo.png"
+  web:
+    generate: true
+    image_path: "assets/logo/client_logo.png"
+    background_color: "#FCF5F8"
+    theme_color: "#5B3A5E"

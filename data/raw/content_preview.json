@@ -1,0 +1,29 @@
+[
+  {
+    "id": "15",
+    "category": "meditation",
+    "title": "Anxiety Release",
+    "description": "",
+    "duration_minutes": 10,
+    "is_preview": true,
+    "sort_order": 0
+  },
+  {
+    "id": "26",
+    "category": "meditation",
+    "title": "Anxiety Release Short",
+    "description": "",
+    "duration_minutes": 5,
+    "is_preview": true,
+    "sort_order": 0
+  },
+  {
+    "id": "32",
+    "category": "reiki",
+    "title": "Introduction to Reiki",
+    "description": "Discover what Reiki is, what to expect in a session, its benefits, and answers to common questions.",
+    "duration_minutes": null,
+    "is_preview": true,
+    "sort_order": 1
+  }
+]

@@ -1,0 +1,177 @@
+[
+  {
+    "name": "Root Chakra",
+    "sanskrit": "Muladhara",
+    "emoji": "🔻",
+    "color": "bg-red-50 border-red-200",
+    "accent": "text-red-600",
+    "badge": "bg-red-100 text-red-700",
+    "description": "The Root Chakra is your foundation. It governs safety, stability, and your sense of belonging. When balanced, you feel grounded, supported, and connected to your body and the present moment.",
+    "affirmations": [
+      "I am safe, supported, and grounded.",
+      "I trust life and my place in it.",
+      "I am rooted in strength and stability."
+    ],
+    "practices": [
+      "Walk barefoot on grass or earth",
+      "Slow, deep belly breathing",
+      "Decluttering your physical space",
+      "Grounding visualisations (imagining roots growing from your feet)"
+    ],
+    "imbalance": [
+      "Feeling disconnected or unstable",
+      "Difficulty relaxing",
+      "Overwhelm or fear around basic needs"
+    ]
+  },
+  {
+    "name": "Sacral Chakra",
+    "sanskrit": "Svadhisthana",
+    "emoji": "🟠",
+    "color": "bg-orange-50 border-orange-200",
+    "accent": "text-orange-600",
+    "badge": "bg-orange-100 text-orange-700",
+    "description": "The Sacral Chakra governs creativity, pleasure, emotional flow, and relationships. When balanced, you feel expressive, inspired, and open to joy.",
+    "affirmations": [
+      "I honour my emotions and let them flow.",
+      "I deserve pleasure, joy, and creativity.",
+      "My energy moves with ease."
+    ],
+    "practices": [
+      "Creative expression (art, music, dance)",
+      "Gentle hip-opening stretches",
+      "Warm baths or water rituals",
+      "Journaling emotional experiences"
+    ],
+    "imbalance": [
+      "Feeling creatively blocked",
+      "Emotional numbness or overwhelm",
+      "Difficulty connecting with pleasure"
+    ]
+  },
+  {
+    "name": "Solar Plexus Chakra",
+    "sanskrit": "Manipura",
+    "emoji": "🟡",
+    "color": "bg-yellow-50 border-yellow-200",
+    "accent": "text-yellow-700",
+    "badge": "bg-yellow-100 text-yellow-800",
+    "description": "The Solar Plexus Chakra is your centre of confidence, personal power, and self-worth. When balanced, you feel capable, motivated, and aligned with your goals.",
+    "affirmations": [
+      "I trust myself and my decisions.",
+      "I am strong, confident, and empowered.",
+      "I act with clarity and purpose."
+    ],
+    "practices": [
+      "Core-strengthening movements",
+      "Setting small achievable goals",
+      "Sunlight exposure",
+      "Practising healthy boundaries"
+    ],
+    "imbalance": [
+      "Self-doubt or insecurity",
+      "Difficulty taking action",
+      "Feeling powerless or overly controlling"
+    ]
+  },
+  {
+    "name": "Heart Chakra",
+    "sanskrit": "Anahata",
+    "emoji": "💚",
+    "color": "bg-green-50 border-green-200",
+    "accent": "text-green-700",
+    "badge": "bg-green-100 text-green-800",
+    "description": "The Heart Chakra governs love, compassion, forgiveness, and emotional openness. When balanced, you feel connected, empathetic, and able to give and receive love freely.",
+    "affirmations": [
+      "I give and receive love with ease.",
+      "My heart is open, safe, and supported.",
+      "I choose compassion for myself and others."
+    ],
+    "practices": [
+      "Gratitude journaling",
+      "Gentle chest-opening stretches",
+      "Spending time with loved ones",
+      "Acts of kindness"
+    ],
+    "imbalance": [
+      "Difficulty trusting or opening up",
+      "Emotional heaviness",
+      "Feeling disconnected from others"
+    ]
+  },
+  {
+    "name": "Throat Chakra",
+    "sanskrit": "Vishuddha",
+    "emoji": "🔵",
+    "color": "bg-blue-50 border-blue-200",
+    "accent": "text-blue-700",
+    "badge": "bg-blue-100 text-blue-800",
+    "description": "The Throat Chakra governs communication, truth, and self-expression. When balanced, you speak clearly, honestly, and confidently.",
+    "affirmations": [
+      "I express myself with clarity and confidence.",
+      "My voice matters.",
+      "I speak my truth with love."
+    ],
+    "practices": [
+      "Singing or humming",
+      "Honest conversations",
+      "Drinking warm herbal teas",
+      "Journaling your truth"
+    ],
+    "imbalance": [
+      "Difficulty expressing feelings",
+      "Fear of speaking up",
+      "Feeling unheard or misunderstood"
+    ]
+  },
+  {
+    "name": "Third Eye Chakra",
+    "sanskrit": "Ajna",
+    "emoji": "🟣",
+    "color": "bg-purple-50 border-purple-200",
+    "accent": "text-purple-700",
+    "badge": "bg-purple-100 text-purple-800",
+    "description": "The Third Eye Chakra governs intuition, insight, and inner wisdom. When balanced, you see life clearly and trust your inner guidance.",
+    "affirmations": [
+      "I trust my intuition.",
+      "I see clearly with inner wisdom.",
+      "My mind is calm, open, and aware."
+    ],
+    "practices": [
+      "Meditation",
+      "Mindfulness and stillness",
+      "Limiting overstimulation",
+      "Visualisation exercises"
+    ],
+    "imbalance": [
+      "Difficulty making decisions",
+      "Feeling mentally foggy",
+      "Overthinking or confusion"
+    ]
+  },
+  {
+    "name": "Crown Chakra",
+    "sanskrit": "Sahasrara",
+    "emoji": "🟪",
+    "color": "bg-violet-50 border-violet-200",
+    "accent": "text-violet-700",
+    "badge": "bg-violet-100 text-violet-800",
+    "description": "The Crown Chakra connects you to higher consciousness, purpose, and spiritual alignment. When balanced, you feel connected, peaceful, and guided.",
+    "affirmations": [
+      "I am connected to something greater.",
+      "I trust the wisdom of the universe.",
+      "I am aligned with my highest self."
+    ],
+    "practices": [
+      "Quiet contemplation",
+      "Prayer or spiritual reflection",
+      "Spending time in nature",
+      "Letting go of attachment to outcomes"
+    ],
+    "imbalance": [
+      "Feeling disconnected from purpose",
+      "Lack of inspiration",
+      "Feeling spiritually blocked"
+    ]
+  }
+]

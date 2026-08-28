@@ -1,0 +1,62 @@
+# ============================================================================
+# Divine Healing — repository ignore rules
+# ============================================================================
+
+# ---------- Secrets: NEVER commit ----------
+# Live Stripe secret key + Supabase keys live here.
+.env
+.env.local
+**/.env
+!**/.env.example
+
+# Android release signing. Losing these is fatal, but they must be backed up
+# OUT OF BAND (password manager / encrypted drive), never in git.
+**/key.properties
+**/*.jks
+**/*.keystore
+DivineHealing_KEYSTORE_BACKUP.md
+
+# Google OAuth client secret downloaded from Cloud Console.
+client_secret_*.json
+
+# Supabase CLI local state / linked-project ref.
+supabase/.temp/
+supabase/.branches/
+
+# ---------- Large binary content (lives in Supabase Storage) ----------
+# 22 mp3 files, ~329 MB. Source of truth is the `sh-audio` bucket; the local
+# copies are the download cache produced by automation/05_extract_content.js.
+assets/audio/
+
+# Playwright persistent Chromium profile — contains the logged-in Glide
+# session cookies and is ~367 MB.
+automation/browser-session/
+
+# ---------- Build output / dependencies ----------
+node_modules/
+build/
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+.idea/
+.vscode/
+.gradle/
+local.properties
+
+# Flutter/Dart generated
+**/generated_plugin_registrant.dart
+*.g.dart
+*.freezed.dart
+
+# iOS / macOS
+**/Pods/
+**/*.xcworkspace/xcuserdata/
+**/xcuserdata/
+**/DerivedData/
+.DS_Store
+
+# ---------- Misc ----------
+*.log
+Thumbs.db

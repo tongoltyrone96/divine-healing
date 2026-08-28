@@ -1,0 +1,13 @@
+{
+  "source": "apps/spiritual-healing/client/pages/ShadowWorkJourney.tsx (var REFLECTION_PROMPTS)",
+  "description": "7 reflection prompts shown after the Shadow Work meditation. Same for every session (per client confirmation). Answers stored in sh_shadow_work_responses.prompt_1..prompt_7.",
+  "prompts": [
+    "What came up for me during this meditation?",
+    "What emotion did I feel most strongly?",
+    "Where do I feel this emotion in my body?",
+    "When was the first time I remember feeling this way?",
+    "What belief might be connected to this feeling?",
+    "What part of me still feels unseen, unsafe, or unheard?",
+    "What do I need right now to feel supported?"
+  ]
+}

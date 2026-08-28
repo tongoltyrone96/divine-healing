@@ -1,0 +1,50 @@
+{
+  "meditation": {
+    "label": "Meditations",
+    "icon": "[React icon]",
+    "color": "bg-info-weak text-info",
+    "href": "/library/meditation"
+  },
+  "shadow_work": {
+    "label": "Shadow Work",
+    "icon": "[React icon]",
+    "color": "bg-warning-weak text-warning",
+    "href": "/library/shadow_work"
+  },
+  "chakra_healing": {
+    "label": "Chakra Healing",
+    "icon": "[React icon]",
+    "color": "bg-success-weak text-success",
+    "href": "/chakras"
+  },
+  "reiki": {
+    "label": "Reiki",
+    "icon": "[React icon]",
+    "color": "bg-warning-weak text-warning",
+    "href": "/library/reiki"
+  },
+  "manifestation": {
+    "label": "Manifestation",
+    "icon": "[React icon]",
+    "color": "bg-info-weak text-info",
+    "href": "/manifestation"
+  },
+  "affirmations": {
+    "label": "Affirmations",
+    "icon": "[React icon]",
+    "color": "bg-accent/10 text-accent",
+    "href": "/affirmations"
+  },
+  "breathing": {
+    "label": "Breathing",
+    "icon": "[React icon]",
+    "color": "bg-info-weak text-info",
+    "href": "/breathing"
+  },
+  "spiritual_awakening": {
+    "label": "Spiritual Awakening",
+    "icon": "[React icon]",
+    "color": "bg-warning-weak text-warning",
+    "href": "/spiritual-awakening"
+  }
+}
