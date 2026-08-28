@@ -10,6 +10,7 @@ import '../../providers/auth_providers.dart';
 import '../../providers/user_data_providers.dart';
 import '../../theme.dart';
 import 'explanation_step.dart';
+import 'meditation_step.dart';
 
 /// Shadow Work — 3-step wizard: Explanation → Meditation → Reflection.
 ///
@@ -27,7 +28,6 @@ class _ShadowWorkScreenState extends ConsumerState<ShadowWorkScreen> {
   static const _stepNames = ['Explanation', 'Meditation', 'Reflection'];
 
   int _step = 0;
-  bool _playing = false;
   List<String> _prompts = const [];
   final _controllers = <int, TextEditingController>{};
 
@@ -180,9 +180,8 @@ class _ShadowWorkScreenState extends ConsumerState<ShadowWorkScreen> {
   Widget _stepChild() {
     if (_step == 0) return ExplanationStep(onNext: () => _goto(1));
     if (_step == 1) {
-      return _MeditationStep(
-        playing: _playing,
-        onTogglePlay: () => setState(() => _playing = !_playing),
+      return MeditationStep(
+        contentId: _contentIdInt,
         onBack: () => _goto(0),
         onNext: () => _goto(2),
       );
@@ -276,122 +275,6 @@ class _ShadowWorkScreenState extends ConsumerState<ShadowWorkScreen> {
                 size: 11,
                 color: current ? DHColors.forestGreen : DHColors.secondary,
               )),
-    );
-  }
-}
-
-// ============================================================
-// Step 2 — Meditation player (mock)
-// ============================================================
-class _MeditationStep extends StatelessWidget {
-  const _MeditationStep({
-    required this.playing,
-    required this.onTogglePlay,
-    required this.onBack,
-    required this.onNext,
-  });
-  final bool playing;
-  final VoidCallback onTogglePlay;
-  final VoidCallback onBack;
-  final VoidCallback onNext;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      children: [
-        Text('Shadow Work Meditation',
-            style: DHTypography.heading(size: 20, weight: FontWeight.w600),
-            textAlign: TextAlign.center),
-        const SizedBox(height: 6),
-        Center(
-          child: Container(
-              width: 32, height: 2, color: DHColors.sunlightGold),
-        ),
-        const SizedBox(height: 22),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [DHColors.forestGreen, DHColors.mossGreen],
-            ),
-            borderRadius: BorderRadius.circular(DHRadius.card),
-            border: Border.all(color: DHColors.sunlightGold.withOpacity(0.4)),
-          ),
-          child: Column(
-            children: [
-              InkWell(
-                onTap: onTogglePlay,
-                borderRadius: BorderRadius.circular(999),
-                child: Container(
-                  width: 88,
-                  height: 88,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [DHColors.sunlightGold, DHColors.softClay],
-                    ),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: DHColors.sunlightGold.withOpacity(0.4),
-                        blurRadius: 20,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Icon(Icons.eco,
-                          size: 40, color: Colors.white.withOpacity(0.35)),
-                      Icon(playing ? Icons.pause : Icons.play_arrow,
-                          size: 42, color: Colors.white),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                playing ? 'Playing (preview)' : 'Tap to start (preview)',
-                style: DHTypography.caption(color: DHColors.sunlightGold),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                'Take your time with this meditation. Let the guidance help you '
-                'explore what is beneath the surface — gently and safely. When '
-                'you are ready, tap Continue to Reflection.',
-                style: DHTypography.body(
-                    size: 13, color: Colors.white.withOpacity(0.9), height: 1.55),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: onBack,
-                icon: const Icon(Icons.arrow_back, size: 18),
-                label: const Text('Back'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: onNext,
-                icon: const Icon(Icons.arrow_forward, size: 18),
-                label: const Text('Continue to Reflection'),
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 }

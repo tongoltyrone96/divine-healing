@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../models/content_session.dart';
-import '../../repositories/content_repository.dart';
 import '../../providers/audio_providers.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/content_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../providers/user_data_providers.dart';
 import '../../theme.dart';
+import '../player/session_playback.dart';
 
 /// Session detail with a real audio player backed by `just_audio`, streaming
 /// from the private `sh-audio` bucket on Supabase Storage via signed URLs.
@@ -33,50 +33,26 @@ class _ContentDetailScreenState extends ConsumerState<ContentDetailScreen> {
   }
 
   Future<void> _handlePlayTap(ContentSession session) async {
-    if (!session.hasAudio) return;
-    if (!_hasAccess(session)) {
-      _promptPaywall();
-      return;
-    }
+    setState(() {
+      _audioLoading = true;
+      _audioError = null;
+    });
 
-    final player = ref.read(audioHandlerProvider);
-    final alreadyLoaded = player.currentSessionId == session.id;
+    // Shared with the Shadow Work meditation step so both screens agree on
+    // who may listen and on what a refusal means.
+    final outcome = await togglePlayback(ref, session);
+    if (!mounted) return;
 
-    if (!alreadyLoaded) {
-      setState(() {
-        _audioLoading = true;
-        _audioError = null;
-      });
-      try {
-        final repo = ref.read(contentRepositoryProvider);
-        final url = await repo.getAudioUrl(session.contentBody);
-        if (url == null) {
-          throw StateError('Audio URL unavailable for this session.');
-        }
-        await player.setTrack(session: session, url: url);
-      } on AudioAccessDeniedException {
-        // Storage had the final say and refused. Our local subscription
-        // state was stale, so re-read it and show the paywall rather than a
-        // misleading "something went wrong".
-        if (!mounted) return;
-        setState(() => _audioLoading = false);
-        ref.invalidate(subscriptionStatusProvider);
-        _promptPaywall();
-        return;
-      } catch (e) {
-        if (mounted) {
-          setState(() {
-            _audioLoading = false;
-            _audioError = 'Audio failed to load. Please try again.';
-          });
-        }
-        return;
-      }
-      if (!mounted) return;
-      setState(() => _audioLoading = false);
-    }
+    setState(() {
+      _audioLoading = false;
+      _audioError = switch (outcome) {
+        PlaybackOutcome.unavailable => 'Audio is not available for this session.',
+        PlaybackOutcome.failed => 'Audio failed to load. Please try again.',
+        _ => null,
+      };
+    });
 
-    await player.togglePlayPause();
+    if (outcome == PlaybackOutcome.denied) _promptPaywall();
   }
 
   @override
