@@ -84,15 +84,29 @@ async function probeOrigin(url) {
     paidPaths = (all || []).map((r) => r.content_body);
   }
 
-  console.log('\n1. Anonymous callers must not be able to enumerate paid audio');
-  const leakedPaid = (visible || []).filter((r) => !r.is_preview);
+  // The catalogue is public on purpose since 20260829_01: a signed-out
+  // visitor sees all 24 sessions so the locked-card upsell works. That
+  // makes this the check that matters — knowing a paid track's path must
+  // still get you nothing. It is a stronger test than the old one, which
+  // only confirmed the paths were hidden.
+  console.log('\n1. Reading the catalogue must not grant audio');
+  const visiblePaid = (visible || []).filter((r) => !r.is_preview);
   check(
-    'sh_content exposes preview rows only',
-    leakedPaid.length === 0,
-    leakedPaid.length
-      ? `${leakedPaid.length} paid paths readable`
-      : `${previewPaths.length} preview paths visible`,
+    'catalogue is browsable signed out',
+    (visible || []).length > 0,
+    `${(visible || []).length} sessions visible, ${visiblePaid.length} of them paid`,
   );
+  for (const row of visiblePaid.slice(0, 5)) {
+    const { data, error } = await anon.storage
+      .from(BUCKET)
+      .createSignedUrl(row.content_body, 60);
+    check(
+      `sign ${row.content_body} refused`,
+      !!error || !data,
+      error ? error.message : 'signed URL was issued!',
+    );
+  }
+  console.log(`  (checked 5 of ${visiblePaid.length} paid tracks by their real paths)`);
 
   console.log('\n2. Origin must refuse the public route');
   for (const p of [...previewPaths, ...LEGACY.slice(0, 3).map((l) => l.path)]) {
@@ -100,27 +114,7 @@ async function probeOrigin(url) {
     check(`origin public/${p} blocked`, status >= 400, `HTTP ${status}`);
   }
 
-  console.log('\n3. Anonymous caller must not be able to sign a paid track');
-  if (!paidPaths.length) {
-    console.log(
-      '  SKIP  set SUPABASE_SECRET_KEY to test the real paid paths\n' +
-        '        (they are unguessable, which is why anon cannot find them)',
-    );
-  } else {
-    for (const p of paidPaths.slice(0, 5)) {
-      const { data, error } = await anon.storage
-        .from(BUCKET)
-        .createSignedUrl(p, 60);
-      check(
-        `sign ${p} refused`,
-        !!error || !data,
-        error ? error.message : 'signed URL was issued!',
-      );
-    }
-    console.log(`  (checked 5 of ${paidPaths.length} paid tracks)`);
-  }
-
-  console.log('\n4. Free preview must still stream for a signed-out visitor');
+  console.log('\n3. Free preview must still stream for a signed-out visitor');
   let previewSigned = null;
   for (const p of previewPaths) {
     const { data, error } = await anon.storage
@@ -135,18 +129,19 @@ async function probeOrigin(url) {
     check(`stream ${p}`, status === 206 || status === 200, `HTTP ${status}`);
   }
 
-  console.log('\n5. A signed URL must not be a skeleton key for other objects');
-  if (previewSigned && paidPaths.length) {
+  console.log('\n4. A signed URL must not be a skeleton key for other objects');
+  const paidTarget = (visible || []).find((r) => !r.is_preview)?.content_body;
+  if (previewSigned && paidTarget) {
     // Keep the token, swap the path. Storage signs per-object, so this must
     // be rejected.
-    const forged = previewSigned.url.replace(previewSigned.path, paidPaths[0]);
+    const forged = previewSigned.url.replace(previewSigned.path, paidTarget);
     const status = await probe(forged);
-    check('token replay onto a paid path blocked', status >= 400, `HTTP ${status}`);
+    check(`token replay onto ${paidTarget} blocked`, status >= 400, `HTTP ${status}`);
   } else {
-    console.log('  SKIP  needs both a preview signature and a known paid path');
+    console.log('  SKIP  no preview signature to replay');
   }
 
-  console.log('\n6. CDN residue at the old guessable paths');
+  console.log('\n5. CDN residue at the old guessable paths');
   const residue = [];
   for (const l of LEGACY) {
     if ((await probe(publicUrl(l.path))) < 400) residue.push(l);
