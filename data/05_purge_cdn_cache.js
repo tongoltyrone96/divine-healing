@@ -24,13 +24,20 @@ require('dotenv').config({
 const { createClient } = require('@supabase/supabase-js');
 
 const URL = process.env.SUPABASE_URL;
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// This project is on Supabase's newer key format, where the admin credential
+// is a `sb_secret_...` key (Project Settings > API Keys > Secret keys) rather
+// than the legacy `service_role` JWT. Both work identically here, so accept
+// either name.
+const SERVICE_KEY =
+  process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+
 if (!URL || !SERVICE_KEY) {
   console.error(
-    'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.\n' +
-      'The service_role key is admin-level — set it as an env var for this\n' +
-      'run only, never commit it:\n' +
-      '  $env:SUPABASE_SERVICE_ROLE_KEY="..."',
+    'Missing SUPABASE_URL or the admin key.\n' +
+      'Grab it from Project Settings > API Keys > Secret keys (sb_secret_...)\n' +
+      'and set it for this run only — it bypasses RLS, so never commit it:\n' +
+      '  $env:SUPABASE_SECRET_KEY="sb_secret_..."',
   );
   process.exit(1);
 }
