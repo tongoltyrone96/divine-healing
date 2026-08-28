@@ -30,18 +30,38 @@ async function importContent() {
   //   Glide content_body = "audio/10.mp3" (Glide's storage path)
   //   Supabase we keep same convention — bucket is 'sh-audio', object is same path
   // If audio file was renamed during download, update this mapping.
-  const rows = src.map(item => ({
-    id: parseInt(item.id, 10),
-    category: item.category,
-    title: item.title,
-    description: item.description || '',
-    content_body: item.content_body,          // keep original path — matches Storage
-    duration_minutes: item.duration_minutes,
-    is_preview: item.is_preview,
-    sort_order: item.sort_order ?? 0,
-    created_at: item.created_at,
-    updated_at: item.updated_at,
-  }));
+  // Storage paths were randomized after the paywall fix (see
+  // 06_randomize_audio_paths.js), so the Glide export's `audio/{id}.mp3` is
+  // stale. Re-running this import must not drag those guessable paths back —
+  // that would repoint every row at objects the bucket no longer has, and
+  // undo the enumeration defence. Keep whatever the table already says.
+  const { data: existing, error: readErr } = await supabase
+    .from('sh_content')
+    .select('id, content_body');
+  if (readErr) {
+    console.error('Could not read existing content_body values:', readErr);
+    process.exit(1);
+  }
+  const currentPath = new Map(
+    (existing || []).map(r => [r.id, r.content_body]),
+  );
+
+  const rows = src.map(item => {
+    const id = parseInt(item.id, 10);
+    return {
+      id,
+      category: item.category,
+      title: item.title,
+      description: item.description || '',
+      // Existing row wins; the export's path is only a seed for new rows.
+      content_body: currentPath.get(id) ?? item.content_body,
+      duration_minutes: item.duration_minutes,
+      is_preview: item.is_preview,
+      sort_order: item.sort_order ?? 0,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+    };
+  });
 
   // Insert (upsert on id in case re-run)
   const { data, error } = await supabase
