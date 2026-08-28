@@ -24,10 +24,29 @@ PKG=com.divinehealing.app
 SHOTS="$(dirname "$0")/../reference/screenshots/device"
 SETTLE=2.5   # let an animation finish before capturing
 
+# This phone reports two displays, and screencap warns that its default "is
+# not guaranteed to be consistent across captures". It is not: several
+# captures came back as an 8 KB black frame from the second display while the
+# app was plainly running on the first, which reads exactly like a crash. Pick
+# the display with actual content rather than trusting the default.
+display_id() {
+  local best="" best_size=0 id size
+  for id in $("$ADB" shell dumpsys SurfaceFlinger --display-id 2>/dev/null                 | grep -oE 'Display [0-9]+' | grep -oE '[0-9]+'); do
+    "$ADB" shell screencap -d "$id" /sdcard/_probe.png >/dev/null 2>&1
+    size=$("$ADB" shell stat -c %s /sdcard/_probe.png 2>/dev/null | tr -d '')
+    [ -n "$size" ] && [ "$size" -gt "$best_size" ] && { best="$id"; best_size="$size"; }
+  done
+  "$ADB" shell rm -f /sdcard/_probe.png >/dev/null 2>&1
+  echo "$best"
+}
+
+DISPLAY_ID="${DH_DISPLAY_ID:-}"
+
 shot() {
   local name="${1:-shot}"
   mkdir -p "$SHOTS"
-  "$ADB" shell screencap /sdcard/_dh.png
+  [ -z "$DISPLAY_ID" ] && DISPLAY_ID=$(display_id)
+  "$ADB" shell screencap -d "$DISPLAY_ID" /sdcard/_dh.png
   "$ADB" pull -a /sdcard/_dh.png "$SHOTS/$name.png" >/dev/null 2>&1
   "$ADB" shell rm -f /sdcard/_dh.png
   echo "  -> reference/screenshots/device/$name.png"

@@ -3,6 +3,7 @@ import 'package:audio_session/audio_session.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../models/content_session.dart';
+import 'artwork.dart';
 
 /// The app's single audio pipeline.
 ///
@@ -120,6 +121,10 @@ class DivineHealingAudioHandler extends BaseAudioHandler with SeekHandler {
     if (_currentSessionId == session.id) return;
     _currentSessionId = session.id;
 
+    // Staged on first use and cached after, so this is a no-op from the second
+    // session onward. Null off Android/iOS, and the item simply carries no art.
+    final artUri = await mediaArtworkUri();
+
     // Published before loading so the lock screen has something to show while
     // the audio buffers.
     mediaItem.add(
@@ -129,6 +134,7 @@ class DivineHealingAudioHandler extends BaseAudioHandler with SeekHandler {
         artist: 'Divine Healing',
         album: _categoryLabel(session.category),
         duration: Duration(minutes: session.durationMinutes),
+        artUri: artUri,
       ),
     );
 
@@ -230,7 +236,15 @@ Future<DivineHealingAudioHandler> initAudioHandler() async {
         // to still be there afterwards.
         androidNotificationOngoing: false,
         androidStopForegroundOnPause: true,
-        androidNotificationIcon: 'mipmap/launcher_icon',
+        // Not the launcher icon: Android keeps only a small icon's alpha
+        // channel and fills the rest with a flat colour, so an opaque
+        // launcher icon draws as a solid square on the lock screen.
+        androidNotificationIcon: 'drawable/ic_notification',
+        // The source image is 1024px square; the lock screen and notification
+        // want a fraction of that, and shuttling the full bitmap between
+        // processes on every track change is pure waste.
+        artDownscaleWidth: 384,
+        artDownscaleHeight: 384,
         fastForwardInterval: Duration(seconds: 30),
         rewindInterval: Duration(seconds: 15),
       ),

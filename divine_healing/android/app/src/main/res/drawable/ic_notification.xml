@@ -1,0 +1,21 @@
+<!--
+  Small icon for the media notification.
+
+  Android uses only the alpha channel of a small icon and paints the rest a
+  flat colour, so pointing this at the full-colour launcher icon rendered a
+  solid filled square on the lock screen. This is the leaf mark from
+  assets/logo/logo_mark.svg reduced to a silhouette with the orb punched out,
+  which is all that survives being drawn at 24dp anyway.
+
+  Set in initAudioHandler as androidNotificationIcon: 'drawable/ic_notification'.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M100,22 C145,35 155,130 100,178 C45,130 55,35 100,22 Z M78,100 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0 Z" />
+</vector>
