@@ -39,14 +39,22 @@ declare -A BEFORE
 for pid in $PIDS; do BEFORE[$pid]=$(cpu_ticks "$pid"); done
 sleep "$SAMPLE_SECONDS"
 
-echo "=== CPU over ${SAMPLE_SECONDS}s ==="
-BUSY=0
+echo "=== CPU over ${SAMPLE_SECONDS}s (busy at ${BUSY_TICKS}+ ticks) ==="
+TOTAL=0
 for pid in $PIDS; do
   delta=$(( $(cpu_ticks "$pid") - ${BEFORE[$pid]} ))
-  [ "$delta" -gt 0 ] && BUSY=1
-  printf '  pid %-7s %s ticks  %s\n' "$pid" "$delta" \
-    "$( [ "$delta" -gt 0 ] && echo working || echo idle )"
+  TOTAL=$(( TOTAL + delta ))
+  if [ "$delta" -ge "$BUSY_TICKS" ]; then
+    state=working
+  elif [ "$delta" -gt 0 ]; then
+    state="barely — probably waiting"
+  else
+    state=idle
+  fi
+  printf '  pid %-7s %4s ticks  %s\n' "$pid" "$delta" "$state"
 done
+BUSY=0
+[ "$TOTAL" -ge "$BUSY_TICKS" ] && BUSY=1
 
 echo
 echo "=== files written under build/ in the last 2 minutes ==="
