@@ -4,24 +4,24 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../theme.dart';
 
-/// Booking — external Square calendar link. Client will provide the URL.
-/// Once payment is enabled in Square, a manual Zoom link is sent after
-/// confirmation.
+/// Booking — sends the visitor to Strawberry Hope's Square site, which is
+/// where the original Glide app pointed ("Zoom Sessions Only"). Once payment
+/// is enabled in Square, a private Zoom link follows the confirmation email.
 class BookingScreen extends StatelessWidget {
   const BookingScreen({super.key});
 
-  // TODO: swap with the real Square appointments URL once the client sends it.
-  static const _squareBookingUrl =
-      'https://squareup.com/appointments/book/PLACEHOLDER';
+  /// Recovered from the original Glide bundle, where this same URL backed the
+  /// "Book a Zoom Session" button. Until now the app shipped a literal
+  /// PLACEHOLDER path, so the button opened a Square 404.
+  static const bookingUrl = 'https://divine-healing-106774.square.site';
 
-  Future<void> _openSquare(BuildContext context) async {
-    final uri = Uri.parse(_squareBookingUrl);
+  Future<void> _openBooking(BuildContext context) async {
+    final uri = Uri.parse(bookingUrl);
     final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!launched && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-              'Booking link will be finalized before launch. Placeholder for now.'),
+          content: Text('Could not open the booking page. Please try again.'),
         ),
       );
     }
@@ -100,14 +100,15 @@ class BookingScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () => _openSquare(context),
+                  onPressed: () => _openBooking(context),
                   icon: const Icon(Icons.open_in_new, size: 18),
-                  label: const Text('Open booking calendar'),
+                  label: const Text('Book a Zoom Session'),
                 ),
               ),
               const SizedBox(height: 12),
               Text(
-                'You will be redirected to the secure booking calendar.',
+                'You will be redirected to our secure booking page to choose '
+                'your session type and preferred time.',
                 style:
                     DHTypography.caption(color: DHColors.secondary),
                 textAlign: TextAlign.center,

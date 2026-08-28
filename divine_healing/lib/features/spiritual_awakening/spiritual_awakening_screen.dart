@@ -54,6 +54,11 @@ class _SpiritualAwakeningScreenState extends State<SpiritualAwakeningScreen> {
             children: [
               _hero(d.heroText),
               const SizedBox(height: 20),
+              for (final section in d.journey) ...[
+                _JourneyCard(heading: section.heading, body: section.body),
+                const SizedBox(height: 12),
+              ],
+              const SizedBox(height: 8),
               _ListCard(
                 title: 'Benefits of Awakening',
                 icon: Icons.star_border,
@@ -306,11 +311,68 @@ class _FaqCard extends StatelessWidget {
 }
 
 // ============================================================
+// The Journey — one long-form section
+// ============================================================
+class _JourneyCard extends StatelessWidget {
+  const _JourneyCard({required this.heading, required this.body});
+
+  final String heading;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(DHRadius.card),
+        border: Border.all(color: DHColors.softSage.withOpacity(0.5)),
+        boxShadow: DHShadows.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: DHColors.softSage.withOpacity(0.45),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.auto_awesome,
+                    size: 16, color: DHColors.forestGreen),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(heading, style: DHTypography.heading(size: 17)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // The source separates paragraphs with blank lines; keeping them as
+          // separate Text runs preserves the pacing of the writing.
+          for (final para in body.split('\n\n').where((p) => p.trim().isNotEmpty))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text(
+                para.trim(),
+                style: DHTypography.body(size: 14, height: 1.65),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================
 // Data
 // ============================================================
 class _SAData {
   const _SAData({
     required this.heroText,
+    required this.journey,
     required this.benefits,
     required this.whatToExpect,
     required this.reflectionPrompts,
@@ -318,6 +380,9 @@ class _SAData {
   });
 
   final String heroText;
+  /// The original page's "The Journey" tab — Strawberry Hope's long-form
+  /// writing, which the first content extraction dropped entirely.
+  final List<({String heading, String body})> journey;
   final List<String> benefits;
   final List<String> whatToExpect;
   final List<String> reflectionPrompts;
@@ -325,8 +390,13 @@ class _SAData {
 
   factory _SAData.fromJson(Map<String, dynamic> j) {
     final faqsRaw = (j['faqs'] as List).cast<Map<String, dynamic>>();
+    final journeyRaw =
+        ((j['journey'] as List?) ?? const []).cast<Map<String, dynamic>>();
     return _SAData(
       heroText: j['hero_text'] as String,
+      journey: journeyRaw
+          .map((b) => (heading: b['heading'] as String, body: b['body'] as String))
+          .toList(),
       benefits: (j['benefits'] as List).cast<String>(),
       whatToExpect: (j['what_to_expect'] as List).cast<String>(),
       reflectionPrompts: (j['reflection_prompts'] as List).cast<String>(),
