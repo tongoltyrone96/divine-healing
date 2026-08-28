@@ -5,13 +5,13 @@
 // exploitable — the other half (a public bucket) is fixed by
 // migrations/20260828_01_audio_paywall.sql.
 //
-// This does NOT recover the objects Cloudflare cached while the bucket was
-// public. Supabase only invalidates CDN entries on Pro+ (Smart CDN); on Free
-// there is no purge, confirmed by a re-upload leaving Last-Modified and ETag
-// untouched. Those stale copies stay reachable at their old paths until
-// Cloudflare evicts them. What this script buys is that nothing NEW is ever
-// guessable, and the stale entries become orphans pointing at paths the app
-// no longer uses.
+// It also clears the objects Cloudflare had cached from when the bucket was
+// public, which is worth knowing because the obvious approach does not work:
+// re-uploading over an object leaves its cache entry untouched (Last-Modified
+// and ETag both stayed on the original upload). Moving it away does clear it
+// — the old key stops existing, and the old path starts answering 400 with
+// CF-Cache-Status: BYPASS. Verified on the Free plan, so this is not the
+// Pro-only Smart CDN invalidation.
 //
 // Run:
 //   $env:SUPABASE_SECRET_KEY="sb_secret_..."
