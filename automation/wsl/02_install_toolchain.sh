@@ -34,56 +34,7 @@ mkdir -p "$OPT" "$DL"
 say() { printf '\n=== %s ===\n' "$1"; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
-# Large transfers over this machine's VPN run for a while and then throttle to
-# zero rather than failing outright — the Flutter archive is 1.5 GB and each
-# attempt moves ~100 MB before the connection goes quiet. So: resume into a
-# .part file, treat a minute under 1 KB/s as a dead connection instead of
-# waiting out curl's own two-hour timeout, and keep reconnecting.
-#
-# Attempts are only "wasted" when they move no bytes at all. Counting those
-# separately is what distinguishes a slow link, which will finish, from a URL
-# that is never going to return anything.
-fetch() { # fetch <url> <dest>
-  local url="$1" dest="$2" attempt before after stuck=0
-  if [ -s "$dest" ]; then
-    echo "  cached: $(basename "$dest")"
-    return
-  fi
-  for attempt in $(seq 1 80); do
-    before=$(stat -c %s "$dest.part" 2>/dev/null || echo 0)
-    if curl -fL --no-progress-meter             -C -             --connect-timeout 30             --speed-limit 1024 --speed-time 60             -o "$dest.part" "$url"; then
-      mv "$dest.part" "$dest"
-      echo "  got $(du -h "$dest" | cut -f1) in $attempt attempt(s)"
-      return
-    fi
-    after=$(stat -c %s "$dest.part" 2>/dev/null || echo 0)
-    if [ "$after" -gt "$before" ]; then
-      stuck=0
-      echo "  $(numfmt --to=iec "$after") so far — reconnecting"
-    else
-      stuck=$((stuck + 1))
-      echo "  no progress ($stuck/6) at $(numfmt --to=iec "$after") — reconnecting"
-      if [ "$stuck" -ge 6 ]; then
-        echo "  six attempts moved nothing; the link is not coming back" >&2
-        return 1
-      fi
-    fi
-    sleep 10
-  done
-  echo "  gave up after 80 attempts on $url" >&2
-  return 1
-}
-
-# Downloads that stop early still leave a valid-looking file, so archives are
-# checked before anything is extracted from them.
-verify_archive() { # verify_archive <file>
-  case "$1" in
-    *.tar.xz) xz -t "$1" 2>/dev/null ;;
-    *.tar.gz) gzip -t "$1" 2>/dev/null ;;
-    *.zip)    python3 -c "import sys,zipfile; sys.exit(0 if zipfile.is_zipfile(sys.argv[1]) else 1)" "$1" ;;
-    *)        return 0 ;;
-  esac
-}
+. "$(dirname "$0")/_lib.sh"   # fetch(), verify_archive()
 
 # unzip is not installed and installing it needs sudo. Python is present, and
 # its zipfile module is enough — it just does not preserve the executable bit,
