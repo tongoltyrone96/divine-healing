@@ -40,8 +40,25 @@ android {
             if (keystorePropertiesFile.exists()) {
                 keyAlias = keystoreProperties["keyAlias"] as String
                 keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = file(keystoreProperties["storeFile"] as String)
                 storePassword = keystoreProperties["storePassword"] as String
+
+                // storeFile is written by hand into key.properties, which sits
+                // in android/ while file() resolves against android/app/. Both
+                // "upload-keystore.jks" and "app/upload-keystore.jks" are
+                // plausible things to write there, and the wrong one fails
+                // late with a doubled path — android/app/app/… — that reads
+                // like a missing file rather than a misread setting.
+                val configured = keystoreProperties["storeFile"] as String
+                val candidates = listOf(
+                    file(configured),
+                    rootProject.file(configured),
+                    File(configured)
+                )
+                storeFile = candidates.firstOrNull { it.exists() }
+                    ?: throw GradleException(
+                        "Keystore '$configured' from key.properties was not found. " +
+                        "Looked in: " + candidates.joinToString { it.absolutePath }
+                    )
             }
         }
     }

@@ -49,7 +49,11 @@ class LibraryScreen extends ConsumerWidget {
               error: (e, _) => Center(child: Text('Error: $e')),
               data: (list) {
                 if (list.isEmpty && !isChakra) {
-                  return const Center(child: Text('No sessions yet.'));
+                  // "No sessions yet" was actively wrong for a signed-out
+                  // visitor: the sessions exist, they are just not readable
+                  // yet. Saying so, with a way in, beats telling someone the
+                  // category is empty.
+                  return _emptyState(context, signedIn: isSignedIn);
                 }
                 if (isChakra) {
                   return const SizedBox.shrink();
@@ -73,6 +77,43 @@ class LibraryScreen extends ConsumerWidget {
       ),
     );
   }
+
+  Widget _emptyState(BuildContext context, {required bool signedIn}) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(signedIn ? Icons.spa_outlined : Icons.lock_outline,
+                  size: 34, color: DHColors.mossGreen),
+              const SizedBox(height: 12),
+              Text(
+                signedIn
+                    ? 'Nothing in this category yet.'
+                    : 'Sign in to see these sessions',
+                style: DHTypography.heading(size: 16),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                signedIn
+                    ? 'New sessions are added here as they are published.'
+                    : 'The full library is here — signing in reveals it, and '
+                        'a free trial unlocks the audio.',
+                style: DHTypography.body(size: 13, height: 1.5),
+                textAlign: TextAlign.center,
+              ),
+              if (!signedIn) ...[
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => context.push('/sign-in'),
+                  child: const Text('Sign in'),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
 
   Widget _signInPrompt(BuildContext context) => Container(
         width: double.infinity,
