@@ -1,32 +1,36 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
-import '../services/audio_player_service.dart';
+import '../services/audio_handler.dart';
 
-/// Single shared audio player instance. Not `.autoDispose` — audio should
-/// keep playing when the user navigates away from the player screen.
-final audioPlayerServiceProvider = Provider<AudioPlayerService>((ref) {
-  final service = AudioPlayerService();
-  ref.onDispose(() => service.dispose());
-  return service;
+/// The one audio handler, built in `main()` before the app starts because
+/// registering with the OS media session is async.
+///
+/// Overridden in the root ProviderScope; reading it without that override is a
+/// programming error rather than something to paper over with a fallback.
+final audioHandlerProvider = Provider<DivineHealingAudioHandler>((ref) {
+  throw UnimplementedError(
+    'audioHandlerProvider must be overridden in main() with the instance '
+    'returned by initAudioHandler().',
+  );
 });
 
 /// True when the player is actively playing (as opposed to paused/stopped).
 final audioPlayingProvider = StreamProvider<bool>((ref) {
-  return ref.watch(audioPlayerServiceProvider).playingStream;
+  return ref.watch(audioHandlerProvider).playingStream;
 });
 
 /// Current playback position, updates roughly 30 times per second.
 final audioPositionProvider = StreamProvider<Duration>((ref) {
-  return ref.watch(audioPlayerServiceProvider).positionStream;
+  return ref.watch(audioHandlerProvider).positionStream;
 });
 
 /// Total duration of the loaded track (null while loading / before ready).
 final audioDurationProvider = StreamProvider<Duration?>((ref) {
-  return ref.watch(audioPlayerServiceProvider).durationStream;
+  return ref.watch(audioHandlerProvider).durationStream;
 });
 
 /// Full player state (loading / buffering / ready / completed).
 final audioPlayerStateProvider = StreamProvider<PlayerState>((ref) {
-  return ref.watch(audioPlayerServiceProvider).playerStateStream;
+  return ref.watch(audioHandlerProvider).playerStateStream;
 });

@@ -39,8 +39,8 @@ class _ContentDetailScreenState extends ConsumerState<ContentDetailScreen> {
       return;
     }
 
-    final playerService = ref.read(audioPlayerServiceProvider);
-    final alreadyLoaded = playerService.currentSessionId == session.id;
+    final player = ref.read(audioHandlerProvider);
+    final alreadyLoaded = player.currentSessionId == session.id;
 
     if (!alreadyLoaded) {
       setState(() {
@@ -53,7 +53,7 @@ class _ContentDetailScreenState extends ConsumerState<ContentDetailScreen> {
         if (url == null) {
           throw StateError('Audio URL unavailable for this session.');
         }
-        await playerService.setTrack(sessionId: session.id, url: url);
+        await player.setTrack(session: session, url: url);
       } on AudioAccessDeniedException {
         // Storage had the final say and refused. Our local subscription
         // state was stale, so re-read it and show the paywall rather than a
@@ -76,7 +76,7 @@ class _ContentDetailScreenState extends ConsumerState<ContentDetailScreen> {
       setState(() => _audioLoading = false);
     }
 
-    await playerService.togglePlayPause();
+    await player.togglePlayPause();
   }
 
   @override
@@ -345,8 +345,8 @@ class _ContentDetailScreenState extends ConsumerState<ContentDetailScreen> {
     final duration =
         ref.watch(audioDurationProvider).valueOrNull ?? Duration.zero;
 
-    final playerService = ref.read(audioPlayerServiceProvider);
-    final isCurrentTrack = playerService.currentSessionId == s.id;
+    final player = ref.read(audioHandlerProvider);
+    final isCurrentTrack = player.currentSessionId == s.id;
     final locked = !_hasAccess(s);
     final canPlay = s.hasAudio && !_audioLoading;
 
@@ -389,7 +389,7 @@ class _ContentDetailScreenState extends ConsumerState<ContentDetailScreen> {
             _Scrubber(
               position: isCurrentTrack ? position : Duration.zero,
               duration: duration,
-              onSeek: (target) => playerService.seek(target),
+              onSeek: (target) => player.seek(target),
             ),
             const SizedBox(height: 4),
             Row(
