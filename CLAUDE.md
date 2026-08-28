@@ -268,7 +268,11 @@ Splash / Home / Module page / Meditation player / Journaling screen — detailed
 - Mobile-responsive (tested at 390x844 iPhone viewport)
 - **Sent to the client 2026-08-25 for M1 approval**
 - Redeploy: `cd divine_healing/build/web && npx vercel deploy --prod --yes --name divine-healing --scope tyrone-jher-tongols-projects`
-- Rebuild: `cd divine_healing && "C:/src/flutter/bin/flutter.bat" build web --release`
+- Rebuild: `cd divine_healing && .\run_local.ps1 build web --release`
+  - **Must go through `run_local.ps1`.** Calling `flutter build web --release`
+    directly passes no `--dart-define`, so `Env.hasSupabase` is false and the
+    app silently falls back to M1 local-only mode — no audio, no auth, no
+    subscription. The script forwards only the client-safe keys.
 
 ## Immediate Next Steps
 
