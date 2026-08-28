@@ -13,6 +13,12 @@
 # Attempts that move bytes are not counted as failures — that distinction is
 # the whole point. A slow link makes progress every attempt and will finish; a
 # dead one moves nothing, and only then is there any reason to stop.
+#
+# "Moves nothing" needs to be patient, though. The VPN reconnects periodically
+# and DNS disappears with it, so a run of failures is normal and temporary; the
+# NDK download died at 418 MB to a minute of "Could not resolve host". So the
+# wait grows with each fruitless attempt, up to a minute, and it takes twenty
+# of them to give up — roughly a quarter of an hour of genuine silence.
 fetch() { # fetch <url> <dest>
   local url="$1" dest="$2" attempt before after stuck=0
   if [ -s "$dest" ]; then
@@ -37,13 +43,14 @@ fetch() { # fetch <url> <dest>
       echo "  $(numfmt --to=iec "$after") so far — reconnecting"
     else
       stuck=$((stuck + 1))
-      echo "  no progress ($stuck/6) at $(numfmt --to=iec "$after") — reconnecting"
-      if [ "$stuck" -ge 6 ]; then
-        echo "  six attempts moved nothing; the link is not coming back" >&2
+      echo "  no progress ($stuck/20) at $(numfmt --to=iec "$after") — reconnecting"
+      if [ "$stuck" -ge 20 ]; then
+        echo "  twenty attempts moved nothing; the link is not coming back" >&2
         return 1
       fi
     fi
-    sleep 10
+    # Back off as failures pile up, but never wait more than a minute.
+    sleep $(( stuck > 6 ? 60 : 10 + stuck * 8 ))
   done
   echo "  gave up after 80 attempts on $url" >&2
   return 1
