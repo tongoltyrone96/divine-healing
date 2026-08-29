@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../config/support.dart';
 import '../../theme.dart';
 
 /// Terms of Service — sets out the contract between the user and
@@ -10,7 +11,8 @@ class TermsOfServiceScreen extends StatelessWidget {
   const TermsOfServiceScreen({super.key});
 
   static const _effectiveDate = 'August 27, 2026';
-  static const _contactEmail = 'gstsaver@me.com';
+  // One definition, in config/support.dart.
+  static const _contactEmail = Support.email;
 
   @override
   Widget build(BuildContext context) {

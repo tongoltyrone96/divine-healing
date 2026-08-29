@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../config/support.dart';
 import '../../theme.dart';
 
 /// Privacy Policy — required by Apple App Store, Google Play, Google OAuth
@@ -13,7 +14,8 @@ class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
 
   static const _effectiveDate = 'August 27, 2026';
-  static const _contactEmail = 'gstsaver@me.com';
+  // One definition, in config/support.dart.
+  static const _contactEmail = Support.email;
 
   @override
   Widget build(BuildContext context) {

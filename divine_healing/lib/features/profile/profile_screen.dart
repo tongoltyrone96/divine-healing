@@ -7,6 +7,7 @@ import '../../config/stripe_links.dart';
 import '../../models/subscription_status.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/subscription_providers.dart';
+import '../../config/support.dart';
 import '../../theme.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -56,7 +57,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final displayName = ref.watch(userDisplayNameProvider);
     final email = user?.email;
     final subAsync = ref.watch(subscriptionStatusProvider);
-    final hasSub = subAsync.valueOrNull?.hasFullAccess ?? false;
+    final sub = subAsync.valueOrNull;
+    final hasSub = sub?.hasFullAccess ?? false;
+    // Cancelled but still inside the paid period. Access continues, so the
+    // active card is right — but hiding the plans as well left no way back in,
+    // and the moment someone regrets cancelling is exactly when they need one.
+    final cancelled = sub?.isCanceledButActive ?? false;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
@@ -71,8 +77,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             _sectionHeader('Subscription'),
             const SizedBox(height: 12),
             if (hasSub) ...[
-              _activeSubscriptionCard(subAsync.value!),
-            ] else ...[
+              _activeSubscriptionCard(sub!),
+              if (cancelled) const SizedBox(height: 20),
+            ],
+            if (!hasSub || cancelled) ...[
+              if (cancelled) ...[
+                Text('Changed your mind?',
+                    style: DHTypography.heading(size: 16)),
+                const SizedBox(height: 4),
+                Text(
+                  'Resubscribe any time — you keep access until '
+                  '${_formatDate(sub!.currentPeriodEnd)} either way.',
+                  style: DHTypography.body(size: 13, height: 1.5),
+                ),
+                const SizedBox(height: 12),
+              ],
               _planCard(
                 context: context,
                 tag: 'ANNUAL · MOST POPULAR',
@@ -95,22 +114,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 email: email,
               ),
               const SizedBox(height: 12),
-              _freeForeverCard(),
+              if (!hasSub) _freeForeverCard(),
             ],
             const SizedBox(height: 28),
             _sectionHeader('Account'),
             const SizedBox(height: 8),
-            _accountTile(
-              icon: Icons.notifications_outlined,
-              title: 'Notifications',
-              subtitle: 'Daily reminders',
-              onTap: () {},
-            ),
+            // The Notifications row that used to sit here did nothing, and
+            // promised daily reminders the app cannot send — push is not built
+            // yet. A row that advertises a feature it does not have is worse
+            // than no row, and reviewers look for exactly that. It comes back
+            // with push.
             _accountTile(
               icon: Icons.help_outline,
               title: 'Help & Support',
-              subtitle: 'Contact us',
-              onTap: () {},
+              subtitle: Support.email,
+              onTap: () => _openSupportEmail(context),
+            ),
+            _accountTile(
+              icon: Icons.lock_outline,
+              title: 'Privacy Policy',
+              subtitle: 'How your data is handled',
+              onTap: () => context.push('/privacy'),
+            ),
+            _accountTile(
+              icon: Icons.description_outlined,
+              title: 'Terms of Service',
+              subtitle: 'The agreement you are on',
+              onTap: () => context.push('/terms'),
             ),
             const SizedBox(height: 32),
           ],
@@ -180,6 +210,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
     final url = Uri.parse(StripeLinks.withEmail(paymentLink, email));
     await launchUrl(url, mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> _openSupportEmail(BuildContext context) async {
+    final uri = Support.mailto();
+    if (await launchUrl(uri, mode: LaunchMode.externalApplication)) return;
+    // A device with no mail app configured would otherwise just swallow the
+    // tap, which is how the row behaved before this change.
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Email ${Support.email}')),
+      );
+    }
   }
 
   Widget _sectionHeader(String label) => Row(
@@ -354,7 +396,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(height: 8),
           Text(
             'You have full access to all 24 sessions and future content. '
-            'To cancel or update payment, email gstsaver@me.com.',
+            'To cancel or update payment, email ${Support.email}.',
             style: DHTypography.caption(color: DHColors.secondary),
           ),
         ],
