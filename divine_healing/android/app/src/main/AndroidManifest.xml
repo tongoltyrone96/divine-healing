@@ -32,6 +32,19 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+
+            <!-- Where Supabase sends the browser back after Google or
+                 Microsoft sign-in. Without it the browser has nowhere to
+                 hand control to and the app never learns the user signed
+                 in. Must match redirectTo in auth_service.dart and the
+                 allowed redirect list in the Supabase dashboard. -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="com.divinehealing.app"
+                      android:host="login-callback"/>
+            </intent-filter>
         </activity>
         <!-- audio_service. Without these the session dies the moment the
              app is backgrounded, and the lock screen has nothing to bind to. -->

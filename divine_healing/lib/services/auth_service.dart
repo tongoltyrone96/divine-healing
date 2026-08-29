@@ -13,6 +13,20 @@ class AuthService {
 
   final SupabaseClient _client;
 
+  /// Where the provider sends the browser back to.
+  ///
+  /// On web that is the page the user started from. On a phone it has to be
+  /// a scheme the OS can route to this app — passing null, as this did
+  /// before, left the browser sitting on Supabase's callback page with no
+  /// way back, so signing in appeared to do nothing.
+  ///
+  /// Registered in ios/Runner/Info.plist (CFBundleURLTypes) and in the
+  /// Android manifest, and it must also be on the allow-list under
+  /// Authentication > URL Configuration in the Supabase dashboard.
+  static const _mobileRedirect = 'com.divinehealing.app://login-callback';
+
+  String? get _redirectTo => kIsWeb ? Uri.base.origin : _mobileRedirect;
+
   /// Current auth user, or null if not signed in.
   User? get currentUser => _client.auth.currentUser;
 
@@ -27,7 +41,7 @@ class AuthService {
   Future<void> sendMagicLink(String email) async {
     await _client.auth.signInWithOtp(
       email: email,
-      emailRedirectTo: kIsWeb ? Uri.base.origin : null,
+      emailRedirectTo: _redirectTo,
       shouldCreateUser: true,
     );
   }
@@ -37,9 +51,10 @@ class AuthService {
   Future<bool> signInWithGoogle() async {
     return _client.auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo: kIsWeb ? Uri.base.origin : null,
-      authScreenLaunchMode:
-          kIsWeb ? LaunchMode.externalApplication : LaunchMode.platformDefault,
+      redirectTo: _redirectTo,
+      authScreenLaunchMode: kIsWeb
+          ? LaunchMode.externalApplication
+          : LaunchMode.inAppBrowserView,
     );
   }
 
@@ -47,10 +62,11 @@ class AuthService {
   Future<bool> signInWithMicrosoft() async {
     return _client.auth.signInWithOAuth(
       OAuthProvider.azure,
-      redirectTo: kIsWeb ? Uri.base.origin : null,
+      redirectTo: _redirectTo,
       scopes: 'email openid profile',
-      authScreenLaunchMode:
-          kIsWeb ? LaunchMode.externalApplication : LaunchMode.platformDefault,
+      authScreenLaunchMode: kIsWeb
+          ? LaunchMode.externalApplication
+          : LaunchMode.inAppBrowserView,
     );
   }
 
