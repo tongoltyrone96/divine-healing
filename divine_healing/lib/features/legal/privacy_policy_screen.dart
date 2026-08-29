@@ -47,7 +47,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
               _h('1. Information we collect'),
               _b('Account information', 'Your email address, name (if '
                   'provided by your sign-in provider), and profile photo (if '
-                  'shared through Google or Microsoft sign-in).'),
+                  'shared through Google sign-in).'),
               _b('Content you create', 'Journal entries from Shadow Work, '
                   'manifestation exercise answers, saved affirmations, and '
                   'session completion records.'),
@@ -69,7 +69,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   'servers in Northeast Asia (Tokyo).'),
               _b('Brevo', 'Sends transactional emails such as the sign-in '
                   'magic link.'),
-              _b('Google, Microsoft', 'Handle authentication if you sign in '
+              _b('Google', 'Handles authentication if you sign in '
                   'with these providers.'),
               _b('Apple App Store, Google Play, Stripe', 'Handle subscription '
                   'payments and receipt validation.'),

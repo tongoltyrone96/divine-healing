@@ -4,10 +4,12 @@ import 'package:url_launcher/url_launcher.dart' show LaunchMode;
 
 /// Thin wrapper around Supabase Auth.
 ///
-/// Supports Google + Microsoft (Azure) OAuth and email magic-link. Providers
-/// beyond email require the corresponding provider to be enabled in the
-/// Supabase Dashboard (Authentication > Providers). Errors surface upward so
-/// the UI can show a friendly message.
+/// Supports Google OAuth and email magic-link. Google needs the provider
+/// enabled in the Supabase Dashboard (Authentication > Providers). Errors
+/// surface upward so the UI can show a friendly message.
+///
+/// Microsoft was dropped at the client's request. The scope list in
+/// CLAUDE.md still names all three; that entry is the stale one.
 class AuthService {
   AuthService(this._client);
 
@@ -52,18 +54,6 @@ class AuthService {
     return _client.auth.signInWithOAuth(
       OAuthProvider.google,
       redirectTo: _redirectTo,
-      authScreenLaunchMode: kIsWeb
-          ? LaunchMode.externalApplication
-          : LaunchMode.inAppBrowserView,
-    );
-  }
-
-  /// Kick off Microsoft (Azure AD) OAuth flow.
-  Future<bool> signInWithMicrosoft() async {
-    return _client.auth.signInWithOAuth(
-      OAuthProvider.azure,
-      redirectTo: _redirectTo,
-      scopes: 'email openid profile',
       authScreenLaunchMode: kIsWeb
           ? LaunchMode.externalApplication
           : LaunchMode.inAppBrowserView,

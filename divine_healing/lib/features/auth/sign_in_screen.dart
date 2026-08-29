@@ -7,7 +7,7 @@ import '../../config/env.dart';
 import '../../providers/auth_providers.dart';
 import '../../theme.dart';
 
-/// Sign In — Google + Microsoft + Email magic link.
+/// Sign In — Google + Email magic link.
 ///
 /// OAuth providers must be enabled in the Supabase Dashboard (Authentication
 /// > Providers). Email magic-link uses Supabase's default SMTP.
@@ -42,19 +42,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       await svc.signInWithGoogle();
       // On success, browser redirects to Supabase → back to app; auth state
       // provider picks up the session. Nothing else to do here.
-    } catch (e) {
-      _showError(_friendly(e));
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  Future<void> _handleMicrosoft() async {
-    final svc = _requireAuth();
-    if (svc == null) return;
-    setState(() => _busy = true);
-    try {
-      await svc.signInWithMicrosoft();
     } catch (e) {
       _showError(_friendly(e));
     } finally {
@@ -347,22 +334,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         ),
       );
 
-  Widget _microsoftIcon() => SizedBox(
-        width: 20,
-        height: 20,
-        child: GridView.count(
-          crossAxisCount: 2,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 2,
-          crossAxisSpacing: 2,
-          children: const [
-            ColoredBox(color: Color(0xFFF25022)),
-            ColoredBox(color: Color(0xFF7FBA00)),
-            ColoredBox(color: Color(0xFF00A4EF)),
-            ColoredBox(color: Color(0xFFFFB900)),
-          ],
-        ),
-      );
 }
 
 class _ProviderButton extends StatelessWidget {
