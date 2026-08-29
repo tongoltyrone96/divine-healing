@@ -18,13 +18,19 @@ const _asset = 'assets/logo/client_logo.png';
 const _canvasWidth = 1200;
 const _canvasHeight = 630;
 
-/// Fraction of the canvas height the logo occupies. Low enough that the whole
-/// mark survives a tighter crop than the one measured on this device.
-const _logoScale = 0.68;
+/// Fraction of the canvas height the logo occupies.
+///
+/// Deliberately small. Two cards can show this image: the live session, which
+/// renders it about as drawn, and Android's dormant "resume playback" card,
+/// which zooms in and darkens it. At 0.68 the logo filled the live card but
+/// came out cropped on the dormant one. Sized for the tighter of the two, so
+/// the mark is whole in both — the live card simply carries more white around
+/// it, which is what the logo is designed to sit in anyway.
+const _logoScale = 0.5;
 
 /// Bumped whenever the composition changes, so a device holding an older
 /// rendering redraws instead of keeping it for the life of the install.
-const _revision = 2;
+const _revision = 3;
 
 Uri? _cached;
 
