@@ -305,11 +305,41 @@ must be App Store Connect users, and both already are.
 Builds 7 and 8 are VALID. `node data/20_appstore_api.js testflight-setup
 <emails>` is idempotent and adds more.
 
+### Store listing (2026-08-31)
+
+Everything that does not depend on the Paid Applications Agreement is
+done, through `data/20_appstore_api.js`:
+
+- **Copy** in `data/store/app_store_en-US.json`, applied with
+  `store-metadata`. Written from what the binary contains. **The client has
+  not seen this wording** — the drafts she approved were never written down.
+- **Age rating 4+.** All NONE except `healthOrWellnessTopics`, which is what
+  the whole app is. Apple's questionnaire has grown attributes since the
+  docs; missing ones surface only as 409s naming them.
+- **Screenshots** uploaded to the `APP_IPHONE_67` set, 1320x2868, produced
+  by the simulator workflow. `upload-screenshots <dir>` replaces the set
+  rather than appending.
+- **Privacy policy** at https://divine-healing-iota.vercel.app/privacy.
+  Every Vercel path but the root used to 404 — the build is a static
+  directory and `/privacy` is not a file. `web/vercel.json` rewrites to
+  index.html and travels with each build.
+
+Two API quirks: Apple rejects `limit` on singleton relationships, while the
+VPN stalls on a bare path, so those calls carry a `fields` parameter
+instead.
+
+**Worth a lawyer's eye before submission.** The Reiki page says balanced
+energy makes you "less likely to get sick". App Review rejects health
+claims it considers unsubstantiated, and this is the client's own wording,
+so it is her call rather than ours.
+
 ### Next
-1. Enable the Apple provider in Supabase — the last thing between build 8
-   and a working Apple sign-in.
-2. RevenueCat once the store payment details clear.
-3. Store listings: screenshots, age rating, privacy policy URL.
+1. RevenueCat, once the Paid Applications Agreement clears — subscription
+   products cannot be created before it does, so nothing here can start.
+2. Client: Apple tax and banking, Small Business Program, Play payment
+   details, twelve Play testers.
+3. Client: confirm the listing copy, whether "ABC" is deleted, and the two
+   title typos.
 
 ## Working Notes
 
