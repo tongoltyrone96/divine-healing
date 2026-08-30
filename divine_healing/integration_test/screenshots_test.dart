@@ -27,20 +27,21 @@ void main() {
     await binding.takeScreenshot('01-home');
 
     await _openTab(tester, binding, 'Library', '02-library');
+    await _openTab(tester, binding, 'Profile', '04-profile');
 
-    // A store listing that shows only list screens says nothing about what
-    // the app is for. Introduction to Reiki is one of the three free
-    // sessions, so it opens without a paywall in the way.
+    // The session screen is captured last, and deliberately. It sits outside
+    // the tab shell, so leaving it means navigating back — and pageBack only
+    // recognises the stock back buttons, not this app's own. Ending here
+    // needs no way out. The file names are the store's running order, which
+    // does not have to match the order they were taken in.
+    await _openTab(tester, binding, 'Library', '02-library');
     final session = find.text('Introduction to Reiki');
     if (session.evaluate().isNotEmpty) {
+      // One of the three free sessions, so no paywall stands in front of it.
       await tester.tap(session.first);
       await _settle(tester, const Duration(seconds: 4));
       await binding.takeScreenshot('03-session');
-      await tester.pageBack();
-      await _settle(tester, const Duration(seconds: 2));
     }
-
-    await _openTab(tester, binding, 'Profile', '04-profile');
   });
 }
 

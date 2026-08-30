@@ -63,8 +63,29 @@ function token() {
   return `${signingInput}.${signature}`;
 }
 
-async function api(method, endpoint, body) {
-  const res = await fetch(`${BASE}${endpoint}`, {
+/// Astrill's proxy drops connections rather than refusing them, so a request
+/// fails as a bare "fetch failed" with nothing to distinguish it from being
+/// offline. Retrying is the only way to tell the difference. Only the
+/// transport is retried — an HTTP error is the server's real answer.
+async function api(method, endpoint, body, attempt = 1) {
+  const MAX = 4;
+  let res;
+  try {
+    res = await request(method, endpoint, body);
+  } catch (e) {
+    if (attempt >= MAX) {
+      throw new Error(
+        `${e.message} after ${MAX} attempts — check the VPN`,
+      );
+    }
+    await new Promise((r) => setTimeout(r, 400 * attempt));
+    return api(method, endpoint, body, attempt + 1);
+  }
+  return handle(res);
+}
+
+function request(method, endpoint, body) {
+  return fetch(`${BASE}${endpoint}`, {
     method,
     headers: {
       Authorization: `Bearer ${token()}`,
@@ -72,6 +93,9 @@ async function api(method, endpoint, body) {
     },
     body: body ? JSON.stringify(body) : undefined,
   });
+}
+
+async function handle(res) {
   const text = await res.text();
   let json = null;
   try {
