@@ -1,4 +1,6 @@
 import 'package:flutter/gestures.dart';
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,7 +9,7 @@ import '../../config/env.dart';
 import '../../providers/auth_providers.dart';
 import '../../theme.dart';
 
-/// Sign In — Google + Email magic link.
+/// Sign In — Google, Apple (iOS only) and email magic link.
 ///
 /// OAuth providers must be enabled in the Supabase Dashboard (Authentication
 /// > Providers). Email magic-link uses Supabase's default SMTP.
@@ -32,6 +34,19 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         _showError('Sign-in failed: $err. Please request a new link.');
       }
     });
+  }
+
+  Future<void> _handleApple() async {
+    final svc = _requireAuth();
+    if (svc == null) return;
+    setState(() => _busy = true);
+    try {
+      await svc.signInWithApple();
+    } catch (e) {
+      _showError(_friendly(e));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _handleGoogle() async {
@@ -238,6 +253,17 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     label: 'Continue with Google',
                     onPressed: _busy ? null : _handleGoogle,
                   ),
+                  // iOS only. Apple mandates this button wherever another
+                  // provider is offered; on Android it would just be a web
+                  // sheet nobody asked for.
+                  if (defaultTargetPlatform == TargetPlatform.iOS) ...[
+                    const SizedBox(height: 12),
+                    _ProviderButton(
+                      icon: const Icon(Icons.apple, size: 22, color: Colors.black),
+                      label: 'Continue with Apple',
+                      onPressed: _busy ? null : _handleApple,
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   _ProviderButton(
                     icon: const Icon(Icons.mail_outline,

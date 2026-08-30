@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart' show LaunchMode;
 
 /// Thin wrapper around Supabase Auth.
 ///
-/// Supports Google OAuth and email magic-link. Google needs the provider
+/// Supports Google and Apple OAuth, and email magic-link. Google needs the provider
 /// enabled in the Supabase Dashboard (Authentication > Providers). Errors
 /// surface upward so the UI can show a friendly message.
 ///
@@ -53,6 +53,22 @@ class AuthService {
   Future<bool> signInWithGoogle() async {
     return _client.auth.signInWithOAuth(
       OAuthProvider.google,
+      redirectTo: _redirectTo,
+      authScreenLaunchMode: kIsWeb
+          ? LaunchMode.externalApplication
+          : LaunchMode.inAppBrowserView,
+    );
+  }
+
+  /// Apple requires Sign in with Apple wherever a third-party sign-in is
+  /// offered, so the Google button obliges us to carry this one. Same OAuth
+  /// path and same redirect, which is the one already proven on device.
+  ///
+  /// Shown only on iOS: Apple does not require it elsewhere, and a button
+  /// that sends an Android user through a web sheet is worse than no button.
+  Future<bool> signInWithApple() async {
+    return _client.auth.signInWithOAuth(
+      OAuthProvider.apple,
       redirectTo: _redirectTo,
       authScreenLaunchMode: kIsWeb
           ? LaunchMode.externalApplication

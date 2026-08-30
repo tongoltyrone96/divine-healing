@@ -66,3 +66,8 @@ Thumbs.db
 # Useful to read, not ours to publish.
 *.msg
 *.eml
+
+# App Store Connect API private key. Grants API access to the client's
+# Apple team; downloadable once and not replaceable, only revocable.
+AuthKey_*.p8
+*.p8
