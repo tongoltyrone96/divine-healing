@@ -239,35 +239,39 @@ Recovered from the Glide bundle before she confirmed it; wired into
 
 ### iOS builds (2026-08-31)
 
-The repo is now private at `tongoltyrone96/divine-healing` and
-`.github/workflows/ios-testflight.yml` builds and uploads on
-`workflow_dispatch`. It works: builds 5 and 6 both reached
-`UPLOAD SUCCEEDED with no errors`.
+Working end to end. The repo is private at `tongoltyrone96/divine-healing`
+and `.github/workflows/ios-testflight.yml` builds, signs and uploads on
+`workflow_dispatch`. **Build 7 is VALID in TestFlight.**
 
-**Neither build ever appeared in TestFlight.** `/v1/builds` returns zero
-across the whole team, more than a day after the first upload. Apple
-discarded them during processing and emails the reason to the Account
-Holder — an inbox we do not have. Everything checkable locally is correct,
-and was checked by unpacking the IPA:
+Getting there took four attempts, and three of the four failures pointed
+somewhere other than their cause:
 
-- signature: no provisioned devices, `get-task-allow` false,
-  `beta-reports-active` true, team `B942978KGQ` — a valid App Store signature
-- `CFBundleIconName` present (missing in build 5, which alone explains that
-  one; build 6 has it and was discarded anyway)
-- `ITSAppUsesNonExemptEncryption` false, `UIBackgroundModes` audio
-- 1024 marketing icon present, RGB with no alpha channel
-- every third-party SDK ships its privacy manifest
+1. The workflow file would not parse — a `python3 -c` block inside a YAML
+   block scalar. GitHub reported it as a missing `workflow_dispatch`
+   trigger.
+2. Automatic signing asked Apple for a *development* profile, which lists
+   permitted devices; the team has none. The error named the missing
+   devices, not the wrong profile type.
+3. Signing settings passed to `xcodebuild` applied to every Pod and SwiftPM
+   package, none of which accept a provisioning profile.
+4. **ITMS-90683** — no `NSMicrophoneUsageDescription`. Builds 5 and 6
+   uploaded with no errors and were then discarded during processing.
+   Apple emails the reason to the Account Holder only, so from this side it
+   looked like the builds had simply vanished. The app never records; a
+   linked media framework references the API, and that alone requires the
+   string.
 
-So the next step is not another build. It is the rejection email, from
-gstsaver@me.com or whichever address holds the Apple ID. Without it,
-each attempt costs ten macOS minutes to learn nothing.
+`CFBundleIconName` and `ITSAppUsesNonExemptEncryption` were missing too,
+found by unpacking the IPA from the run artifact rather than waiting on
+another email. Unpacking the artifact is much cheaper than a rebuild —
+worth doing first whenever a build disappears.
 
-The app-level `PrivacyInfo.xcprivacy` is absent. Apple treats that as a
-warning rather than grounds for discarding a build, so it is on the list
-but is unlikely to be the cause.
+The app-level `PrivacyInfo.xcprivacy` is still absent. Apple treats that as
+a warning, so it is on the list but has never blocked a build.
 
 ### Next
-1. Read Apple's rejection email; fix what it names.
+1. TestFlight testers — build 7 is installable as soon as a group exists
+   and the client is invited.
 2. Sign in with Apple — the package is already in the build, the button is
    not on the sign-in screen, and Apple requires it wherever Google sign-in
    appears.
