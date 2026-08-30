@@ -4,13 +4,24 @@
 # Android is not built here — it builds locally under WSL, because Astrill
 # VPN's Winsock LSP crashes Gradle's JVM on Windows. See automation/wsl/.
 #
-# Signing is done by Xcode itself. The App Store Connect key has Admin
-# access, so -allowProvisioningUpdates lets Xcode create the distribution
-# certificate and provisioning profile on the fly. Nothing is stored here and
-# nothing expires quietly in a keychain.
+# Signing is manual, and deliberately so. Automatic signing with
+# -allowProvisioningUpdates was tried first: Xcode kept asking Apple for a
+# *development* profile, which lists the devices allowed to run the build.
+# This team has registered none, so every archive died on "your team has no
+# devices from which to generate a provisioning profile" — a message that
+# points at the wrong problem entirely. It also left two unused development
+# certificates behind on the account.
+#
+# The certificate and profile are therefore created up front, by
+# data/20_appstore_api.js create-distribution, and CI signs with exactly
+# those. Nothing is inferred.
 #
 # Secrets (set with `gh secret set`, never in the repo):
 #   APPSTORE_ISSUER_ID, APPSTORE_KEY_ID, APPSTORE_TEAM_ID, APPSTORE_P8
+#   APPSTORE_DIST_P12, APPSTORE_DIST_P12_PASSWORD, APPSTORE_PROFILE
+#
+# The certificate expires 2027-08-30. Re-run create-distribution after
+# revoking the old one, then replace the three signing secrets.
 #
 # Note on cost: macOS minutes bill at 10x on a private repo, so the free
 # allowance is roughly 200 minutes a month — about eight builds. Run it
@@ -29,7 +40,7 @@ on:
 env:
   FLUTTER_VERSION: 3.47.1
   BUNDLE_ID: com.divinehealing.app
-  APP_STORE_APP_ID: "6806764325"
+  PROFILE_NAME: Divine Healing App Store
   # The publishable Supabase pair. Already shipped inside the web bundle, so
   # there is nothing to protect; the Stripe secret is server-side only and
   # must never appear here.
@@ -54,25 +65,53 @@ jobs:
         working-directory: divine_healing
         run: flutter pub get
 
-      - name: Stage the App Store Connect key
+      - name: Load the signing material
+        env:
+          P12: ${{ secrets.APPSTORE_DIST_P12 }}
+          P12_PASSWORD: ${{ secrets.APPSTORE_DIST_P12_PASSWORD }}
+          PROFILE: ${{ secrets.APPSTORE_PROFILE }}
+          P8: ${{ secrets.APPSTORE_P8 }}
+          KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
         run: |
-          # altool looks here by convention, and xcodebuild is handed the path
-          # explicitly. Written outside the workspace so it cannot be picked up
-          # by anything that archives the checkout.
+          # A throwaway keychain, so nothing is left behind on the runner and
+          # the login keychain is never unlocked.
+          KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 3600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+
+          echo "$P12" | base64 --decode > "$RUNNER_TEMP/dist.p12"
+          security import "$RUNNER_TEMP/dist.p12" -k "$KEYCHAIN" \
+            -P "$P12_PASSWORD" -T /usr/bin/codesign -T /usr/bin/security
+          rm -f "$RUNNER_TEMP/dist.p12"
+
+          # Without this, codesign prompts for permission to use the key and
+          # hangs until the job times out.
+          security set-key-partition-list -S apple-tool:,apple: \
+            -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" > /dev/null
+          security list-keychains -d user -s "$KEYCHAIN" login.keychain-db
+
+          # Xcode moved this directory in 16; write both so the profile is
+          # found whichever version the runner image ships.
+          for dir in "$HOME/Library/MobileDevice/Provisioning Profiles" \
+                     "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
+            mkdir -p "$dir"
+            echo "$PROFILE" | base64 --decode > "$dir/divine-healing.mobileprovision"
+          done
+
+          # altool looks here by convention. Outside the workspace, so it
+          # cannot be swept up by anything that archives the checkout.
           mkdir -p ~/.appstoreconnect/private_keys
-          printf '%s' "${{ secrets.APPSTORE_P8 }}" \
-            > ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
+          printf '%s' "$P8" > ~/.appstoreconnect/private_keys/AuthKey_$KEY_ID.p8
           chmod 600 ~/.appstoreconnect/private_keys/*.p8
 
-      # github.run_number increments on every run of this workflow and never
-      # repeats, which is the only property TestFlight cares about. Querying
-      # TestFlight for its highest build was the obvious approach and needed a
-      # multi-line python one-liner inside a YAML block scalar — which broke
-      # the file outright. Not worth it for a counter.
-      #
-      # pubspec's number is left alone; it tracks Play, which is ahead, and
-      # the stores keep separate counters.
+          security find-identity -v -p codesigning "$KEYCHAIN"
 
+      # github.run_number increments on every run of this workflow and never
+      # repeats, which is the only property TestFlight cares about. pubspec's
+      # number is left alone; it tracks Play, which is ahead, and the two
+      # stores keep separate counters.
       - name: Compile without signing
         working-directory: divine_healing
         run: |
@@ -87,17 +126,18 @@ jobs:
       - name: Archive
         working-directory: divine_healing/ios
         run: |
+          # generic/platform=iOS keeps xcodebuild from resolving the
+          # destination against a connected device, of which a runner has none.
           xcodebuild archive \
             -workspace Runner.xcworkspace \
             -scheme Runner \
             -configuration Release \
+            -destination "generic/platform=iOS" \
             -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8 \
-            -authenticationKeyID "${{ secrets.APPSTORE_KEY_ID }}" \
-            -authenticationKeyIssuerID "${{ secrets.APPSTORE_ISSUER_ID }}" \
-            DEVELOPMENT_TEAM="${{ secrets.APPSTORE_TEAM_ID }}" \
-            CODE_SIGN_STYLE=Automatic
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
+            DEVELOPMENT_TEAM="${{ secrets.APPSTORE_TEAM_ID }}"
 
       - name: Export the IPA
         run: |
@@ -108,7 +148,12 @@ jobs:
           <dict>
             <key>method</key><string>app-store-connect</string>
             <key>teamID</key><string>${{ secrets.APPSTORE_TEAM_ID }}</string>
-            <key>signingStyle</key><string>automatic</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>$BUNDLE_ID</key><string>$PROFILE_NAME</string>
+            </dict>
             <key>uploadSymbols</key><true/>
             <key>destination</key><string>export</string>
           </dict>
@@ -117,11 +162,7 @@ jobs:
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
-            -exportPath "$RUNNER_TEMP/ipa" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8 \
-            -authenticationKeyID "${{ secrets.APPSTORE_KEY_ID }}" \
-            -authenticationKeyIssuerID "${{ secrets.APPSTORE_ISSUER_ID }}"
+            -exportPath "$RUNNER_TEMP/ipa"
 
       - name: Upload to TestFlight
         run: |

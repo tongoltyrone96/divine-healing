@@ -18,6 +18,8 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const os = require('os');
+const { execFileSync } = require('child_process');
 require('dotenv').config({
   path: path.join(__dirname, '..', 'divine_healing', '.env'),
 });
@@ -143,6 +145,134 @@ const [, , command, ...args] = process.argv;
       break;
     }
 
+    case 'list-certificates': {
+      const c = await api('GET', '/v1/certificates?limit=200');
+      console.log(`${c.data.length} certificate(s):`);
+      for (const x of c.data) {
+        const a = x.attributes;
+        console.log(
+          `  ${a.certificateType.padEnd(26)} ${a.name} ` +
+            `(expires ${a.expirationDate.slice(0, 10)})`,
+        );
+      }
+      if (!c.data.length) console.log('  (none)');
+      break;
+    }
+
+    case 'list-profiles': {
+      const c = await api('GET', '/v1/profiles?limit=200');
+      console.log(`${c.data.length} profile(s):`);
+      for (const x of c.data) {
+        const a = x.attributes;
+        console.log(
+          `  ${a.profileType.padEnd(22)} ${a.profileState.padEnd(8)} ${a.name}`,
+        );
+      }
+      if (!c.data.length) console.log('  (none)');
+      break;
+    }
+
+    case 'create-distribution': {
+      // Builds everything needed to sign for the App Store, without a Mac.
+      //
+      // Xcode's automatic signing was tried first and kept asking Apple for a
+      // *development* profile, which enumerates permitted devices — this team
+      // has none, so every archive failed. It also littered the account with
+      // two stray development certificates. Creating the distribution pair
+      // explicitly removes the guesswork: CI signs with exactly these.
+      const identifier = args[0] || 'com.divinehealing.app';
+      const out = path.join(__dirname, '..', 'divine_healing', '.signing');
+      fs.mkdirSync(out, { recursive: true });
+      const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'dh-signing-'));
+      const at = (f) => path.join(tmp, f);
+      const openssl = (a) => execFileSync('openssl', a, { stdio: 'pipe' });
+
+      // 1. A key that never leaves here, and the request Apple signs.
+      openssl(['req', '-new', '-newkey', 'rsa:2048', '-nodes',
+        '-keyout', at('key.pem'), '-out', at('csr.pem'),
+        '-subj', '/CN=Divine Healing Distribution/O=Strawberry Hope/C=AU']);
+
+      // 2. Apple only ever holds the public half.
+      let cert;
+      const existing = await api(
+        'GET', '/v1/certificates?filter[certificateType]=DISTRIBUTION');
+      if (existing.data.length) {
+        // A certificate cannot be re-downloaded with its private key, and the
+        // key here is new, so an existing one is useless to us. Apple allows
+        // very few distribution certificates, hence the explicit stop.
+        throw new Error(
+          'A distribution certificate already exists (' +
+            existing.data[0].attributes.name + '). Its private key is not on ' +
+            'this machine. Revoke it in App Store Connect -> Certificates, ' +
+            'then re-run — or recover the original .p12.');
+      }
+      cert = await api('POST', '/v1/certificates', {
+        data: {
+          type: 'certificates',
+          attributes: {
+            certificateType: 'DISTRIBUTION',
+            csrContent: fs.readFileSync(at('csr.pem'), 'utf8'),
+          },
+        },
+      });
+      fs.writeFileSync(at('cert.cer'),
+        Buffer.from(cert.data.attributes.certificateContent, 'base64'));
+      openssl(['x509', '-inform', 'DER', '-in', at('cert.cer'),
+        '-out', at('cert.pem')]);
+
+      // 3. Certificate plus private key, in the one format a keychain imports.
+      // The old PBE algorithms are named on purpose: OpenSSL 3 defaults to
+      // AES-256 with PBKDF2, which some `security import` builds still refuse.
+      const password = crypto.randomBytes(16).toString('hex');
+      openssl(['pkcs12', '-export', '-legacy',
+        '-inkey', at('key.pem'), '-in', at('cert.pem'),
+        '-out', at('dist.p12'), '-passout', 'pass:' + password,
+        '-name', 'Divine Healing Distribution']);
+
+      // 4. The profile ties bundle ID and certificate together.
+      const bundle = await api('GET',
+        '/v1/bundleIds?filter[identifier]=' + encodeURIComponent(identifier));
+      if (!bundle.data.length) {
+        throw new Error('Bundle ID not registered: ' + identifier);
+      }
+      const name = 'Divine Healing App Store';
+      const stale = await api('GET', '/v1/profiles?limit=200');
+      for (const pr of stale.data) {
+        if (pr.attributes.name === name) {
+          // A profile is pinned to a certificate; the old one now points at
+          // nothing we hold.
+          await api('DELETE', '/v1/profiles/' + pr.id);
+        }
+      }
+      const profile = await api('POST', '/v1/profiles', {
+        data: {
+          type: 'profiles',
+          attributes: { name, profileType: 'IOS_APP_STORE' },
+          relationships: {
+            bundleId: { data: { type: 'bundleIds', id: bundle.data[0].id } },
+            certificates: {
+              data: [{ type: 'certificates', id: cert.data.id }],
+            },
+          },
+        },
+      });
+      fs.writeFileSync(path.join(out, 'dist.p12'),
+        fs.readFileSync(at('dist.p12')));
+      fs.writeFileSync(path.join(out, 'profile.mobileprovision'),
+        Buffer.from(profile.data.attributes.profileContent, 'base64'));
+      fs.writeFileSync(path.join(out, 'password.txt'), password);
+      fs.rmSync(tmp, { recursive: true, force: true });
+
+      console.log('Distribution certificate and profile created.');
+      console.log('  certificate  ' + cert.data.attributes.name);
+      console.log('  expires      ' +
+        cert.data.attributes.expirationDate.slice(0, 10));
+      console.log('  profile      ' + profile.data.attributes.name +
+        '  (' + profile.data.attributes.uuid + ')');
+      console.log('  written to   divine_healing/.signing/  — gitignored');
+      break;
+    }
+
     case 'create-app': {
       // Apple refuses this, and the refusal is worth keeping so nobody
       // spends another hour on it:
@@ -152,10 +282,8 @@ const [, , command, ...args] = process.argv;
       // endpoint. The record has to be made in the browser, once, and
       // everything after it (builds, TestFlight, metadata) is scriptable.
       console.log(
-        'The App Store Connect API cannot create apps. Create the record at
-' +
-          '  https://appstoreconnect.apple.com/apps  ->  +  ->  New App
-' +
+        'The App Store Connect API cannot create apps. Create the record at\n' +
+          '  https://appstoreconnect.apple.com/apps  ->  +  ->  New App\n' +
           'The bundle ID is already registered, so it appears in the dropdown.',
       );
       break;
@@ -163,7 +291,8 @@ const [, , command, ...args] = process.argv;
 
     default:
       console.error(
-        'commands: whoami | list-bundle-ids | register-bundle-id <id> <name>',
+        'commands: whoami | list-bundle-ids | register-bundle-id <id> <name>\n' +
+          '          list-certificates | list-profiles | create-distribution',
       );
       process.exit(1);
   }
