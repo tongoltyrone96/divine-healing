@@ -51,6 +51,13 @@
 	<!-- The app only ever talks HTTPS, which Apple exempts. Declaring it
 	     here keeps TestFlight from holding every build behind an export
 	     compliance question. -->
+	<!-- The app plays audio and never records. One of the linked media
+	     frameworks references the microphone API, and Apple requires a
+	     purpose string whenever that is true of anything in the binary —
+	     ITMS-90683 discarded builds 5 and 6 for its absence. iOS shows
+	     this text only if permission is ever requested, which it is not. -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Divine Healing plays guided meditations and never records audio. The audio framework it uses requires this permission to be declared.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>UIBackgroundModes</key>
