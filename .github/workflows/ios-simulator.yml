@@ -23,7 +23,7 @@ on:
       device:
         description: Simulator model
         required: false
-        default: iPhone 16 Pro Max
+        default: iPhone 17 Pro Max
 
 env:
   FLUTTER_VERSION: 3.47.1
@@ -56,8 +56,11 @@ jobs:
         run: |
           WANTED="${{ inputs.device }}"
           # Runner images rename and renumber devices between releases, so the
-          # requested model is a preference, not a requirement — falling back
-          # to any iPhone beats failing the run over a name.
+          # requested model is a preference, not a requirement. The fallback
+          # looks for any Pro Max before settling for any iPhone at all:
+          # Apple accepts only certain screenshot sizes, and 6.9" means a Pro
+          # Max at 1320x2868. A plain iPhone 17 gives 1206x2622, which is a
+          # perfectly good smoke test and a screenshot the store will reject.
           # `set -e` is on and an assignment carries the exit status of its
           # command substitution, so an unmatched grep would end the step
           # before the fallback below ever ran.
@@ -65,7 +68,15 @@ jobs:
             | grep -F "$WANTED (" | head -1 \
             | grep -oE '[0-9A-F]{8}-[0-9A-F-]{27}' || true)
           if [ -z "$UDID" ]; then
-            echo "::warning::$WANTED not available; using the newest iPhone"
+            echo "::warning::$WANTED not available; looking for any Pro Max"
+            UDID=$(xcrun simctl list devices available \
+              | grep -E '^\s+iPhone.*Pro Max' | tail -1 \
+              | grep -oE '[0-9A-F]{8}-[0-9A-F-]{27}' || true)
+          fi
+          if [ -z "$UDID" ]; then
+            echo "::warning::no Pro Max either; screenshots will be the wrong"
+            echo "::warning::size for the App Store, but the run still proves"
+            echo "::warning::the app launches"
             UDID=$(xcrun simctl list devices available \
               | grep -E '^\s+iPhone' | tail -1 \
               | grep -oE '[0-9A-F]{8}-[0-9A-F-]{27}' || true)
