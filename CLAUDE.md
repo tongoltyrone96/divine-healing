@@ -269,13 +269,47 @@ worth doing first whenever a build disappears.
 The app-level `PrivacyInfo.xcprivacy` is still absent. Apple treats that as
 a warning, so it is on the list but has never blocked a build.
 
+### Sign in with Apple (2026-08-31)
+
+Done and shipped in build 8. The button had been on the sign-in screen all
+along but ran the web OAuth flow; iOS now opens the system sheet through
+AuthenticationServices and hands Supabase the identity token. The nonce is
+generated raw, hashed for Apple, and the raw value given to Supabase so a
+token cannot be replayed between sessions.
+
+The entitlement meant enabling `APPLE_ID_AUTH` on the bundle ID and
+reissuing the provisioning profile — a profile is a snapshot of the bundle
+ID's capabilities when it was made, so the old one would have been
+rejected for claiming an entitlement it did not carry. Both steps are
+`node data/20_appstore_api.js refresh-profile`; it also prints the command
+to update the `APPSTORE_PROFILE` secret, which must be done or the next
+build signs with the stale profile.
+
+Apple rejects the capability without a configuration — "Please select at
+least one configuration for Sign In with Apple" — so the request sends
+`APPLE_ID_AUTH_APP_CONSENT: PRIMARY_APP_CONSENT`.
+
+**Not yet working at runtime.** Supabase needs the Apple provider enabled
+with `com.divinehealing.app` as an authorised client ID; until then the
+button reaches Apple and fails on the way back. Dashboard only — there is
+no management token in `.env`.
+
+### TestFlight
+
+Internal group **Internal Testers**, `hasAccessToAllBuilds`, with
+gstsaver@me.com and tongoltyrone84@gmail.com invited. Internal rather than
+external because internal groups skip Beta App Review, which holds an
+external group's first build for a day or two; the cost is that testers
+must be App Store Connect users, and both already are.
+
+Builds 7 and 8 are VALID. `node data/20_appstore_api.js testflight-setup
+<emails>` is idempotent and adds more.
+
 ### Next
-1. TestFlight testers — build 7 is installable as soon as a group exists
-   and the client is invited.
-2. Sign in with Apple — the package is already in the build, the button is
-   not on the sign-in screen, and Apple requires it wherever Google sign-in
-   appears.
-3. RevenueCat once the store payment details clear.
+1. Enable the Apple provider in Supabase — the last thing between build 8
+   and a working Apple sign-in.
+2. RevenueCat once the store payment details clear.
+3. Store listings: screenshots, age rating, privacy policy URL.
 
 ## Working Notes
 
