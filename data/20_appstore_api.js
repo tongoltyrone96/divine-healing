@@ -37,6 +37,7 @@ if (!ISSUER || !KEY_ID || !P8) {
 }
 
 const BASE = 'https://api.appstoreconnect.apple.com';
+const BUNDLE_ID = 'com.divinehealing.app';
 
 /// Apple wants an ES256 JWT, and specifically the JOSE signature form — a bare
 /// r||s pair. Node signs EC keys as DER by default, which Apple rejects as
@@ -172,6 +173,26 @@ const [, , command, ...args] = process.argv;
       break;
     }
 
+    case 'list-builds': {
+      // Processing takes a few minutes after altool reports success, and a
+      // build is not testable until it leaves PROCESSING.
+      const app = await api('GET',
+        '/v1/apps?filter[bundleId]=' + encodeURIComponent(BUNDLE_ID));
+      if (!app.data.length) throw new Error('No app record for ' + BUNDLE_ID);
+      const builds = await api('GET',
+        '/v1/builds?filter[app]=' + app.data[0].id + '&limit=10');
+      console.log(app.data[0].attributes.name + ' — ' +
+        builds.data.length + ' build(s):');
+      for (const b of builds.data) {
+        const a = b.attributes;
+        console.log('  build ' + String(a.version).padEnd(6) +
+          a.processingState.padEnd(12) +
+          'uploaded ' + a.uploadedDate.slice(0, 16).replace('T', ' '));
+      }
+      if (!builds.data.length) console.log('  (none yet)');
+      break;
+    }
+
     case 'create-distribution': {
       // Builds everything needed to sign for the App Store, without a Mac.
       //
@@ -292,7 +313,7 @@ const [, , command, ...args] = process.argv;
     default:
       console.error(
         'commands: whoami | list-bundle-ids | register-bundle-id <id> <name>\n' +
-          '          list-certificates | list-profiles | create-distribution',
+          '          list-certificates | list-profiles | create-distribution | list-builds',
       );
       process.exit(1);
   }
