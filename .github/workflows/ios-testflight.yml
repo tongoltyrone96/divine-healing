@@ -1,0 +1,163 @@
+# Builds the iOS app and uploads it to TestFlight.
+#
+# There is no Mac on this project, so this runs on GitHub's macOS runners.
+# Android is not built here — it builds locally under WSL, because Astrill
+# VPN's Winsock LSP crashes Gradle's JVM on Windows. See automation/wsl/.
+#
+# Signing is done by Xcode itself. The App Store Connect key has Admin
+# access, so -allowProvisioningUpdates lets Xcode create the distribution
+# certificate and provisioning profile on the fly. Nothing is stored here and
+# nothing expires quietly in a keychain.
+#
+# Secrets (set with `gh secret set`, never in the repo):
+#   APPSTORE_ISSUER_ID, APPSTORE_KEY_ID, APPSTORE_TEAM_ID, APPSTORE_P8
+#
+# Note on cost: macOS minutes bill at 10x on a private repo, so the free
+# allowance is roughly 200 minutes a month — about eight builds. Run it
+# deliberately, which is why there is no push trigger.
+
+name: iOS — TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      notes:
+        description: What changed in this build
+        required: false
+        default: Internal test build.
+
+env:
+  FLUTTER_VERSION: 3.47.1
+  BUNDLE_ID: com.divinehealing.app
+  APP_STORE_APP_ID: "6806764325"
+  # The publishable Supabase pair. Already shipped inside the web bundle, so
+  # there is nothing to protect; the Stripe secret is server-side only and
+  # must never appear here.
+  SUPABASE_URL: https://buzdtsupgmytqokgfsbn.supabase.co
+  SUPABASE_ANON_KEY: sb_publishable_7m-bk8K9-pW7CUEu-3Dnyg_dpaZWQDa
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install packages
+        working-directory: divine_healing
+        run: flutter pub get
+
+      - name: Stage the App Store Connect key
+        run: |
+          # altool looks here by convention, and xcodebuild is handed the path
+          # explicitly. Written outside the workspace so it cannot be picked up
+          # by anything that archives the checkout.
+          mkdir -p ~/.appstoreconnect/private_keys
+          printf '%s' "${{ secrets.APPSTORE_P8 }}" \
+            > ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
+          chmod 600 ~/.appstoreconnect/private_keys/*.p8
+
+      - name: Work out the build number
+        id: build_number
+        run: |
+          # pubspec's build number tracks Play, which is already ahead. The two
+          # stores keep separate counters, so reusing it would collide on one
+          # side. Ask TestFlight what it has and go one above.
+          KEY=~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
+          LATEST=$(xcrun altool --list-builds \
+            --apiKey "${{ secrets.APPSTORE_KEY_ID }}" \
+            --apiIssuer "${{ secrets.APPSTORE_ISSUER_ID }}" \
+            --output-format json 2>/dev/null \
+            | python3 -c "
+import json,sys
+try:
+    d = json.load(sys.stdin)
+except Exception:
+    print(0); raise SystemExit
+nums = []
+for item in d.get('builds', []) or []:
+    try:
+        nums.append(int(item.get('buildVersion', 0)))
+    except (TypeError, ValueError):
+        pass
+print(max(nums) if nums else 0)
+" || echo 0)
+          NEXT=$(( ${LATEST:-0} + 1 ))
+          echo "TestFlight is at ${LATEST:-0}; building $NEXT"
+          echo "number=$NEXT" >> "$GITHUB_OUTPUT"
+
+      - name: Compile without signing
+        working-directory: divine_healing
+        run: |
+          # Two passes on purpose: Flutter produces the app and the generated
+          # Xcode config, then xcodebuild archives it with credentials Flutter
+          # has no way to pass through.
+          flutter build ios --release --no-codesign \
+            --build-number=${{ steps.build_number.outputs.number }} \
+            --dart-define=SUPABASE_URL=$SUPABASE_URL \
+            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+
+      - name: Archive
+        working-directory: divine_healing/ios
+        run: |
+          xcodebuild archive \
+            -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8 \
+            -authenticationKeyID "${{ secrets.APPSTORE_KEY_ID }}" \
+            -authenticationKeyIssuerID "${{ secrets.APPSTORE_ISSUER_ID }}" \
+            DEVELOPMENT_TEAM="${{ secrets.APPSTORE_TEAM_ID }}" \
+            CODE_SIGN_STYLE=Automatic
+
+      - name: Export the IPA
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>teamID</key><string>${{ secrets.APPSTORE_TEAM_ID }}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>destination</key><string>export</string>
+          </dict>
+          </plist>
+          PLIST
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/ipa" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8 \
+            -authenticationKeyID "${{ secrets.APPSTORE_KEY_ID }}" \
+            -authenticationKeyIssuerID "${{ secrets.APPSTORE_ISSUER_ID }}"
+
+      - name: Upload to TestFlight
+        run: |
+          xcrun altool --upload-app \
+            -f "$RUNNER_TEMP"/ipa/*.ipa \
+            -t ios \
+            --apiKey "${{ secrets.APPSTORE_KEY_ID }}" \
+            --apiIssuer "${{ secrets.APPSTORE_ISSUER_ID }}"
+
+      - name: Keep the IPA and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-${{ steps.build_number.outputs.number }}
+          path: |
+            ${{ runner.temp }}/ipa/*.ipa
+            ${{ runner.temp }}/Runner.xcarchive/Info.plist
+          if-no-files-found: warn
+          retention-days: 14
