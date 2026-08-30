@@ -10,6 +10,8 @@
 //   node data/20_appstore_api.js register-bundle-id com.divinehealing.app "Divine Healing"
 //   node data/20_appstore_api.js list-bundle-ids
 //
+// Note: apps cannot be created through this API — see the create-app case.
+//
 // Credentials come from divine_healing/.env:
 //   APPSTORE_ISSUER_ID, APPSTORE_KEY_ID, APPSTORE_P8_PATH
 
@@ -137,6 +139,24 @@ const [, , command, ...args] = process.argv;
       console.log(
         `Registered ${created.data.attributes.identifier} ` +
           `(id ${created.data.id})`,
+      );
+      break;
+    }
+
+    case 'create-app': {
+      // Apple refuses this, and the refusal is worth keeping so nobody
+      // spends another hour on it:
+      //   HTTP 403 — The resource 'apps' does not allow 'CREATE'.
+      //   Allowed operations are: GET_COLLECTION, GET_INSTANCE, UPDATE
+      // Not a permissions problem — the API simply has no app-creation
+      // endpoint. The record has to be made in the browser, once, and
+      // everything after it (builds, TestFlight, metadata) is scriptable.
+      console.log(
+        'The App Store Connect API cannot create apps. Create the record at
+' +
+          '  https://appstoreconnect.apple.com/apps  ->  +  ->  New App
+' +
+          'The bundle ID is already registered, so it appears in the dropdown.',
       );
       break;
     }
