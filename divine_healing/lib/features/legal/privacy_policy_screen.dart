@@ -49,7 +49,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
               _h('1. Information we collect'),
               _b('Account information', 'Your email address, name (if '
                   'provided by your sign-in provider), and profile photo (if '
-                  'shared through Google sign-in).'),
+                  'shared through Google sign-in). Signing in with Apple '
+                  'shares an email address and, on first sign-in only, a '
+                  'name.'),
               _b('Content you create', 'Journal entries from Shadow Work, '
                   'manifestation exercise answers, saved affirmations, and '
                   'session completion records.'),
@@ -71,8 +73,10 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   'servers in Northeast Asia (Tokyo).'),
               _b('Brevo', 'Sends transactional emails such as the sign-in '
                   'magic link.'),
-              _b('Google', 'Handles authentication if you sign in '
-                  'with these providers.'),
+              _b('Google and Apple', 'Handle authentication if you '
+                  'sign in with either provider. Apple offers Hide My '
+                  'Email, which gives us a relay address instead of '
+                  'your own; the App works the same either way.'),
               _b('Apple App Store, Google Play, Stripe', 'Handle subscription '
                   'payments and receipt validation.'),
               _b('Vercel', 'Serves the web version of the App.'),

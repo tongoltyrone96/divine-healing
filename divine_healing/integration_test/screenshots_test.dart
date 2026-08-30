@@ -27,11 +27,20 @@ void main() {
     await binding.takeScreenshot('01-home');
 
     await _openTab(tester, binding, 'Library', '02-library');
-    await _openTab(tester, binding, 'Profile', '03-profile');
 
-    // Back to Home so the run ends somewhere predictable, which matters if a
-    // later screenshot is ever added to the end of this list.
-    await _openTab(tester, binding, 'Home', '04-home-again');
+    // A store listing that shows only list screens says nothing about what
+    // the app is for. Introduction to Reiki is one of the three free
+    // sessions, so it opens without a paywall in the way.
+    final session = find.text('Introduction to Reiki');
+    if (session.evaluate().isNotEmpty) {
+      await tester.tap(session.first);
+      await _settle(tester, const Duration(seconds: 4));
+      await binding.takeScreenshot('03-session');
+      await tester.pageBack();
+      await _settle(tester, const Duration(seconds: 2));
+    }
+
+    await _openTab(tester, binding, 'Profile', '04-profile');
   });
 }
 
