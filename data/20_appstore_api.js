@@ -204,6 +204,68 @@ const [, , command, ...args] = process.argv;
       break;
     }
 
+    case 'testflight-setup': {
+      // Internal testing, not external: internal groups take App Store Connect
+      // users only, but they skip Beta App Review, which for an external group
+      // holds the first build for a day or two.
+      //
+      //   node data/20_appstore_api.js testflight-setup a@b.com c@d.com
+      const app = await api('GET',
+        '/v1/apps?filter[bundleId]=' + encodeURIComponent(BUNDLE_ID));
+      if (!app.data.length) throw new Error('No app record for ' + BUNDLE_ID);
+      const appId = app.data[0].id;
+
+      const groupName = 'Internal Testers';
+      const groups = await api('GET', '/v1/betaGroups?limit=200');
+      let group = groups.data.find((g) => g.attributes.name === groupName);
+      if (group) {
+        console.log('Group already exists: ' + groupName);
+      } else {
+        const created = await api('POST', '/v1/betaGroups', {
+          data: {
+            type: 'betaGroups',
+            attributes: {
+              name: groupName,
+              isInternalGroup: true,
+              // Every build reaches the group without being assigned by hand,
+              // which is the whole point of internal testing.
+              hasAccessToAllBuilds: true,
+            },
+            relationships: { app: { data: { type: 'apps', id: appId } } },
+          },
+        });
+        group = created.data;
+        console.log('Created group: ' + groupName);
+      }
+
+      const emails = args.length ? args : [];
+      if (!emails.length) {
+        console.log('No testers given. Pass emails to invite them.');
+        break;
+      }
+      const existing = await api('GET',
+        '/v1/betaTesters?filter[betaGroups]=' + group.id + '&limit=200');
+      const have = existing.data.map((t) => (t.attributes.email || '')
+        .toLowerCase());
+      for (const email of emails) {
+        if (have.includes(email.toLowerCase())) {
+          console.log('  already invited  ' + email);
+          continue;
+        }
+        await api('POST', '/v1/betaTesters', {
+          data: {
+            type: 'betaTesters',
+            attributes: { email },
+            relationships: {
+              betaGroups: { data: [{ type: 'betaGroups', id: group.id }] },
+            },
+          },
+        });
+        console.log('  invited          ' + email);
+      }
+      break;
+    }
+
     case 'refresh-profile': {
       // A provisioning profile is a snapshot of the bundle ID's capabilities
       // at the moment it was created. Turning a capability on does nothing to
@@ -409,7 +471,7 @@ const [, , command, ...args] = process.argv;
       console.error(
         'commands: whoami | list-bundle-ids | register-bundle-id <id> <name>\n' +
           '          list-certificates | list-profiles | create-distribution\n' +
-          '          list-builds | refresh-profile | get <endpoint>',
+          '          list-builds | refresh-profile | testflight-setup | get <endpoint>',
       );
       process.exit(1);
   }
