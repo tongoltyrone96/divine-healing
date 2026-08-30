@@ -228,6 +228,107 @@ const [, , command, ...args] = process.argv;
       break;
     }
 
+    case 'upload-screenshots': {
+      // Apple's upload is a three-step handshake, not a POST: reserve a slot
+      // and it answers with the URLs and byte ranges to PUT to, then the
+      // reservation is confirmed with a checksum. Skipping the confirmation
+      // leaves a screenshot that exists and never appears.
+      //
+      //   node data/20_appstore_api.js upload-screenshots <dir>
+      const dir = args[0];
+      if (!dir) {
+        console.error('usage: upload-screenshots <directory of .png files>');
+        process.exit(1);
+      }
+      const files = fs.readdirSync(dir).filter((f) => f.endsWith('.png')).sort();
+      if (!files.length) throw new Error('No .png files in ' + dir);
+
+      const app = await api('GET',
+        '/v1/apps?filter[bundleId]=' + encodeURIComponent(BUNDLE_ID));
+      const versions = await api('GET',
+        '/v1/apps/' + app.data[0].id + '/appStoreVersions?limit=1');
+      const vlocs = await api('GET', '/v1/appStoreVersions/' +
+        versions.data[0].id + '/appStoreVersionLocalizations?limit=20');
+      const vloc = vlocs.data.find((l) => l.attributes.locale === 'en-US');
+      if (!vloc) throw new Error('No en-US localization');
+
+      // APP_IPHONE_67 is the slot Apple uses for the largest iPhones, which
+      // covers the 1320x2868 a Pro Max simulator produces.
+      const displayType = 'APP_IPHONE_67';
+      const sets = await api('GET', '/v1/appStoreVersionLocalizations/' +
+        vloc.id + '/appScreenshotSets?limit=20');
+      let set = sets.data.find(
+        (x) => x.attributes.screenshotDisplayType === displayType);
+      if (!set) {
+        const made = await api('POST', '/v1/appScreenshotSets', {
+          data: {
+            type: 'appScreenshotSets',
+            attributes: { screenshotDisplayType: displayType },
+            relationships: {
+              appStoreVersionLocalization: {
+                data: { type: 'appStoreVersionLocalizations', id: vloc.id },
+              },
+            },
+          },
+        });
+        set = made.data;
+        console.log('Created the ' + displayType + ' set');
+      }
+
+      // Replacing rather than appending: a rerun should not leave the old
+      // screenshots sitting alongside the new ones in an arbitrary order.
+      const existing = await api('GET',
+        '/v1/appScreenshotSets/' + set.id + '/appScreenshots?limit=20');
+      for (const old of existing.data) {
+        await api('DELETE', '/v1/appScreenshots/' + old.id);
+      }
+      if (existing.data.length) {
+        console.log('Removed ' + existing.data.length + ' earlier screenshot(s)');
+      }
+
+      for (const name of files) {
+        const bytes = fs.readFileSync(path.join(dir, name));
+        const reserved = await api('POST', '/v1/appScreenshots', {
+          data: {
+            type: 'appScreenshots',
+            attributes: { fileSize: bytes.length, fileName: name },
+            relationships: {
+              appScreenshotSet: {
+                data: { type: 'appScreenshotSets', id: set.id },
+              },
+            },
+          },
+        });
+        for (const op of reserved.data.attributes.uploadOperations) {
+          const headers = {};
+          for (const h of op.requestHeaders) headers[h.name] = h.value;
+          // Not api(): these are presigned URLs, and sending our own
+          // Authorization header to them is refused.
+          const put = await fetch(op.url, {
+            method: op.method,
+            headers,
+            body: bytes.subarray(op.offset, op.offset + op.length),
+          });
+          if (!put.ok) {
+            throw new Error(name + ': upload returned HTTP ' + put.status);
+          }
+        }
+        await api('PATCH', '/v1/appScreenshots/' + reserved.data.id, {
+          data: {
+            type: 'appScreenshots',
+            id: reserved.data.id,
+            attributes: {
+              uploaded: true,
+              sourceFileChecksum: crypto.createHash('md5')
+                .update(bytes).digest('hex'),
+            },
+          },
+        });
+        console.log('  uploaded  ' + name + '  (' + bytes.length + ' bytes)');
+      }
+      break;
+    }
+
     case 'age-rating': {
       // Everything NONE, which is the honest answer for a meditation app and
       // yields a 4+ rating. unrestrictedWebAccess is false on purpose: the
@@ -630,7 +731,7 @@ const [, , command, ...args] = process.argv;
         'commands: whoami | list-bundle-ids | register-bundle-id <id> <name>\n' +
           '          list-certificates | list-profiles | create-distribution\n' +
           '          list-builds | refresh-profile | testflight-setup\n' +
-          '          store-metadata | age-rating | get <endpoint>',
+          '          store-metadata | age-rating | upload-screenshots <dir>',
       );
       process.exit(1);
   }
