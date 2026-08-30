@@ -1,4 +1,10 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:convert' show utf8;
+import 'dart:math' show Random;
+
+import 'package:crypto/crypto.dart' show sha256;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart' show LaunchMode;
 
@@ -61,19 +67,66 @@ class AuthService {
   }
 
   /// Apple requires Sign in with Apple wherever a third-party sign-in is
-  /// offered, so the Google button obliges us to carry this one. Same OAuth
-  /// path and same redirect, which is the one already proven on device.
+  /// offered, so the Google button obliges us to carry this one.
   ///
-  /// Shown only on iOS: Apple does not require it elsewhere, and a button
-  /// that sends an Android user through a web sheet is worse than no button.
+  /// On iOS this must be the system sheet, not a web page. Apple's guidelines
+  /// call for the native flow, and a browser round-trip for a provider the
+  /// device can authenticate locally is a poor experience besides. Elsewhere
+  /// the OAuth path stands, though nothing shows the button there.
   Future<bool> signInWithApple() async {
-    return _client.auth.signInWithOAuth(
-      OAuthProvider.apple,
-      redirectTo: _redirectTo,
-      authScreenLaunchMode: kIsWeb
-          ? LaunchMode.externalApplication
-          : LaunchMode.inAppBrowserView,
-    );
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
+      return _client.auth.signInWithOAuth(
+        OAuthProvider.apple,
+        redirectTo: _redirectTo,
+        authScreenLaunchMode: kIsWeb
+            ? LaunchMode.externalApplication
+            : LaunchMode.inAppBrowserView,
+      );
+    }
+
+    // Apple signs the nonce's hash into the token; Supabase is given the raw
+    // value and checks it matches. Without the pair, a token lifted from one
+    // session could be replayed into another.
+    final rawNonce = _randomNonce();
+    final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
+
+    try {
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: const [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: hashedNonce,
+      );
+      final idToken = credential.identityToken;
+      if (idToken == null) {
+        throw const AuthException(
+          'Apple did not return an identity token. Please try again.',
+        );
+      }
+      await _client.auth.signInWithIdToken(
+        provider: OAuthProvider.apple,
+        idToken: idToken,
+        nonce: rawNonce,
+      );
+      return true;
+    } on SignInWithAppleAuthorizationException catch (e) {
+      // Dismissing the sheet is a decision, not a failure. Reporting it as an
+      // error would put a red banner in front of someone who just changed
+      // their mind.
+      if (e.code == AuthorizationErrorCode.canceled) return false;
+      rethrow;
+    }
+  }
+
+  /// Apple accepts the characters listed in its own nonce example; anything
+  /// outside that set is rejected on some iOS versions.
+  static String _randomNonce([int length = 32]) {
+    const chars =
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(length, (_) => chars[random.nextInt(chars.length)])
+        .join();
   }
 
   Future<void> signOut() => _client.auth.signOut();

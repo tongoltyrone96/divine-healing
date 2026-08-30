@@ -204,6 +204,90 @@ const [, , command, ...args] = process.argv;
       break;
     }
 
+    case 'refresh-profile': {
+      // A provisioning profile is a snapshot of the bundle ID's capabilities
+      // at the moment it was created. Turning a capability on does nothing to
+      // profiles that already exist, so anything signed with the old one is
+      // rejected for claiming an entitlement the profile does not carry.
+      // Run this after changing capabilities, then replace APPSTORE_PROFILE.
+      const identifier = args[0] || BUNDLE_ID;
+      const capability = args[1] || 'APPLE_ID_AUTH'; // Sign in with Apple
+      const out = path.join(__dirname, '..', 'divine_healing', '.signing');
+      fs.mkdirSync(out, { recursive: true });
+
+      const bundle = await api('GET',
+        '/v1/bundleIds?filter[identifier]=' + encodeURIComponent(identifier));
+      if (!bundle.data.length) {
+        throw new Error('Bundle ID not registered: ' + identifier);
+      }
+      const bundleDbId = bundle.data[0].id;
+
+      const caps = await api('GET',
+        '/v1/bundleIds/' + bundleDbId + '/bundleIdCapabilities');
+      const have = caps.data.map((c) => c.attributes.capabilityType);
+      if (have.includes(capability)) {
+        console.log(capability + ' already enabled.');
+      } else {
+        await api('POST', '/v1/bundleIdCapabilities', {
+          data: {
+            type: 'bundleIdCapabilities',
+            attributes: {
+              capabilityType: capability,
+              // Apple refuses the capability without one: "Please select at
+              // least one configuration for Sign In with Apple." This is the
+              // primary-app choice, which is what a standalone app wants —
+              // the alternative groups it under another app's consent.
+              settings: capability === 'APPLE_ID_AUTH'
+                ? [{
+                    key: 'APPLE_ID_AUTH_APP_CONSENT',
+                    options: [{ key: 'PRIMARY_APP_CONSENT' }],
+                  }]
+                : undefined,
+            },
+            relationships: {
+              bundleId: { data: { type: 'bundleIds', id: bundleDbId } },
+            },
+          },
+        });
+        console.log('Enabled ' + capability + ' on ' + identifier);
+      }
+
+      const certs = await api('GET',
+        '/v1/certificates?filter[certificateType]=DISTRIBUTION');
+      if (!certs.data.length) {
+        throw new Error('No distribution certificate. Run create-distribution.');
+      }
+
+      const name = 'Divine Healing App Store';
+      const existing = await api('GET', '/v1/profiles?limit=200');
+      for (const pr of existing.data) {
+        if (pr.attributes.name === name) {
+          await api('DELETE', '/v1/profiles/' + pr.id);
+        }
+      }
+      const profile = await api('POST', '/v1/profiles', {
+        data: {
+          type: 'profiles',
+          attributes: { name, profileType: 'IOS_APP_STORE' },
+          relationships: {
+            bundleId: { data: { type: 'bundleIds', id: bundleDbId } },
+            certificates: {
+              data: [{ type: 'certificates', id: certs.data[0].id }],
+            },
+          },
+        },
+      });
+      fs.writeFileSync(path.join(out, 'profile.mobileprovision'),
+        Buffer.from(profile.data.attributes.profileContent, 'base64'));
+
+      console.log('Profile reissued: ' + profile.data.attributes.name +
+        '  (' + profile.data.attributes.uuid + ')');
+      console.log('Now update the secret:');
+      console.log('  base64 -w0 divine_healing/.signing/' +
+        'profile.mobileprovision | gh secret set APPSTORE_PROFILE');
+      break;
+    }
+
     case 'create-distribution': {
       // Builds everything needed to sign for the App Store, without a Mac.
       //
@@ -324,7 +408,8 @@ const [, , command, ...args] = process.argv;
     default:
       console.error(
         'commands: whoami | list-bundle-ids | register-bundle-id <id> <name>\n' +
-          '          list-certificates | list-profiles | create-distribution | list-builds',
+          '          list-certificates | list-profiles | create-distribution\n' +
+          '          list-builds | refresh-profile | get <endpoint>',
       );
       process.exit(1);
   }
