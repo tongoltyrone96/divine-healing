@@ -1,0 +1,127 @@
+# Runs the app on an iOS simulator and captures every main screen.
+#
+# There is no iPhone on this project. Until this existed, nothing had ever
+# run the iOS binary — builds went straight from compiling to TestFlight, and
+# a crash on launch would have been discovered by the client.
+#
+# It also produces the App Store screenshots. A simulator screenshot is at
+# the device's native resolution, so an iPhone 16 Pro Max gives 1320x2868 —
+# exactly Apple's 6.9" requirement, with nothing to scale or pad.
+#
+# What it cannot do: Sign in with Apple. The simulator answers that with
+# "Sign in to your iPhone" unless an Apple ID is signed in, and putting real
+# credentials on a runner is not worth it. That check needs a real device.
+#
+# Cost: macOS minutes bill at 10x on a private repo. Roughly eight builds a
+# month between this and the TestFlight workflow.
+
+name: iOS — Simulator
+
+on:
+  workflow_dispatch:
+    inputs:
+      device:
+        description: Simulator model
+        required: false
+        default: iPhone 16 Pro Max
+
+env:
+  FLUTTER_VERSION: 3.47.1
+  # The publishable Supabase pair, same as the TestFlight workflow. Without
+  # these the app falls back to local-only mode and the screenshots would show
+  # an empty catalogue.
+  SUPABASE_URL: https://buzdtsupgmytqokgfsbn.supabase.co
+  SUPABASE_ANON_KEY: sb_publishable_7m-bk8K9-pW7CUEu-3Dnyg_dpaZWQDa
+
+jobs:
+  screenshots:
+    runs-on: macos-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install packages
+        working-directory: divine_healing
+        run: flutter pub get
+
+      - name: Boot the simulator
+        id: sim
+        run: |
+          WANTED="${{ inputs.device }}"
+          # Runner images rename and renumber devices between releases, so the
+          # requested model is a preference, not a requirement — falling back
+          # to any iPhone beats failing the run over a name.
+          UDID=$(xcrun simctl list devices available \
+            | grep -F "$WANTED (" | head -1 \
+            | grep -oE '[0-9A-F]{8}-[0-9A-F-]{27}')
+          if [ -z "$UDID" ]; then
+            echo "::warning::$WANTED not available; using the newest iPhone"
+            UDID=$(xcrun simctl list devices available \
+              | grep -E '^\s+iPhone' | tail -1 \
+              | grep -oE '[0-9A-F]{8}-[0-9A-F-]{27}')
+          fi
+          [ -n "$UDID" ] || { xcrun simctl list devices available; exit 1; }
+
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          NAME=$(xcrun simctl list devices | grep "$UDID" | sed -E 's/^ *(.*) \(.*/\1/')
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          echo "Booted $NAME  ($UDID)"
+
+          # Status bar is baked into every screenshot, so it may as well read
+          # the way Apple's own marketing shots do rather than showing a
+          # runner's battery level.
+          xcrun simctl status_bar "$UDID" override \
+            --time "9:41" --batteryState charged --batteryLevel 100 \
+            --cellularMode active --cellularBars 4 --wifiBars 3
+
+      - name: Run the app and capture the screens
+        working-directory: divine_healing
+        run: |
+          flutter drive \
+            --driver test_driver/integration_test.dart \
+            --target integration_test/screenshots_test.dart \
+            -d "${{ steps.sim.outputs.udid }}" \
+            --dart-define=SUPABASE_URL=$SUPABASE_URL \
+            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+
+      - name: Report what was captured
+        if: always()
+        working-directory: divine_healing
+        run: |
+          if [ -d screenshots ]; then
+            for f in screenshots/*.png; do
+              echo "$(basename "$f")  $(sips -g pixelWidth -g pixelHeight "$f" \
+                | awk '/pixel/ {printf "%s ", $2}')"
+            done
+          else
+            echo "::warning::No screenshots directory — the run captured nothing"
+          fi
+
+      - name: Collect crash reports
+        if: always()
+        run: |
+          # Only useful when the app died on launch, which is the failure this
+          # workflow exists to catch.
+          mkdir -p "$RUNNER_TEMP/crashes"
+          find ~/Library/Logs/DiagnosticReports -name '*Runner*' \
+            -exec cp {} "$RUNNER_TEMP/crashes/" \; 2>/dev/null || true
+          ls -la "$RUNNER_TEMP/crashes" || true
+
+      - name: Keep the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-screenshots-${{ github.run_number }}
+          path: |
+            divine_healing/screenshots/*.png
+            ${{ runner.temp }}/crashes/*
+          if-no-files-found: warn
+          retention-days: 30
