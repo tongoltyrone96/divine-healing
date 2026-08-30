@@ -126,6 +126,12 @@ jobs:
       - name: Archive
         working-directory: divine_healing/ios
         run: |
+          # The signing settings live in the Runner target's Release
+          # configuration, not here. Passing them on the command line applies
+          # them to every target in the workspace, and CocoaPods and SwiftPM
+          # dependencies reject a provisioning profile outright — the archive
+          # failed with one error per package.
+          #
           # generic/platform=iOS keeps xcodebuild from resolving the
           # destination against a connected device, of which a runner has none.
           xcodebuild archive \
@@ -133,11 +139,7 @@ jobs:
             -scheme Runner \
             -configuration Release \
             -destination "generic/platform=iOS" \
-            -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
-            DEVELOPMENT_TEAM="${{ secrets.APPSTORE_TEAM_ID }}"
+            -archivePath "$RUNNER_TEMP/Runner.xcarchive"
 
       - name: Export the IPA
         run: |
