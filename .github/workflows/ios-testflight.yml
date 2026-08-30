@@ -64,34 +64,14 @@ jobs:
             > ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
           chmod 600 ~/.appstoreconnect/private_keys/*.p8
 
-      - name: Work out the build number
-        id: build_number
-        run: |
-          # pubspec's build number tracks Play, which is already ahead. The two
-          # stores keep separate counters, so reusing it would collide on one
-          # side. Ask TestFlight what it has and go one above.
-          KEY=~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
-          LATEST=$(xcrun altool --list-builds \
-            --apiKey "${{ secrets.APPSTORE_KEY_ID }}" \
-            --apiIssuer "${{ secrets.APPSTORE_ISSUER_ID }}" \
-            --output-format json 2>/dev/null \
-            | python3 -c "
-import json,sys
-try:
-    d = json.load(sys.stdin)
-except Exception:
-    print(0); raise SystemExit
-nums = []
-for item in d.get('builds', []) or []:
-    try:
-        nums.append(int(item.get('buildVersion', 0)))
-    except (TypeError, ValueError):
-        pass
-print(max(nums) if nums else 0)
-" || echo 0)
-          NEXT=$(( ${LATEST:-0} + 1 ))
-          echo "TestFlight is at ${LATEST:-0}; building $NEXT"
-          echo "number=$NEXT" >> "$GITHUB_OUTPUT"
+      # github.run_number increments on every run of this workflow and never
+      # repeats, which is the only property TestFlight cares about. Querying
+      # TestFlight for its highest build was the obvious approach and needed a
+      # multi-line python one-liner inside a YAML block scalar — which broke
+      # the file outright. Not worth it for a counter.
+      #
+      # pubspec's number is left alone; it tracks Play, which is ahead, and
+      # the stores keep separate counters.
 
       - name: Compile without signing
         working-directory: divine_healing
@@ -100,7 +80,7 @@ print(max(nums) if nums else 0)
           # Xcode config, then xcodebuild archives it with credentials Flutter
           # has no way to pass through.
           flutter build ios --release --no-codesign \
-            --build-number=${{ steps.build_number.outputs.number }} \
+            --build-number=${{ github.run_number }} \
             --dart-define=SUPABASE_URL=$SUPABASE_URL \
             --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
 
@@ -155,7 +135,7 @@ print(max(nums) if nums else 0)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ios-build-${{ steps.build_number.outputs.number }}
+          name: ios-build-${{ github.run_number }}
           path: |
             ${{ runner.temp }}/ipa/*.ipa
             ${{ runner.temp }}/Runner.xcarchive/Info.plist
