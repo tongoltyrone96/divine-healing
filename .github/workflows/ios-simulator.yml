@@ -58,29 +58,35 @@ jobs:
           # Runner images rename and renumber devices between releases, so the
           # requested model is a preference, not a requirement — falling back
           # to any iPhone beats failing the run over a name.
+          # `set -e` is on and an assignment carries the exit status of its
+          # command substitution, so an unmatched grep would end the step
+          # before the fallback below ever ran.
           UDID=$(xcrun simctl list devices available \
             | grep -F "$WANTED (" | head -1 \
-            | grep -oE '[0-9A-F]{8}-[0-9A-F-]{27}')
+            | grep -oE '[0-9A-F]{8}-[0-9A-F-]{27}' || true)
           if [ -z "$UDID" ]; then
             echo "::warning::$WANTED not available; using the newest iPhone"
             UDID=$(xcrun simctl list devices available \
               | grep -E '^\s+iPhone' | tail -1 \
-              | grep -oE '[0-9A-F]{8}-[0-9A-F-]{27}')
+              | grep -oE '[0-9A-F]{8}-[0-9A-F-]{27}' || true)
           fi
           [ -n "$UDID" ] || { xcrun simctl list devices available; exit 1; }
 
           xcrun simctl boot "$UDID"
           xcrun simctl bootstatus "$UDID" -b
-          NAME=$(xcrun simctl list devices | grep "$UDID" | sed -E 's/^ *(.*) \(.*/\1/')
+          NAME=$(xcrun simctl list devices | grep "$UDID" \
+            | sed -E 's/^ *(.*) \(.*/\1/' || true)
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
           echo "Booted $NAME  ($UDID)"
 
           # Status bar is baked into every screenshot, so it may as well read
           # the way Apple's own marketing shots do rather than showing a
           # runner's battery level.
+          # Cosmetic only — not worth failing the run over on a device model
+          # that rejects one of the flags.
           xcrun simctl status_bar "$UDID" override \
             --time "9:41" --batteryState charged --batteryLevel 100 \
-            --cellularMode active --cellularBars 4 --wifiBars 3
+            --cellularMode active --cellularBars 4 --wifiBars 3 || true
 
       - name: Run the app and capture the screens
         working-directory: divine_healing
