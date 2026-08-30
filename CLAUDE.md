@@ -237,12 +237,41 @@ Recovered from the Glide bundle before she confirmed it; wired into
 - Store listings: screenshots, icon, descriptions (client approved the
   drafts), age rating.
 
+### iOS builds (2026-08-31)
+
+The repo is now private at `tongoltyrone96/divine-healing` and
+`.github/workflows/ios-testflight.yml` builds and uploads on
+`workflow_dispatch`. It works: builds 5 and 6 both reached
+`UPLOAD SUCCEEDED with no errors`.
+
+**Neither build ever appeared in TestFlight.** `/v1/builds` returns zero
+across the whole team, more than a day after the first upload. Apple
+discarded them during processing and emails the reason to the Account
+Holder — an inbox we do not have. Everything checkable locally is correct,
+and was checked by unpacking the IPA:
+
+- signature: no provisioned devices, `get-task-allow` false,
+  `beta-reports-active` true, team `B942978KGQ` — a valid App Store signature
+- `CFBundleIconName` present (missing in build 5, which alone explains that
+  one; build 6 has it and was discarded anyway)
+- `ITSAppUsesNonExemptEncryption` false, `UIBackgroundModes` audio
+- 1024 marketing icon present, RGB with no alpha channel
+- every third-party SDK ships its privacy manifest
+
+So the next step is not another build. It is the rejection email, from
+gstsaver@me.com or whichever address holds the Apple ID. Without it,
+each attempt costs ten macOS minutes to learn nothing.
+
+The app-level `PrivacyInfo.xcprivacy` is absent. Apple treats that as a
+warning rather than grounds for discarding a build, so it is on the list
+but is unlikely to be the cause.
+
 ### Next
-1. Sign in with Apple button (needed before any iOS submission).
-2. Private GitHub repo — CI cannot reach the code otherwise, and it is still
-   local-only. See the security note below first.
-3. codemagic.yaml, then iOS build to TestFlight once the API key lands.
-4. RevenueCat once the store payment details clear.
+1. Read Apple's rejection email; fix what it names.
+2. Sign in with Apple — the package is already in the build, the button is
+   not on the sign-in screen, and Apple requires it wherever Google sign-in
+   appears.
+3. RevenueCat once the store payment details clear.
 
 ## Working Notes
 
@@ -261,6 +290,18 @@ Recovered from the Glide bundle before she confirmed it; wired into
   every upload; currently at `1.0.0+3`.
 - Content edits go to Supabase, not to the old Glide admin — Glide no longer
   feeds this app. The client needs walking through the Table Editor.
+- **iOS signing is manual and deliberate.** Automatic signing kept asking
+  Apple for a *development* profile, which lists permitted devices; the team
+  has none, so it failed with a message about missing devices rather than
+  about the wrong profile type, and left two unused development certificates
+  on the account. `node data/20_appstore_api.js create-distribution` makes
+  the certificate and App Store profile directly; the settings live in the
+  Runner target's Release configuration, because passing them to `xcodebuild`
+  applies them to every Pod and SwiftPM package, none of which accept a
+  profile. The certificate expires **2027-08-30**.
+- macOS runners bill at 10x on a private repo — roughly eight free builds a
+  month. There is no push trigger for that reason. Unpack the IPA from the
+  run's artifact before spending another one.
 
 ## Security
 
