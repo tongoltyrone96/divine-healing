@@ -228,6 +228,140 @@ const [, , command, ...args] = process.argv;
       break;
     }
 
+    case 'age-rating': {
+      // Everything NONE, which is the honest answer for a meditation app and
+      // yields a 4+ rating. unrestrictedWebAccess is false on purpose: the
+      // app has no browser. It opens the booking page in the system browser
+      // and shows Google's consent screen in a Safari view, neither of which
+      // lets anyone navigate the open web from inside the app.
+      const app = await api('GET',
+        '/v1/apps?filter[bundleId]=' + encodeURIComponent(BUNDLE_ID));
+      const infos = await api('GET',
+        '/v1/apps/' + app.data[0].id + '/appInfos?limit=10');
+      const editable = infos.data.find((i) =>
+        i.attributes.appStoreState === 'PREPARE_FOR_SUBMISSION') ||
+        infos.data[0];
+
+      const none = 'NONE';
+      await api('PATCH', '/v1/ageRatingDeclarations/' + editable.id, {
+        data: {
+          type: 'ageRatingDeclarations',
+          id: editable.id,
+          attributes: {
+            alcoholTobaccoOrDrugUseOrReferences: none,
+            contests: none,
+            gamblingSimulated: none,
+            // The sessions are a spiritual practice, not medical advice, and
+            // the app makes no treatment claims.
+            medicalOrTreatmentInformation: none,
+            profanityOrCrudeHumor: none,
+            sexualContentGraphicAndNudity: none,
+            sexualContentOrNudity: none,
+            horrorOrFearThemes: none,
+            matureOrSuggestiveThemes: none,
+            violenceCartoonOrFantasy: none,
+            violenceRealisticProlongedGraphicOrSadistic: none,
+            violenceRealistic: none,
+            gambling: false,
+            unrestrictedWebAccess: false,
+            // Added by Apple's newer questionnaire.
+            advertising: false,
+            messagingAndChat: false,
+            parentalControls: false,
+            lootBox: false,
+            gunsOrOtherWeapons: none,
+            ageAssurance: false,
+            // True, and deliberately so. The whole app is meditation and
+            // emotional practice, which is exactly what Apple means here. It
+            // may raise the rating; answering otherwise would be false.
+            healthOrWellnessTopics: true,
+            // Journals and manifestation answers are user-written but private
+            // to the account. Apple's question is about content other people
+            // can see, and nothing here is ever shared.
+            userGeneratedContent: false,
+          },
+        },
+      });
+      console.log('Age rating declared: no restricted content anywhere (4+).');
+      break;
+    }
+
+    case 'store-metadata': {
+      // Writes the listing copy from data/store/app_store_<locale>.json.
+      // Nothing here submits anything — the version stays in
+      // PREPARE_FOR_SUBMISSION and every field can be changed again.
+      const copy = JSON.parse(fs.readFileSync(
+        path.join(__dirname, 'store', 'app_store_en-US.json'), 'utf8'));
+
+      // Apple truncates silently on some fields and rejects on others, so
+      // both cases are caught here where the message can name the field.
+      const limits = { subtitle: 30, promotionalText: 170, keywords: 100,
+        description: 4000 };
+      for (const [field, max] of Object.entries(limits)) {
+        const len = (copy[field] || '').length;
+        if (len > max) {
+          throw new Error(field + ' is ' + len + ' characters, limit ' + max);
+        }
+      }
+
+      const app = await api('GET',
+        '/v1/apps?filter[bundleId]=' + encodeURIComponent(BUNDLE_ID));
+      if (!app.data.length) throw new Error('No app record for ' + BUNDLE_ID);
+      const appId = app.data[0].id;
+
+      // Version-level copy: what changes with each release.
+      const versions = await api('GET',
+        '/v1/apps/' + appId + '/appStoreVersions?limit=1');
+      if (!versions.data.length) throw new Error('No app store version yet');
+      const state = versions.data[0].attributes.appStoreState;
+      if (state !== 'PREPARE_FOR_SUBMISSION') {
+        throw new Error('Version is ' + state + ', not editable');
+      }
+      // The limit is not optional: without a query string the request stalls
+      // behind the VPN and fails as a bare "fetch failed".
+      const vlocs = await api('GET', '/v1/appStoreVersions/' +
+        versions.data[0].id + '/appStoreVersionLocalizations?limit=20');
+      const vloc = vlocs.data.find((l) => l.attributes.locale === copy.locale);
+      if (!vloc) throw new Error('No ' + copy.locale + ' version localization');
+      await api('PATCH', '/v1/appStoreVersionLocalizations/' + vloc.id, {
+        data: {
+          type: 'appStoreVersionLocalizations',
+          id: vloc.id,
+          attributes: {
+            description: copy.description,
+            keywords: copy.keywords,
+            promotionalText: copy.promotionalText,
+            supportUrl: copy.supportUrl,
+            marketingUrl: copy.marketingUrl,
+          },
+        },
+      });
+      console.log('Version copy written (' + copy.locale + ')');
+
+      // App-level copy: what stays put across releases.
+      const infos = await api('GET',
+        '/v1/apps/' + appId + '/appInfos?limit=10');
+      const editable = infos.data.find((i) =>
+        i.attributes.appStoreState === 'PREPARE_FOR_SUBMISSION') ||
+        infos.data[0];
+      const ilocs = await api('GET', '/v1/appInfos/' + editable.id +
+        '/appInfoLocalizations?limit=20');
+      const iloc = ilocs.data.find((l) => l.attributes.locale === copy.locale);
+      if (!iloc) throw new Error('No ' + copy.locale + ' app info localization');
+      await api('PATCH', '/v1/appInfoLocalizations/' + iloc.id, {
+        data: {
+          type: 'appInfoLocalizations',
+          id: iloc.id,
+          attributes: {
+            subtitle: copy.subtitle,
+            privacyPolicyUrl: copy.privacyPolicyUrl,
+          },
+        },
+      });
+      console.log('App-level copy written (subtitle, privacy policy URL)');
+      break;
+    }
+
     case 'testflight-setup': {
       // Internal testing, not external: internal groups take App Store Connect
       // users only, but they skip Beta App Review, which for an external group
@@ -495,7 +629,8 @@ const [, , command, ...args] = process.argv;
       console.error(
         'commands: whoami | list-bundle-ids | register-bundle-id <id> <name>\n' +
           '          list-certificates | list-profiles | create-distribution\n' +
-          '          list-builds | refresh-profile | testflight-setup | get <endpoint>',
+          '          list-builds | refresh-profile | testflight-setup\n' +
+          '          store-metadata | age-rating | get <endpoint>',
       );
       process.exit(1);
   }
