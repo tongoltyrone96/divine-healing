@@ -75,84 +75,6 @@ Home / Library / Profile / Admin
 - **Audio files**: **22** (2 of the 24 sessions have no audio: ABC, Introduction to Reiki). Download complete → `assets/audio/` (2026-08-25, 325 MB total).
 - **Booking**: Warning — CLAUDE.md initially said "Square", but the actual app shows **"Zoom Sessions Only"** — the `/booking` page has a "Book a Zoom Session" button that redirects to an external booking page. The real system may be Zoom itself or Square / Calendly — confirm by clicking through (screenshot: `reference/screenshots/features/booking_full.png`).
 
-## Extracted Data (2026-08-25 Playwright automation)
-
-**All content has been captured locally.** File locations:
-
-### Extracted via API
-- `data/raw/admin_content.json` — full metadata for all 24 sessions
-- `data/raw/admin_subscribers.json` — 1 subscriber (gstsaver@me.com, "Complimentary" plan)
-- `data/raw/content_preview.json` — 3 free preview sessions
-- `data/raw/audio_manifest.json` — audio file mapping
-- `data/raw/subscription_status.json` — current user's subscription state
-- `data/raw/affirmations_favourites.json` — favourites (currently 0)
-- `data/raw/page_texts_v2.json` — rendered text per page
-
-### Extracted from the JS bundle (hard-coded content)
-- `data/content/affirmations.json` — 20 affirmations (complete)
-- `data/content/chakras.json` — 7 chakras, full data (name, sanskrit, description, affirmations, practices, imbalance)
-- `data/content/techniques.json` — 7 breathing techniques, full data (name, subtitle, description, steps, benefits)
-- `data/content/category_meta.json` — 8-card routing info
-- `data/content/ShadowWorkJourney_source.js` — original React source (for text extraction)
-- `data/content/ReikiJourney_source.js`
-- `data/content/ManifestationJourney_source.js`
-- `data/content/SpiritualAwakening_source.js`
-
-### App Architecture (API map)
-**Base**: `https://p7d350073-spiritual-healing--gstsaver.glideos.app`
-
-Read:
-- `GET /app-api/content` — all content (optional `?category=<meditation|shadow_work|reiki>`)
-- `GET /app-api/content/preview` — free preview items
-- `GET /app-api/content/{id}` — single item
-- `GET /app-api/subscription/status` — current user's subscription
-- `GET /app-api/affirmations/favourites` — user's favourites
-- `GET /app-api/audio/{content_body}` — audio file (content_body starts with `audio/`)
-- `GET /app-api/admin/content` — admin: all content (same as regular /content)
-- `GET /app-api/admin/subscribers` — admin: subscriber list
-
-Write:
-- `POST /app-api/content/{id}/complete` — mark session done
-- `POST /app-api/shadow-work/save` — save journal
-- `POST /app-api/manifestation` — save 5-field form
-- `POST /app-api/affirmations/favourites` (body: {index}) — add favourite
-- `DELETE /app-api/affirmations/favourites/{index}` — remove favourite
-- `POST /app-api/admin/content` — create session
-- `PUT /app-api/admin/content/{id}` — update session
-- `DELETE /app-api/admin/content/{id}` — delete session
-- `POST /app-api/admin/upload-audio/{id}` — upload audio (multipart)
-
-### Category → URL routing (in-app)
-| Home card | Category (DB) | Route |
-|-----------|--------------|-------|
-| Meditations | `meditation` | `/library/meditation` |
-| Shadow Work | `shadow_work` | `/library/shadow_work` |
-| Chakra Healing | (none — hard-coded) | **`/chakras`** (special case) |
-| Reiki | `reiki` | `/library/reiki` |
-| Manifestation | (none — hard-coded) | `/manifestation` |
-| Affirmations | (none — hard-coded) | `/affirmations` |
-| Breathing | (none — hard-coded) | `/breathing` |
-| Spiritual Awakening | (none — hard-coded) | `/spiritual-awakening` |
-
-**Important**: Chakra Healing is not a DB category. **The 7 chakras are hard-coded into the app source** (see chakras.json).
-For the same reason, Manifestation / Affirmations / Breathing / Spiritual Awakening are all hard-coded too. When migrating to Supabase these static pieces can either:
-1. Ship as a static asset inside the Flutter app (no localisation needed) — **recommended**
-2. Or live in a separate Supabase table (e.g. `sh_static_content`) for management
-
-### Automation Setup (reusable)
-Playwright scripts under `e:\Tasks\Glide_app\automation\`:
-- `02_launch_persistent.js` — sets up the Chromium session (one-time)
-- `05_extract_content.js` — calls the API and downloads audio
-- `06_extract_pages.js`, `07_final_pages.js` — automates page screenshots
-- `08_parse_bundle.js` — extracts data from the JS bundle
-- `browser-session/` — saved login session (do not touch)
-
-**Re-run**: `cd automation && node <script>.js`. The session stays alive so no re-login is needed.
-
-### Client email (new info)
-**Client's real email: `gstsaver@me.com`** (separate from the Freelancer account `gstsaver`).
-
-
 ## Database Schema (client-provided)
 
 6 tables — **Supabase recommended** (Postgres schema is a perfect match + 3-way auth + storage):
@@ -228,22 +150,6 @@ Splash / Home / Module page / Meditation player / Journaling screen — detailed
 | Push | Firebase Cloud Messaging |
 | State | Riverpod or Bloc |
 
-## Open Questions (all resolved via the 2026-08-25 client reply)
-
-1. Free tier: 2 free meditations (Anxiety Release, Anxiety Release Short) + Reiki info + Spiritual Awakening info + Bookings. Rest = paid.
-2. Free trial: **7 days**, then paid.
-3. Subscription: **CAD $19/mo, CAD $149/yr** (client corrected from AUD to CAD).
-4. Fonts: **Playfair Display + Nunito**. Confirmed.
-5. Hex codes: confirmed 2026-08-25 (client sent "ends in CCB" / "ends in 7B" — the emoji was `B)` → 😎 auto-conversion).
-   - Sandstone: **#E8DCCB**
-   - Strawberry Blush: **#D96A7B**
-6. Logo: no file exists. Tyrone will design it from the brand notes.
-   - **Concept per client**: **nature + moon + fairies** (client wrote "ferries" — typo for "fairies").
-7. Not asked yet — deferred until closer to store submission.
-8. DB typos: not answered. Assume fix during migration ("Forgivness" → "Forgiveness", "Charkra Short" → "Chakra Short").
-9. Reiki: text only, no more audio planned. Add a "Book Session with Strawberry Hope" button linking to the booking calendar.
-10. Shadow Work: not answered — assume no expansion.
-
 ## New Requirements from Client (2026-08-25 response)
 
 - **Reiki page**: add a "Book Session with Strawberry Hope" button → booking calendar. Implemented in `library_screen.dart` (shown when filter = reiki).
@@ -295,24 +201,74 @@ Recovered from the Glide bundle before she confirmed it; wired into
     app silently falls back to M1 local-only mode — no audio, no auth, no
     subscription. The script forwards only the client-safe keys.
 
-## Immediate Next Steps
+## Current State (2026-08-30)
 
-### Tonight
-1. Confirm Freelancer accept + first milestone $150 funded status
-2. Accept the Glide admin invite email
-3. Screenshot the entire Glide app (all categories + detail pages)
-4. Download all audio / image / text content
-5. Draft the morning summary that consolidates the Open Questions above
+### Done and verified on a real device (Motorola XT2557-1, Android 16)
+- All content restored; `node data/08_audit_content_coverage.js` reports zero
+  missing passages. Reiki had shipped with none of its content at all.
+- Audio paywall enforced in Storage RLS, not just the UI:
+  `node data/04_verify_paywall.js` passes.
+- Background playback, lock-screen controls, artwork, interruption handling.
+- Google sign-in, including the deep-link return that had never worked on
+  either platform.
+- Fonts bundled (google_fonts removed — it fetched at runtime and failed).
+- Live on Play internal testing:
+  https://play.google.com/apps/internaltest/4701738235794999065
+- Web demo: https://divine-healing-iota.vercel.app
 
-### Tomorrow morning
-- Send the morning summary to the client → start setup work while waiting on her reply.
+### Blocked on the client
+- Apple + Google payment details (tax/bank). Nothing paid ships until both
+  clear. Waiting on her ABN — she said up to 48h as of 2026-08-29.
+- App Store Connect API key: Issuer ID `027e6790-d592-4674-ada9-714978737be5`
+  received; Key ID and the .p8 still outstanding. The key page errors out for
+  our account, so she has to create it.
+- EU trader status (Account Holder only).
+- App Store Small Business Program enrolment — not automatic, must apply.
+- 12 testers for the Play closed test. Two-week clock, cannot be shortened.
 
-### This Week
-1. Init the Flutter project
-2. Create the Supabase project + run the 6-table schema SQL
-3. Upload audio files to Supabase Storage
-4. Encode the brand colours / fonts into `theme.dart`
-5. Splash + Home → send screenshots to the client for approval
+### Not built yet
+- **In-app purchases.** The Profile screen still opens live Stripe payment
+  links in a browser. Both stores forbid that for in-app digital goods, so
+  this is the last substantial piece. `purchases_flutter` is in pubspec,
+  unused.
+- **Sign in with Apple.** Apple requires it wherever Google sign-in is
+  offered; without it the app is rejected. Not on the sign-in screen yet.
+- Push notifications, offline support (agreed as v1.1).
+- Store listings: screenshots, icon, descriptions (client approved the
+  drafts), age rating.
+
+### Next
+1. Sign in with Apple button (needed before any iOS submission).
+2. Private GitHub repo — CI cannot reach the code otherwise, and it is still
+   local-only. See the security note below first.
+3. codemagic.yaml, then iOS build to TestFlight once the API key lands.
+4. RevenueCat once the store payment details clear.
+
+## Working Notes
+
+- **Android builds run in WSL**, never on Windows. Astrill VPN registers
+  ASProxy64.dll as a Winsock LSP, which crashes Gradle's JVM before it
+  starts. `automation/wsl/` holds the toolchain and build scripts;
+  `03_build_android.sh apk|aab` is the entry point. adb still works on
+  Windows — only the JVM is affected.
+- The same VPN throttles large downloads to zero rather than failing. Every
+  downloader without retry logic dies on it, so SDK packages, the Gradle
+  distribution and the Flutter engine artifacts are prefetched by the
+  numbered scripts in `automation/wsl/`.
+- `.dart_tool/package_config.json` holds absolute paths, so Windows and WSL
+  cannot share one. Both build scripts run `flutter pub get` first.
+- **Play never reuses a versionCode.** Bump `version:` in pubspec before
+  every upload; currently at `1.0.0+3`.
+- Content edits go to Supabase, not to the old Glide admin — Glide no longer
+  feeds this app. The client needs walking through the Table Editor.
+
+## Security
+
+`https://github.com/tongoltyrone96/Glide_app_mobile` is **public** and
+contains the keystore password and a Google OAuth client secret, pushed
+2026-08-28. Verified reachable unauthenticated. The keystore binary itself
+did not leak. Not yet resolved: the repo needs taking down or making
+private, and the OAuth client rotating.
 
 ## Risks & Notes
 
@@ -320,15 +276,6 @@ Recovered from the Glide bundle before she confirmed it; wired into
 - **3-week timeline is tight**: consider cutting MVP scope (IAP + Push moved to v1.1).
 - **Apple IAP issue**: already pre-warned the client. Web Stripe alone will be rejected by iOS review.
 - **Login mismatch resolved**: client ultimately picked "all options" (Google + Microsoft + Email).
-
-## Client Communication History Summary
-
-1. **First contact**: "Have you ever moved an app from Glide to a proper app?" → replied: yes, with wellness/content app examples.
-2. **Client shares the Glide link** → detailed analysis reply (8 categories, IAP warning, 5 questions).
-3. **Negotiation**: 3 weeks, $500 → client asks how to make milestones.
-4. **Milestones proposed**: 3-stage $150 / $200 / $150 → client actually creates 2 stages $150 / $350.
-5. **Awarded + schema shared**: 6-table DB schema + brand system delivered.
-6. **Latest**: client went to bed ("night time here"). Tyrone will accept the admin email + explore the app.
 
 ## Persona Note
 
