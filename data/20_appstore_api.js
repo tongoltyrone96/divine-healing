@@ -173,6 +173,17 @@ const [, , command, ...args] = process.argv;
       break;
     }
 
+    case 'get': {
+      // Escape hatch for endpoints that have not earned a command yet.
+      //   node data/20_appstore_api.js get '/v1/builds?limit=5'
+      if (!args[0]) {
+        console.error("usage: get '/v1/<endpoint>'");
+        process.exit(1);
+      }
+      console.log(JSON.stringify(await api('GET', args[0]), null, 2));
+      break;
+    }
+
     case 'list-builds': {
       // Processing takes a few minutes after altool reports success, and a
       // build is not testable until it leaves PROCESSING.
