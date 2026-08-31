@@ -88,12 +88,11 @@ jobs:
           # combination it is tested against; the custom set produced an
           # emulator that launched and never appeared on adb.
           working-directory: divine_healing
-          script: |
-            flutter drive \
-              --driver test_driver/integration_test.dart \
-              --target integration_test/screenshots_test.dart \
-              --dart-define=SUPABASE_URL=$SUPABASE_URL \
-              --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+          # One line on purpose. The action hands this to `sh -c`, where a
+          # backslash continuation is passed through as a literal
+          # argument — Flutter read it as the target and reported
+          # 'Target file "\\" not found'.
+          script: flutter drive --driver test_driver/integration_test.dart --target integration_test/screenshots_test.dart --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
 
       - name: Report what was captured
         if: always()
