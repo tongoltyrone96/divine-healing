@@ -53,9 +53,20 @@ jobs:
           # in a wall of adb retries, which is why this looked like a boot
           # timeout for two runs. The runner image ships toolchains this job
           # never touches.
+          # The Android SDK is left alone. Deleting the NDK freed space and
+          # then broke the build: a native plugin needs it, and the failure
+          # surfaced as a missing CMake nine minutes into Gradle.
           df -h / | tail -1
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android/sdk/ndk             /opt/ghc /usr/local/share/boost /usr/local/lib/node_modules             "$AGENT_TOOLSDIRECTORY/CodeQL" || true
+          sudo rm -rf /usr/share/dotnet             /opt/ghc /usr/local/share/boost /usr/local/lib/node_modules             "$AGENT_TOOLSDIRECTORY/CodeQL" || true
           df -h / | tail -1
+
+      - name: Install the CMake the native plugin wants
+        run: |
+          # [CXX1300] CMake '3.22.1' was not found. The runner image does
+          # not carry this version, and Gradle only says so after nine
+          # minutes of otherwise-successful build.
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            'cmake;3.22.1' > /dev/null
 
       - name: Let the emulator use KVM
         run: |
