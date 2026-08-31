@@ -382,16 +382,67 @@ Store screenshots live in `store/ios/` (1320x2868) and `store/play/`
 interchangeable: Play caps phone screenshots at 2:1 and the iOS set is
 2.17:1, while Apple checks against its own device sizes.
 
+### In-app purchases (2026-09-01)
+
+**Built and shipped to TestFlight.** The Profile screen used to open a
+Stripe payment link in a browser, which both stores forbid for digital
+goods sold inside an app; it was the single most likely reason for a first
+rejection. iOS and Android now purchase through RevenueCat, and the web
+build keeps Stripe, where no store is involved and no commission is taken.
+
+`sh_subscribers` is still the one source of truth. RevenueCat's webhook
+writes the same rows the Stripe one does, so the audio paywall in Storage
+RLS never had to learn which store took the money.
+
+- App: `lib/services/purchases_service.dart`, wired into the Profile
+  screen with Restore Purchases beside it — Apple requires that, and
+  someone reinstalling has already paid.
+- Webhook: `supabase/functions/revenuecat-webhook`, deployed and verified
+  end to end (correct secret → 200, wrong secret → 401).
+- After a purchase the app waits for the `sh_subscribers` row rather than
+  unlocking immediately. The store confirms instantly but RLS reads that
+  table, so until it lands the audio genuinely will not play.
+
+RevenueCat project `91a7dfa1`, owned by the client. Configured: App Store
+app connected (valid credentials), both products, entitlement
+`full_access` — **the app looks for that exact string** — offering
+`default` with `$rc_monthly` and `$rc_annual`.
+
+Store products exist on both sides at CAD 19 and 149 with a seven-day
+trial. Apple's read `Prepare for Submission`, which is normal: the first
+subscription group is approved with the first app version. The API
+reports `MISSING_METADATA` for the same records — the web UI is right and
+the API is not, which cost an hour of looking for absent fields.
+
+### Account deletion (2026-09-01)
+
+Required by Play since 2023 and Apple's guideline 5.1.1(v) since 2022, and
+asked about directly on Play's Data safety form. The app had sign-in and
+no way out.
+
+Profile → Account → Delete Account, the `delete-account` Edge Function,
+and https://divine-healing-iota.vercel.app/delete-account for someone who
+has already uninstalled. The function takes the caller from their JWT and
+accepts no user id, and was checked against the anon key — which is itself
+a valid JWT and would otherwise have been enough to reach it.
+
 ### Next
-1. RevenueCat, now that products exist.
-2. Client: Small Business Program (Apple) and the 15% service fee (Play) —
-   neither is automatic, and both halve the commission. The Play payments
-   warning says "contact your account owner", so it is hers, not ours.
-3. Client: twelve Play testers, and Sign in with Apple checked on a real
-   iPhone — the simulator cannot.
-4. Apple's EU trader review is still open on her side. It gates EU
-   distribution, not the build or the products.
-5. Rotate the Supabase secret key at launch.
+
+1. **Android purchases.** Everything is built; it needs a Play service
+   account JSON, which needs `Admin (all permissions)` on the Play account.
+   The client said she granted it, but `/api-access` still redirects away,
+   so it did not take. See the Android section under Working Notes.
+2. Real-device checks, waiting on the client's wife's Apple ID: Sign in
+   with Apple should show the system sheet rather than a browser, and the
+   trial should open Apple's payment sheet.
+3. Client: Small Business Program (Apple) and the 15% service fee (Play).
+   Neither is automatic and each halves the commission.
+4. Client: twelve Play testers. Fourteen continuous days, and the clock
+   has not started.
+5. Apple's EU trader review is open on her side. It gates EU distribution,
+   not the build or the products.
+6. Rotate the Supabase secret key and the RevenueCat webhook secret at
+   launch. Both have been through this chat.
 
 ## Working Notes
 
@@ -410,6 +461,17 @@ interchangeable: Play caps phone screenshots at 2:1 and the iOS set is
   every upload; currently at `1.0.0+3`.
 - Content edits go to Supabase, not to the old Glide admin — Glide no longer
   feeds this app. The client needs walking through the Table Editor.
+- **Android purchases, to finish.** RevenueCat needs a Play service account
+  JSON to verify Android receipts: Play Console → API access → create a
+  service account in Google Cloud → grant it Financial data and Manage
+  orders → download the JSON → RevenueCat → new Play Store app with package
+  `com.divinehealing.app`. Then `REVENUECAT_ANDROID_KEY` goes in `.env`
+  (`run_local.ps1` and `automation/wsl/03_build_android.sh` already forward
+  it), bump `version:` in pubspec, build the AAB in WSL and upload. The Play
+  products and offering are already made; only the credential is missing.
+- **Never trust the App Store Connect API's `state` on subscriptions.** It
+  reported MISSING_METADATA on records the web UI showed as complete and
+  ready. Check the browser before hunting for missing fields.
 - **iOS signing is manual and deliberate.** Automatic signing kept asking
   Apple for a *development* profile, which lists permitted devices; the team
   has none, so it failed with a message about missing devices rather than
