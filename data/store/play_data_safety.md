@@ -116,7 +116,7 @@ and there is no microphone permission in the Android manifest.
 | Question | Answer |
 |---|---|
 | Is all user data encrypted in transit? | **Yes** — HTTPS throughout; Supabase and RevenueCat both refuse plaintext |
-| Do you provide a way for users to request data deletion? | **Yes** — see the blocker below |
+| Do you provide a way for users to request data deletion? | **Yes** — see below |
 | Have you committed to the Play Families Policy? | No — not a children's app |
 | Has your app been independently security reviewed? | No |
 
