@@ -46,6 +46,10 @@ env:
   # must never appear here.
   SUPABASE_URL: https://buzdtsupgmytqokgfsbn.supabase.co
   SUPABASE_ANON_KEY: sb_publishable_7m-bk8K9-pW7CUEu-3Dnyg_dpaZWQDa
+  # RevenueCat's SDK key for the App Store app. Public by design — it ships
+  # inside the bundle. Their secret API keys are a separate list and none
+  # exist for this project.
+  REVENUECAT_IOS_KEY: appl_gRucUlyqHaqiupqZssHWhocqSjf
 
 jobs:
   build:
@@ -121,7 +125,8 @@ jobs:
           flutter build ios --release --no-codesign \
             --build-number=${{ github.run_number }} \
             --dart-define=SUPABASE_URL=$SUPABASE_URL \
-            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
+            --dart-define=REVENUECAT_IOS_KEY=$REVENUECAT_IOS_KEY
 
       - name: Archive
         working-directory: divine_healing/ios
