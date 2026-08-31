@@ -295,17 +295,20 @@ class _ContentDetailScreenState extends ConsumerState<ContentDetailScreen> {
 
   void _promptPaywall() {
     final signedIn = ref.read(isSignedInProvider);
+    final count = ref.read(sessionCountProvider);
+    final library =
+        count == null ? 'every guided session' : '$count guided sessions';
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Unlock the full library'),
         content: Text(
           signedIn
-              ? 'Start your 7-day free trial to access all 24 guided sessions. '
+              ? 'Start your 7-day free trial to access $library. '
                   'Cancel any time before the trial ends and you won’t be '
                   'charged.'
-              : 'Sign in and start your 7-day free trial to access all 24 '
-                  'guided sessions.',
+              : 'Sign in and start your 7-day free trial to access '
+                  '$library.',
         ),
         actions: [
           TextButton(

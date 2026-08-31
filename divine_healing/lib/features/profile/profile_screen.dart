@@ -9,6 +9,7 @@ import '../../providers/auth_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../config/support.dart';
 import '../../theme.dart';
+import '../../providers/content_providers.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -53,6 +54,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final sessionCount = ref.watch(sessionCountProvider);
     final user = ref.watch(currentUserProvider);
     final displayName = ref.watch(userDisplayNameProvider);
     final email = user?.email;
@@ -77,7 +79,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             _sectionHeader('Subscription'),
             const SizedBox(height: 12),
             if (hasSub) ...[
-              _activeSubscriptionCard(sub!),
+              _activeSubscriptionCard(sub!, sessionCount),
               if (cancelled) const SizedBox(height: 20),
             ],
             if (!hasSub || cancelled) ...[
@@ -94,6 +96,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ],
               _planCard(
                 context: context,
+                sessionCount: sessionCount,
                 tag: 'ANNUAL · MOST POPULAR',
                 price: 'CAD \$149',
                 period: '/year',
@@ -105,6 +108,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(height: 12),
               _planCard(
                 context: context,
+                sessionCount: sessionCount,
                 tag: 'MONTHLY',
                 price: 'CAD \$19',
                 period: '/month',
@@ -149,11 +153,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  static const _benefits = [
-    '24 guided sessions',
-    'All journaling & exercises',
-    'All future content',
-  ];
+  /// The count comes from the catalogue rather than being written out, so it
+  /// cannot promise a number the library no longer has. Null while loading —
+  /// the sentence simply drops the figure rather than flashing a wrong one.
+  static List<String> _benefits(int? sessionCount) => [
+        sessionCount == null
+            ? 'Every guided session'
+            : '$sessionCount guided sessions',
+        'All journaling & exercises',
+        'All future content',
+      ];
 
   Widget _userCard(
     BuildContext context,
@@ -241,6 +250,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Widget _planCard({
     required BuildContext context,
+    required int? sessionCount,
     required String tag,
     required String price,
     required String period,
@@ -288,7 +298,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               style: DHTypography.body(size: 12, color: DHColors.secondary),
             ),
             const SizedBox(height: 12),
-            ..._benefits.map(
+            ..._benefits(sessionCount).map(
               (b) => Padding(
                 padding: const EdgeInsets.only(bottom: 6),
                 child: Row(
@@ -315,7 +325,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
       );
 
-  Widget _activeSubscriptionCard(SubscriptionStatus s) {
+  Widget _activeSubscriptionCard(SubscriptionStatus s, int? sessionCount) {
     final planLine = s.planName ?? 'Divine Healing';
     final trialDays = s.trialDaysLeft;
     String statusLine;
@@ -395,7 +405,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               style: DHTypography.body(size: 13, color: DHColors.forestGreen)),
           const SizedBox(height: 8),
           Text(
-            'You have full access to all 24 sessions and future content. '
+            sessionCount == null
+                ? 'You have full access to every session and to future '
+                    'content. '
+                : 'You have full access to all $sessionCount sessions and '
+                    'future content. '
             'To cancel or update payment, email ${Support.email}.',
             style: DHTypography.caption(color: DHColors.secondary),
           ),

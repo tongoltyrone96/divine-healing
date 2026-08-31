@@ -8,7 +8,7 @@ import '../../providers/content_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../theme.dart';
 
-/// Library — 24 sessions from `admin_content.json` (or Supabase in M2),
+/// Library — every session from `admin_content.json` (or Supabase in M2),
 /// filtered by category, with per-session cards that navigate to the
 /// audio player.
 class LibraryScreen extends ConsumerWidget {
@@ -28,6 +28,7 @@ class LibraryScreen extends ConsumerWidget {
     final isReiki = category == 'reiki';
     final isChakra = category == 'chakra_healing';
     final isSignedIn = ref.watch(isSignedInProvider);
+    final sessionCount = ref.watch(sessionCountProvider);
 
     // Chakra Healing has no DB rows (all static, hardcoded 7 chakras in
     // /chakras). Everything else queries admin_content.json via provider.
@@ -39,7 +40,7 @@ class LibraryScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Library')),
       body: Column(
         children: [
-          if (!isSignedIn) _signInPrompt(context),
+          if (!isSignedIn) _signInPrompt(context, sessionCount),
           _filterChips(context),
           if (isReiki) _reikiBookingCard(context),
           if (isChakra) _chakraLink(context),
@@ -115,7 +116,8 @@ class LibraryScreen extends ConsumerWidget {
         ),
       );
 
-  Widget _signInPrompt(BuildContext context) => Container(
+  Widget _signInPrompt(BuildContext context, int? sessionCount) =>
+      Container(
         width: double.infinity,
         margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
         padding: const EdgeInsets.all(14),
@@ -153,7 +155,10 @@ class LibraryScreen extends ConsumerWidget {
                       style: DHTypography.heading(size: 14)),
                   const SizedBox(height: 2),
                   Text(
-                    'Sign in to unlock all 24 guided sessions.',
+                    sessionCount == null
+                        ? 'Sign in to unlock every guided session.'
+                        : 'Sign in to unlock all $sessionCount guided '
+                            'sessions.',
                     style: DHTypography.caption(color: DHColors.secondary),
                   ),
                 ],

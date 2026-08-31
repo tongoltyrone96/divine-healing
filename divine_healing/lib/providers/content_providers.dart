@@ -24,6 +24,22 @@ final allSessionsProvider =
   return repo.getAll(category: category);
 });
 
+/// How many sessions the library holds, for the copy that advertises it.
+///
+/// This was written out as "24" in five places. The client edits content in
+/// Supabase directly now, so a hard-coded number goes stale the first time
+/// she adds or removes anything — as it did the moment the empty "ABC"
+/// session was deleted and every screen still promised 24.
+///
+/// While the catalogue is loading there is no number to show. Callers get
+/// null and drop the count from the sentence rather than flashing a wrong
+/// one.
+final sessionCountProvider = Provider<int?>((ref) {
+  return ref.watch(allSessionsProvider(null)).whenOrNull(
+        data: (sessions) => sessions.length,
+      );
+});
+
 /// The 3 free preview sessions (Anxiety Release, Anxiety Release Short,
 /// Introduction to Reiki per client's free-tier definition).
 final freePreviewSessionsProvider = FutureProvider<List<ContentSession>>((ref) {
