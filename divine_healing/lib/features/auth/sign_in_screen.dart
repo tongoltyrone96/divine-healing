@@ -67,16 +67,22 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   Future<void> _handleEmail() async {
     final svc = _requireAuth();
     if (svc == null) return;
-    final email = await _promptForEmail();
-    if (email == null || email.isEmpty) return;
+    final entered = await _promptForEmail();
+    if (entered == null) return;
 
     setState(() => _busy = true);
     try {
-      await svc.sendMagicLink(email);
+      final password = entered.password;
+      if (password != null) {
+        await svc.signInWithPassword(email: entered.email, password: password);
+        // The auth state provider picks the session up; nothing to show.
+        return;
+      }
+      await svc.sendMagicLink(entered.email);
       if (!mounted) return;
       _showInfo(
-        'Sign-in link sent to $email. Check your inbox — and your spam '
-        'folder if it does not arrive in a minute.',
+        'Sign-in link sent to ${entered.email}. Check your inbox — and your '
+        'spam folder if it does not arrive in a minute.',
       );
     } catch (e) {
       _showError(_friendly(e));
@@ -163,46 +169,76 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     return 'Something went wrong. Please try again in a moment.';
   }
 
-  Future<String?> _promptForEmail() async {
-    final controller = TextEditingController();
-    return showDialog<String>(
+  /// Email, and optionally a password.
+  ///
+  /// The magic link is still how people get in — nothing in the app sets a
+  /// password. The field is here because both stores require reviewer
+  /// credentials for an app with paid content, and a reviewer cannot receive
+  /// a link sent to somebody else's inbox.
+  Future<({String email, String? password})?> _promptForEmail() async {
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
+    return showDialog<({String email, String? password})>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Sign in with email'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Enter your email and we will send you a magic link.',
-              style: DHTypography.body(size: 13, color: DHColors.secondary),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          final email = emailController.text.trim();
+          final password = passwordController.text;
+          void send() {
+            if (email.isEmpty) return;
+            Navigator.pop(
+              ctx,
+              (email: email, password: password.isEmpty ? null : password),
+            );
+          }
+
+          return AlertDialog(
+            title: const Text('Sign in with email'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Enter your email and we will send you a link. If you '
+                  'already have a password, enter it instead.',
+                  style: DHTypography.body(size: 13, color: DHColors.secondary),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: emailController,
+                  autofocus: true,
+                  keyboardType: TextInputType.emailAddress,
+                  onChanged: (_) => setDialogState(() {}),
+                  decoration: const InputDecoration(
+                    hintText: 'you@example.com',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  onChanged: (_) => setDialogState(() {}),
+                  onSubmitted: (_) => send(),
+                  decoration: const InputDecoration(
+                    labelText: 'Password (optional)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                hintText: 'you@example.com',
-                border: OutlineInputBorder(),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, null),
+                child: const Text('Cancel'),
               ),
-              onSubmitted: (v) =>
-                  Navigator.pop(ctx, v.trim().isEmpty ? null : v.trim()),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, null),
-              child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              final v = controller.text.trim();
-              Navigator.pop(ctx, v.isEmpty ? null : v);
-            },
-            child: const Text('Send link'),
-          ),
-        ],
+              ElevatedButton(
+                onPressed: email.isEmpty ? null : send,
+                child: Text(password.isEmpty ? 'Send link' : 'Sign in'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

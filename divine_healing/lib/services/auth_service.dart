@@ -129,5 +129,19 @@ class AuthService {
         .join();
   }
 
+  /// Signs in an account that has a password set.
+  ///
+  /// Both stores require reviewer credentials for an app with paid content,
+  /// and neither can receive a magic link — they have no access to the
+  /// inbox. Passwords are set server-side by data/23_make_review_account.js;
+  /// nothing in the app creates one, so the magic link remains the only way
+  /// an ordinary person gets an account.
+  Future<void> signInWithPassword({
+    required String email,
+    required String password,
+  }) async {
+    await _client.auth.signInWithPassword(email: email, password: password);
+  }
+
   Future<void> signOut() => _client.auth.signOut();
 }
