@@ -13,7 +13,17 @@
 #   automation/wsl/03_build_android.sh apk      # in WSL, first
 #   automation/play_screenshots.sh              # then this
 #
-# The device is resized to 1080x1920 for the capture and reset afterwards.
+# The device is resized for the capture and reset afterwards. Play asks for
+# phone screenshots and, separately, 7-inch and 10-inch tablet ones, all
+# marked required. Two passes cover it:
+#
+#   phone   1080x1920  density 420
+#   tablet  1440x2560  density 320   (9:16, inside both tablet ranges,
+#                                     so one set fills both slots)
+#
+# The tablet pass is worth doing rather than reusing the phone shots: the
+# layout genuinely differs — the home screen lays its category cards out
+# in two columns.
 # 720p is what the emulator ships with; Play accepts it, but it looks poor
 # beside the 1320x2868 iPhone set. 1080x1920 is 1.78:1, inside Play's 2:1
 # limit — the iPhone screenshots are 2.17:1 and would be rejected here.
