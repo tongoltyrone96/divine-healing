@@ -1,0 +1,100 @@
+# Captures the Play Store screenshots on an Android emulator.
+#
+# Deliberately a Linux runner. macOS bills at 10x on a private repo and the
+# iOS workflows already eat most of the allowance; Linux is charged at 1x,
+# so this one is close to free. Android release builds still happen locally
+# under WSL — Astrill's Winsock LSP crashes Gradle's JVM on Windows — but a
+# debug build for an emulator has no such problem here.
+#
+# The emulator is a Pixel 7 Pro: 1440x3120, comfortably inside Play's limits
+# and tall enough that the screenshots do not look cramped next to the
+# iPhone set.
+#
+# Same integration test as the iOS run, so the two stores show the same
+# screens in the same order.
+
+name: Android — Screenshots
+
+on:
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: 3.47.1
+  # The publishable Supabase pair. Without it the app falls back to
+  # local-only mode and the screenshots show a stale catalogue.
+  SUPABASE_URL: https://buzdtsupgmytqokgfsbn.supabase.co
+  SUPABASE_ANON_KEY: sb_publishable_7m-bk8K9-pW7CUEu-3Dnyg_dpaZWQDa
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install packages
+        working-directory: divine_healing
+        run: flutter pub get
+
+      - name: Let the emulator use KVM
+        run: |
+          # Without this the emulator falls back to software rendering and
+          # takes long enough to hit the job timeout.
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run the app and capture the screens
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7_pro
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          working-directory: divine_healing
+          script: |
+            flutter drive \
+              --driver test_driver/integration_test.dart \
+              --target integration_test/screenshots_test.dart \
+              --dart-define=SUPABASE_URL=$SUPABASE_URL \
+              --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+
+      - name: Report what was captured
+        if: always()
+        working-directory: divine_healing
+        run: |
+          if [ -d screenshots ]; then
+            for f in screenshots/*.png; do
+              echo "$(basename "$f")  $(python3 -c "
+import struct,sys
+h=open(sys.argv[1],'rb').read(26)
+w,ht=struct.unpack('>II',h[16:24])
+print(w,ht)" "$f")"
+            done
+          else
+            echo "::warning::No screenshots directory — the run captured nothing"
+          fi
+
+      - name: Keep the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-screenshots-${{ github.run_number }}
+          path: divine_healing/screenshots/*.png
+          if-no-files-found: warn
+          retention-days: 30

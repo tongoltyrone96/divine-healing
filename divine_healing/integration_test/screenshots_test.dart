@@ -8,6 +8,8 @@
 // Run it through the workflow, not by hand:
 //   .github/workflows/ios-simulator.yml
 
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -18,6 +20,13 @@ void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('captures the main screens', (tester) async {
+    // Android renders Flutter into a SurfaceView, which screenshot capture
+    // cannot read. Converting it first is Android-only; calling it on iOS
+    // throws.
+    if (Platform.isAndroid) {
+      await binding.convertFlutterSurfaceToImage();
+    }
+
     app.main();
 
     // pumpAndSettle waits for every animation to stop, and this app always
