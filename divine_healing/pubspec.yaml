@@ -118,18 +118,26 @@ flutter_native_splash:
   web: false
   fullscreen: false
 
-# flutter_launcher_icons: flutter pub run flutter_launcher_icons
+# Regenerate with: dart run flutter_launcher_icons
+#
+# The source is app_icon.png, not client_logo.png. The logo carries two lines
+# of type that are unreadable at 48dp and that Google's icon guidance is
+# against; app_icon.png is the circular tree alone, cropped and centred on
+# the app's own background by data/31_make_app_icon.py.
+#
+# The adaptive foreground is a separate file with far more margin: Android
+# masks that layer to roughly the middle two thirds and crops the rest.
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/logo/client_logo.png"
+  image_path: "assets/logo/app_icon.png"
   min_sdk_android: 21
   remove_alpha_ios: true
   background_color_ios: "#FCF5F8"
   adaptive_icon_background: "#FCF5F8"
-  adaptive_icon_foreground: "assets/logo/client_logo.png"
+  adaptive_icon_foreground: "assets/logo/app_icon_adaptive_fg.png"
   web:
     generate: true
-    image_path: "assets/logo/client_logo.png"
+    image_path: "assets/logo/app_icon.png"
     background_color: "#FCF5F8"
     theme_color: "#5B3A5E"
