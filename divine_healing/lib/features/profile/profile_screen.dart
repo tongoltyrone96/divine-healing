@@ -10,6 +10,7 @@ import '../../providers/subscription_providers.dart';
 import '../../config/support.dart';
 import '../../theme.dart';
 import '../../providers/content_providers.dart';
+import '../../services/purchases_service.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -103,6 +104,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 subtitle: 'Save 35% vs monthly',
                 highlighted: true,
                 paymentLink: StripeLinks.annual,
+                annual: true,
                 email: email,
               ),
               const SizedBox(height: 12),
@@ -115,6 +117,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 subtitle: 'Cancel any time',
                 highlighted: false,
                 paymentLink: StripeLinks.monthly,
+                annual: false,
                 email: email,
               ),
               const SizedBox(height: 12),
@@ -134,6 +137,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               subtitle: Support.email,
               onTap: () => _openSupportEmail(context),
             ),
+            // Apple requires a way to restore purchases. Someone who
+            // reinstalls, or signs in on a second device, has already paid
+            // and must not be asked again.
+            if (PurchasesService.isAvailable)
+              _accountTile(
+                icon: Icons.restore,
+                title: 'Restore Purchases',
+                subtitle: 'Already subscribed on this account?',
+                onTap: () => _restorePurchases(context),
+              ),
             _accountTile(
               icon: Icons.lock_outline,
               title: 'Privacy Policy',
@@ -180,6 +193,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         final svc = ref.read(authServiceProvider);
         if (svc == null) return;
         await svc.signOut();
+        // Otherwise the next person to sign in on this device inherits
+        // the previous account's entitlement.
+        await PurchasesService.instance.signOut();
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Signed out.')),
@@ -192,10 +208,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> _startCheckout(
     BuildContext context,
     String paymentLink,
-    String? email,
-  ) async {
-    // Guests must sign in first so Stripe can associate the subscription
-    // with a real user record in Supabase.
+    String? email, {
+    required bool annual,
+  }) async {
+    // Guests must sign in first so the purchase can be associated with a
+    // real user record in Supabase.
     if (email == null || email.isEmpty) {
       final go = await showDialog<bool>(
         context: context,
@@ -217,8 +234,116 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (go == true && context.mounted) context.push('/sign-in');
       return;
     }
+    // On a phone this has to go through the store. Apple and Google both
+    // forbid taking payment for in-app digital goods any other way, and a
+    // browser link is exactly what they reject for. The web build keeps
+    // Stripe: no store is involved there and it costs no commission.
+    if (PurchasesService.isAvailable) {
+      await _buyThroughStore(context, annual: annual);
+      return;
+    }
     final url = Uri.parse(StripeLinks.withEmail(paymentLink, email));
     await launchUrl(url, mode: LaunchMode.externalApplication);
+  }
+
+  /// Signs the current user into RevenueCat before any purchase or restore,
+  /// so what they buy attaches to their account rather than the device.
+  Future<bool> _ensurePurchasesReady() async {
+    final user = ref.read(authServiceProvider)?.currentUser;
+    final email = user?.email;
+    if (user == null || email == null) return false;
+    await PurchasesService.instance.configure(userId: user.id, email: email);
+    return true;
+  }
+
+  Future<void> _buyThroughStore(
+    BuildContext context, {
+    required bool annual,
+  }) async {
+    if (!await _ensurePurchasesReady()) return;
+    final service = PurchasesService.instance;
+
+    final packages = await service.plans();
+    if (!context.mounted) return;
+    if (packages.isEmpty) {
+      _say(context,
+          'Subscriptions are not available right now. Please try again '
+          'shortly.');
+      return;
+    }
+    // Matched on the product id rather than RevenueCat's package type, so
+    // renaming a package in their dashboard cannot quietly sell the wrong
+    // plan.
+    final wanted = annual ? '.annual' : '.monthly';
+    final package = packages.firstWhere(
+      (p) => p.storeProduct.identifier.contains(wanted),
+      orElse: () => packages.first,
+    );
+
+    final outcome = await service.buy(package);
+    if (!context.mounted) return;
+    switch (outcome) {
+      case PurchaseOutcome.purchased:
+      case PurchaseOutcome.restored:
+        await _waitForEntitlement(context);
+      case PurchaseOutcome.cancelled:
+        break;
+      case PurchaseOutcome.nothingToRestore:
+      case PurchaseOutcome.failed:
+        _say(
+            context,
+            service.lastError ??
+                'The purchase did not complete. You have not been charged.');
+    }
+  }
+
+  Future<void> _restorePurchases(BuildContext context) async {
+    if (!await _ensurePurchasesReady()) {
+      if (context.mounted) _say(context, 'Sign in first to restore.');
+      return;
+    }
+    final service = PurchasesService.instance;
+    final outcome = await service.restore();
+    if (!context.mounted) return;
+    switch (outcome) {
+      case PurchaseOutcome.restored:
+      case PurchaseOutcome.purchased:
+        await _waitForEntitlement(context);
+      case PurchaseOutcome.nothingToRestore:
+        _say(context, 'No previous purchase found on this account.');
+      case PurchaseOutcome.cancelled:
+      case PurchaseOutcome.failed:
+        _say(context, service.lastError ?? 'Could not restore purchases.');
+    }
+  }
+
+  /// The store confirms instantly; the entitlement reaches us only once
+  /// RevenueCat's webhook has written to `sh_subscribers`. The audio paywall
+  /// reads that table from Storage RLS, so until the row lands the sessions
+  /// genuinely will not play — better to wait here than to unlock a library
+  /// that then refuses to open.
+  Future<void> _waitForEntitlement(BuildContext context) async {
+    for (var attempt = 0; attempt < 10; attempt++) {
+      ref.invalidate(subscriptionStatusProvider);
+      final status = await ref.read(subscriptionStatusProvider.future);
+      if (status.hasFullAccess) {
+        if (context.mounted) _say(context, 'You are all set. Enjoy.');
+        return;
+      }
+      await Future<void>.delayed(const Duration(seconds: 2));
+    }
+    if (context.mounted) {
+      _say(
+          context,
+          'Payment received. Your access will appear in a moment — pull '
+          'down to refresh.');
+    }
+  }
+
+  void _say(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   Future<void> _openSupportEmail(BuildContext context) async {
@@ -258,6 +383,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     required bool highlighted,
     required String paymentLink,
     required String? email,
+    required bool annual,
   }) =>
       Container(
         padding: const EdgeInsets.all(14),
@@ -317,7 +443,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => _startCheckout(context, paymentLink, email),
+                onPressed: () =>
+                      _startCheckout(context, paymentLink, email,
+                          annual: annual),
                 child: const Text('Start 7-day free trial'),
               ),
             ),
