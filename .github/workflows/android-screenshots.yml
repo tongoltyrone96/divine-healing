@@ -61,11 +61,17 @@ jobs:
       - name: Run the app and capture the screens
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
-          target: google_apis
+          # API 34 with the google_apis image registered on adb and then
+          # never finished booting, twice. 33 with the plain image is the
+          # combination that boots reliably on these runners, and nothing
+          # here needs Play Services.
+          api-level: 33
+          target: default
           arch: x86_64
           profile: pixel_6
           disable-animations: true
+          emulator-boot-timeout: 900
+          ram-size: 4096M
           # No emulator-options override. The action's defaults are the
           # combination it is tested against; the custom set produced an
           # emulator that launched and never appeared on adb.
