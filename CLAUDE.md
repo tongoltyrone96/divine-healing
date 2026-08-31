@@ -241,7 +241,7 @@ Recovered from the Glide bundle before she confirmed it; wired into
 
 Working end to end. The repo is private at `tongoltyrone96/divine-healing`
 and `.github/workflows/ios-testflight.yml` builds, signs and uploads on
-`workflow_dispatch`. **Build 7 is VALID in TestFlight.**
+`workflow_dispatch`. **Builds 7, 8 and 9 are VALID in TestFlight**; 9 is current.
 
 Getting there took four attempts, and three of the four failures pointed
 somewhere other than their cause:
@@ -333,13 +333,31 @@ energy makes you "less likely to get sick". App Review rejects health
 claims it considers unsubstantiated, and this is the client's own wording,
 so it is her call rather than ours.
 
+### Content (2026-08-31)
+
+The client's decisions are applied. `sh_content` holds **23 rows**: the
+empty "ABC" session is gone, and "Forgivness" and "Charkra Short" are
+spelled correctly. `data/21_fix_content_titles.js` did it and is safe to
+re-run; the bundled `admin_content.json` fallback matches.
+
+Deleting one row exposed that **"24" was written into five pieces of
+user-facing copy**, all of which became wrong at once. The count now comes
+from `sessionCountProvider`, which reads the loaded catalogue. She edits
+content in Supabase directly, so any fixed number would go stale again the
+next time she adds anything.
+
+`SUPABASE_SECRET_KEY` now lives in `divine_healing/.env`. It has been shown
+in screenshots and pasted into chat, so treat it as known — Tyrone's call
+is to rotate at launch rather than mid-development. The file says so too.
+
 ### Next
 1. RevenueCat, once the Paid Applications Agreement clears — subscription
    products cannot be created before it does, so nothing here can start.
 2. Client: Apple tax and banking, Small Business Program, Play payment
    details, twelve Play testers.
-3. Client: confirm the listing copy, whether "ABC" is deleted, and the two
-   title typos.
+3. Client: confirm the listing copy, and check Sign in with Apple on a real
+   iPhone — the simulator cannot.
+4. Rotate the Supabase secret key at launch.
 
 ## Working Notes
 
