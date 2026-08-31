@@ -274,7 +274,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     // Matched on the product id rather than RevenueCat's package type, so
     // renaming a package in their dashboard cannot quietly sell the wrong
     // plan.
-    final wanted = annual ? '.annual' : '.monthly';
+    //
+    // No leading dot in the match. Apple's identifiers are
+    // com.divinehealing.app.annual, but Play's are shaped
+    // divine_healing_annual:annual — a dot would have matched on iOS and
+    // silently fallen through to packages.first on Android, which is the
+    // monthly plan.
+    final wanted = annual ? 'annual' : 'monthly';
     final package = packages.firstWhere(
       (p) => p.storeProduct.identifier.contains(wanted),
       orElse: () => packages.first,
