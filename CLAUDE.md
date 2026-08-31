@@ -350,14 +350,48 @@ next time she adds anything.
 in screenshots and pasted into chat, so treat it as known — Tyrone's call
 is to rotate at launch rather than mid-development. The file says so too.
 
+### Subscriptions (2026-08-31)
+
+**The Paid Applications Agreement is active.** The client said the payment
+side was done for both stores; this proves it for Apple, because App Store
+Connect refuses to create a subscription until the agreement is live and
+there is no API that reports the agreement's status directly. The refusal
+is the only signal, and it did not come.
+
+`node data/20_appstore_api.js create-subscriptions` then
+`configure-subscriptions` built:
+
+- group **Divine Healing Membership**, with its own display name — without
+  that the plans stay incomplete no matter how finished they look
+- `com.divinehealing.app.monthly` CAD 19.00 and `.annual` CAD 149.00,
+  matching Stripe
+- availability in 175 territories — a subscription with none cannot be
+  priced, and the refusal reads as a pricing error
+- a seven-day free trial in each of those territories; the endpoint has no
+  "everywhere" option
+- a review screenshot each. 1080x1920 was rejected as
+  IMAGE_INCORRECT_DIMENSIONS *after* a successful upload, so the iOS
+  capture is used
+
+Both still read `MISSING_METADATA`. Everything findable through the API is
+set; App Store Connect's own UI names the remaining field, and the API does
+not. Worth ten minutes in the browser before assuming anything is wrong.
+
+Store screenshots live in `store/ios/` (1320x2868) and `store/play/`
+(1080x1920, captured by `automation/play_screenshots.sh`). They are not
+interchangeable: Play caps phone screenshots at 2:1 and the iOS set is
+2.17:1, while Apple checks against its own device sizes.
+
 ### Next
-1. RevenueCat, once the Paid Applications Agreement clears — subscription
-   products cannot be created before it does, so nothing here can start.
-2. Client: Apple tax and banking, Small Business Program, Play payment
-   details, twelve Play testers.
-3. Client: confirm the listing copy, and check Sign in with Apple on a real
+1. RevenueCat, now that products exist.
+2. Client: Small Business Program (Apple) and the 15% service fee (Play) —
+   neither is automatic, and both halve the commission. The Play payments
+   warning says "contact your account owner", so it is hers, not ours.
+3. Client: twelve Play testers, and Sign in with Apple checked on a real
    iPhone — the simulator cannot.
-4. Rotate the Supabase secret key at launch.
+4. Apple's EU trader review is still open on her side. It gates EU
+   distribution, not the build or the products.
+5. Rotate the Supabase secret key at launch.
 
 ## Working Notes
 

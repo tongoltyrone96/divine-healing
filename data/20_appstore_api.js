@@ -228,6 +228,386 @@ const [, , command, ...args] = process.argv;
       break;
     }
 
+    case 'configure-subscriptions': {
+      // Fills in what create-subscriptions deliberately left out: the
+      // display name and description reviewers and customers see, the CAD
+      // price, and the seven-day trial. Until all three exist a subscription
+      // sits in MISSING_METADATA and cannot be submitted.
+      //
+      // CAD because the client sells in CAD — the Stripe products already
+      // do, and a different currency in the App Store would be a different
+      // price to the same customer.
+      const plans = [
+        {
+          productId: BUNDLE_ID + '.monthly',
+          name: 'Monthly',
+          price: 19.0,
+          // Apple caps this at 55 characters, which is shorter than it
+          // sounds and is checked here rather than by a 409.
+          description: 'Every session and exercise. Cancel any time.',
+        },
+        {
+          productId: BUNDLE_ID + '.annual',
+          name: 'Annual',
+          price: 149.0,
+          description: 'Everything, for a year. 35% less than monthly.',
+        },
+      ];
+
+      const app = await api('GET',
+        '/v1/apps?filter[bundleId]=' + encodeURIComponent(BUNDLE_ID));
+      const groups = await api('GET',
+        '/v1/apps/' + app.data[0].id + '/subscriptionGroups?limit=20');
+      if (!groups.data.length) {
+        throw new Error('No subscription group. Run create-subscriptions.');
+      }
+      // The group needs its own display name — this is the heading
+      // customers see above the two plans on the subscription sheet.
+      // Without it both plans stay in MISSING_METADATA no matter how
+      // complete they are individually.
+      const groupLocs = await api('GET', '/v1/subscriptionGroups/' +
+        groups.data[0].id + '/subscriptionGroupLocalizations?limit=20');
+      if (groupLocs.data.some((l) => l.attributes.locale === 'en-US')) {
+        console.log('Group name already set');
+      } else {
+        await api('POST', '/v1/subscriptionGroupLocalizations', {
+          data: {
+            type: 'subscriptionGroupLocalizations',
+            attributes: { locale: 'en-US', name: 'Divine Healing' },
+            relationships: {
+              subscriptionGroup: {
+                data: {
+                  type: 'subscriptionGroups',
+                  id: groups.data[0].id,
+                },
+              },
+            },
+          },
+        });
+        console.log('Group name written');
+      }
+
+      let allTerritories = null;
+      const subs = await api('GET', '/v1/subscriptionGroups/' +
+        groups.data[0].id + '/subscriptions?limit=20');
+
+      for (const plan of plans) {
+        if (plan.description.length > 55) {
+          throw new Error(plan.productId + ': description is ' +
+            plan.description.length + ' characters, limit 55');
+        }
+        const sub = subs.data.find(
+          (x) => x.attributes.productId === plan.productId);
+        if (!sub) {
+          console.log('  MISSING  ' + plan.productId);
+          continue;
+        }
+        console.log(plan.productId);
+
+        // 1. Localization. Apple caps the display name at 30 characters and
+        // shows it on the subscription sheet.
+        const locs = await api('GET',
+          '/v1/subscriptions/' + sub.id + '/subscriptionLocalizations?limit=20');
+        if (locs.data.some((l) => l.attributes.locale === 'en-US')) {
+          console.log('  localization already set');
+        } else {
+          await api('POST', '/v1/subscriptionLocalizations', {
+            data: {
+              type: 'subscriptionLocalizations',
+              attributes: {
+                locale: 'en-US',
+                name: plan.name,
+                description: plan.description,
+              },
+              relationships: {
+                subscription: { data: { type: 'subscriptions', id: sub.id } },
+              },
+            },
+          });
+          console.log('  localization written');
+        }
+
+        // 2. Availability. A subscription with no territories cannot be
+        // priced, and the refusal reads 'an error occurred while processing
+        // the pricing information' — which points at the price.
+        if (!allTerritories) {
+          const t = await api('GET', '/v1/territories?limit=200');
+          allTerritories = t.data.map(
+            (x) => ({ type: 'territories', id: x.id }));
+        }
+        let availability = null;
+        try {
+          availability = await api('GET', '/v1/subscriptions/' + sub.id +
+            '/subscriptionAvailability?fields[subscriptionAvailabilities]=' +
+            'availableInNewTerritories');
+        } catch (e) {
+          if (!e.message.includes('404')) throw e;
+        }
+        if (availability) {
+          console.log('  availability already set');
+        } else {
+          if (!allTerritories) {
+            const t = await api('GET', '/v1/territories?limit=200');
+            allTerritories = t.data.map(
+              (x) => ({ type: 'territories', id: x.id }));
+          }
+          await api('POST', '/v1/subscriptionAvailabilities', {
+            data: {
+              type: 'subscriptionAvailabilities',
+              // New App Store territories are opted into automatically. The
+              // alternative is the subscription quietly not existing in a
+              // country the app is otherwise sold in.
+              attributes: { availableInNewTerritories: true },
+              relationships: {
+                subscription: { data: { type: 'subscriptions', id: sub.id } },
+                availableTerritories: { data: allTerritories },
+              },
+            },
+          });
+          console.log('  available in ' + allTerritories.length + ' territories');
+        }
+
+        // 3. Price. Apple offers a fixed ladder of price points per
+        // territory, so the exact figure has to exist on it — CAD 19.00 and
+        // 149.00 both do. The ladder runs to several hundred entries, hence
+        // the paging.
+        const prices = await api('GET',
+          '/v1/subscriptions/' + sub.id + '/prices?limit=20');
+        if (prices.data.length) {
+          console.log('  price already set');
+        } else {
+          let url = '/v1/subscriptions/' + sub.id +
+            '/pricePoints?filter[territory]=CAN&limit=200';
+          let point = null;
+          while (url && !point) {
+            const page = await api('GET', url);
+            point = page.data.find(
+              (x) => Number(x.attributes.customerPrice) === plan.price);
+            const next = page.links && page.links.next;
+            url = next ? next.replace(BASE, '') : null;
+          }
+          if (!point) {
+            throw new Error('No CAD price point at ' + plan.price);
+          }
+          await api('POST', '/v1/subscriptionPrices', {
+            data: {
+              type: 'subscriptionPrices',
+              // No attributes. startDate and preserveCurrentPrice are both
+              // optional, and sending them on a subscription that has never
+              // had a price is what Apple was objecting to.
+              relationships: {
+                subscription: { data: { type: 'subscriptions', id: sub.id } },
+                subscriptionPricePoint: {
+                  data: { type: 'subscriptionPricePoints', id: point.id },
+                },
+                // Naming the territory as well as the price point: without
+                // it Apple answers 'an error occurred while processing the
+                // pricing information', which says nothing about what is
+                // missing.
+              },
+            },
+          });
+          console.log('  price set to CAD ' + plan.price.toFixed(2));
+        }
+
+        // 4. Review screenshot. Apple requires one per subscription and
+        // will not leave MISSING_METADATA without it. The Profile screen
+        // shows both plans, their prices and the trial, which is exactly
+        // what a reviewer is checking.
+        let hasShot = false;
+        try {
+          const existing = await api('GET', '/v1/subscriptions/' + sub.id +
+            '/appStoreReviewScreenshot?fields[subscriptionAppStoreReview' +
+            'Screenshots]=assetDeliveryState');
+          const delivery = existing.data.attributes.assetDeliveryState;
+          if (delivery.state === 'FAILED') {
+            // Apple accepts the upload and rejects the image afterwards, so
+            // a failed screenshot sits there looking present. The reason is
+            // in delivery.errors — 1080x1920 came back as
+            // IMAGE_INCORRECT_DIMENSIONS; it wants a real iPhone size.
+            const why = (delivery.errors || [])
+              .map((e) => e.code).join(', ');
+            console.log('  replacing failed screenshot (' + why + ')');
+            await api('DELETE',
+              '/v1/subscriptionAppStoreReviewScreenshots/' + existing.data.id);
+          } else {
+            hasShot = true;
+          }
+        } catch (e) {
+          if (!e.message.includes('404')) throw e;
+        }
+        if (hasShot) {
+          console.log('  review screenshot already uploaded');
+        } else {
+          // The iOS capture, not the Android one: Apple checks the
+          // dimensions against its own device sizes.
+          const shot = path.join(__dirname, '..', 'store', 'ios',
+            '04-profile.png');
+          const bytes = fs.readFileSync(shot);
+          const reserved = await api('POST',
+            '/v1/subscriptionAppStoreReviewScreenshots', {
+              data: {
+                type: 'subscriptionAppStoreReviewScreenshots',
+                attributes: {
+                  fileSize: bytes.length,
+                  fileName: 'subscription-plans.png',
+                },
+                relationships: {
+                  subscription: {
+                    data: { type: 'subscriptions', id: sub.id },
+                  },
+                },
+              },
+            });
+          for (const op of reserved.data.attributes.uploadOperations) {
+            const headers = {};
+            for (const h of op.requestHeaders) headers[h.name] = h.value;
+            const put = await fetch(op.url, {
+              method: op.method,
+              headers,
+              body: bytes.subarray(op.offset, op.offset + op.length),
+            });
+            if (!put.ok) {
+              throw new Error('review screenshot upload: HTTP ' + put.status);
+            }
+          }
+          await api('PATCH', '/v1/subscriptionAppStoreReviewScreenshots/' +
+            reserved.data.id, {
+              data: {
+                type: 'subscriptionAppStoreReviewScreenshots',
+                id: reserved.data.id,
+                attributes: {
+                  uploaded: true,
+                  sourceFileChecksum: crypto.createHash('md5')
+                    .update(bytes).digest('hex'),
+                },
+              },
+            });
+          console.log('  review screenshot uploaded');
+        }
+
+        // 4. The trial the Profile screen already advertises.
+        const offers = await api('GET', '/v1/subscriptions/' + sub.id +
+          '/introductoryOffers?limit=20');
+        // Introductory offers are per-territory — there is no "everywhere"
+        // option on this endpoint. The Profile screen advertises the trial
+        // to everyone, so it has to exist everywhere the subscription does.
+        const have = new Set(offers.data.map((o) => o.id));
+        if (have.size >= allTerritories.length) {
+          console.log('  trial already set in every territory');
+        } else {
+          let added = 0;
+          for (const territory of allTerritories) {
+            try {
+              await api('POST', '/v1/subscriptionIntroductoryOffers', {
+                data: {
+                  type: 'subscriptionIntroductoryOffers',
+                  attributes: {
+                    duration: 'ONE_WEEK',
+                    offerMode: 'FREE_TRIAL',
+                    numberOfPeriods: 1,
+                  },
+                  relationships: {
+                    subscription: {
+                      data: { type: 'subscriptions', id: sub.id },
+                    },
+                    territory: { data: territory },
+                  },
+                },
+              });
+              added += 1;
+            } catch (e) {
+              // A territory that already has one, or that the subscription
+              // is not sold in, is not worth stopping for.
+              if (!/already|conflict|409/i.test(e.message)) throw e;
+            }
+          }
+          console.log('  7-day free trial added in ' + added + ' territories');
+        }
+      }
+      break;
+    }
+
+    case 'create-subscriptions': {
+      // Also the only reliable test of whether the Paid Applications
+      // Agreement is active. App Store Connect refuses to create a
+      // subscription until it is, and there is no API that reports the
+      // agreement's status directly — the refusal is the answer.
+      //
+      // Prices and the free trial are not set here. Those are separate
+      // resources and depend on Apple's price points, which are worth
+      // getting right rather than guessing at.
+      const app = await api('GET',
+        '/v1/apps?filter[bundleId]=' + encodeURIComponent(BUNDLE_ID));
+      const appId = app.data[0].id;
+
+      const groupName = 'Divine Healing Membership';
+      const groups = await api('GET',
+        '/v1/apps/' + appId + '/subscriptionGroups?limit=20');
+      let group = groups.data.find(
+        (g) => g.attributes.referenceName === groupName);
+      if (group) {
+        console.log('Group already exists: ' + groupName);
+      } else {
+        const made = await api('POST', '/v1/subscriptionGroups', {
+          data: {
+            type: 'subscriptionGroups',
+            attributes: { referenceName: groupName },
+            relationships: { app: { data: { type: 'apps', id: appId } } },
+          },
+        });
+        group = made.data;
+        console.log('Created group: ' + groupName);
+      }
+
+      // One group, so a subscriber moving between the two plans upgrades
+      // rather than ending up paying for both.
+      const plans = [
+        {
+          productId: BUNDLE_ID + '.monthly',
+          name: 'Monthly',
+          period: 'ONE_MONTH',
+        },
+        {
+          productId: BUNDLE_ID + '.annual',
+          name: 'Annual',
+          period: 'ONE_YEAR',
+        },
+      ];
+      const existing = await api('GET',
+        '/v1/subscriptionGroups/' + group.id + '/subscriptions?limit=20');
+      for (const plan of plans) {
+        if (existing.data.some(
+          (x) => x.attributes.productId === plan.productId)) {
+          console.log('  exists   ' + plan.productId);
+          continue;
+        }
+        await api('POST', '/v1/subscriptions', {
+          data: {
+            type: 'subscriptions',
+            attributes: {
+              name: plan.name,
+              productId: plan.productId,
+              subscriptionPeriod: plan.period,
+              // Apple requires this on create and shows it only to review.
+              reviewNote: 'Unlocks the full library of guided sessions and '
+                + 'the written exercises. No account or code needed to test.',
+              familySharable: false,
+            },
+            relationships: {
+              group: {
+                data: { type: 'subscriptionGroups', id: group.id },
+              },
+            },
+          },
+        });
+        console.log('  created  ' + plan.productId + '  (' + plan.period + ')');
+      }
+      console.log('');
+      console.log('Prices and the 7-day trial still have to be set.');
+      break;
+    }
+
     case 'upload-screenshots': {
       // Apple's upload is a three-step handshake, not a POST: reserve a slot
       // and it answers with the URLs and byte ranges to PUT to, then the
