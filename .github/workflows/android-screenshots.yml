@@ -6,9 +6,7 @@
 # under WSL — Astrill's Winsock LSP crashes Gradle's JVM on Windows — but a
 # debug build for an emulator has no such problem here.
 #
-# The emulator is a Pixel 7 Pro: 1440x3120, comfortably inside Play's limits
-# and tall enough that the screenshots do not look cramped next to the
-# iPhone set.
+# The emulator is a Pixel 6: 1080x2400, comfortably inside Play's limits.
 #
 # Same integration test as the iOS run, so the two stores show the same
 # screens in the same order.
@@ -56,6 +54,9 @@ jobs:
             | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
+          # Fail here rather than watching adb time out for ten minutes if
+          # the runner has no KVM at all.
+          ls -l /dev/kvm
 
       - name: Run the app and capture the screens
         uses: reactivecircus/android-emulator-runner@v2
@@ -63,9 +64,11 @@ jobs:
           api-level: 34
           target: google_apis
           arch: x86_64
-          profile: pixel_7_pro
+          profile: pixel_6
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          # No emulator-options override. The action's defaults are the
+          # combination it is tested against; the custom set produced an
+          # emulator that launched and never appeared on adb.
           working-directory: divine_healing
           script: |
             flutter drive \

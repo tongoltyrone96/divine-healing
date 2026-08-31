@@ -1,0 +1,35 @@
+{
+  "_comment": [
+    "Google Play listing copy. Paste into Play Console:",
+    "  Grow users -> Store presence -> Main store listing",
+    "",
+    "Play's limits differ from Apple's: title 30, short description 80,",
+    "full description 4000. Play has no keywords field — it indexes the",
+    "description instead, so the terms Apple takes as keywords are worked",
+    "into the prose here rather than listed.",
+    "",
+    "Same substance as data/store/app_store_en-US.json. Both describe what",
+    "the binary contains; Play removes listings that promise more.",
+    "",
+    "Assets Play requires that Apple does not:",
+    "  feature graphic 1024x500  -> divine_healing/assets/store/feature_graphic.png",
+    "  app icon 512x512          -> divine_healing/assets/logo/app_icon.png",
+    "",
+    "Needs the client's eye before publishing."
+  ],
+
+  "locale": "en-US",
+
+  "title": "Divine Healing",
+
+  "shortDescription": "Guided meditation, shadow work, chakra healing and Reiki in one place.",
+
+  "fullDescription": "Divine Healing by Strawberry Hope brings meditation, shadow work, chakra healing and Reiki into one place, so you can sit down and begin without first deciding where to start.\n\nTWENTY-THREE GUIDED SESSIONS\nFrom five-minute resets to twenty-two-minute journeys: anxiety release, inner child work, heart healing, energy clearing, morning and evening practice, sleep meditation and more. Audio keeps playing when you leave the app or lock the phone, with full controls on the lock screen, so you can close your eyes and put it down.\n\nSHADOW WORK WITH JOURNALING\nSeven reflection prompts accompany the shadow work sessions. What you write is saved privately to your account and is waiting when you come back to it.\n\nA MANIFESTATION PRACTICE\nFive questions, written out: what you want, why you want it, who you become when you have it, what changes, and the one action you take next.\n\nAFFIRMATIONS AND BREATHWORK\nTwenty affirmations to keep as favourites, and seven breathing techniques for when you need to steady yourself in a few minutes.\n\nREIKI AND SPIRITUAL AWAKENING\nReadings on Reiki and on the awakening process, each with prompts to reflect on — and you can book a session with Strawberry Hope directly from the app.\n\nMINDFULNESS FOR SLEEP, ANXIETY AND ENERGY\nWhether you are looking for a sleep meditation, help with anxiety, chakra balancing or a daily mindfulness habit, the library is organised so you can find it in a few taps.\n\nSTART FREE\nBrowse the whole library without an account. Three sessions are open to everyone. A subscription unlocks all twenty-three, every written exercise, and everything added later.\n\nSubscription is CAD $19 per month or CAD $149 per year, each with a seven-day free trial. Cancel any time.\n\nPrivacy policy: https://divine-healing-iota.vercel.app/privacy",
+
+  "privacyPolicyUrl": "https://divine-healing-iota.vercel.app/privacy",
+  "websiteUrl": "https://divine-healing-iota.vercel.app",
+  "supportEmail": "gstsaver@me.com",
+
+  "category": "Health & Fitness",
+  "tags": ["meditation", "mindfulness", "wellness"]
+}
