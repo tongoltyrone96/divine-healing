@@ -36,7 +36,11 @@ env:
 jobs:
   screenshots:
     runs-on: macos-latest
-    timeout-minutes: 45
+    # A healthy run takes about 16 minutes. flutter drive occasionally
+    # never connects to the app after the Xcode build finishes and then
+    # sits there — one such hang burned 45 minutes, which is 450 against
+    # the allowance at the 10x macOS rate. Cut the loss sooner.
+    timeout-minutes: 25
 
     steps:
       - uses: actions/checkout@v4
