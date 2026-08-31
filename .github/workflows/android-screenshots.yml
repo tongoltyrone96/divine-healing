@@ -78,17 +78,15 @@ jobs:
         if: always()
         working-directory: divine_healing
         run: |
-          if [ -d screenshots ]; then
-            for f in screenshots/*.png; do
-              echo "$(basename "$f")  $(python3 -c "
-import struct,sys
-h=open(sys.argv[1],'rb').read(26)
-w,ht=struct.unpack('>II',h[16:24])
-print(w,ht)" "$f")"
-            done
-          else
-            echo "::warning::No screenshots directory — the run captured nothing"
-          fi
+          # `file` prints the pixel dimensions, which is all that needs
+          # checking. An inline multi-line python -c here would break out of
+          # this block scalar and make the whole workflow unparseable — that
+          # has already cost one debugging session on the iOS workflow.
+          ls screenshots/*.png >/dev/null 2>&1 || {
+            echo "::warning::No screenshots — the run captured nothing"
+            exit 0
+          }
+          file screenshots/*.png
 
       - name: Keep the screenshots
         if: always()
