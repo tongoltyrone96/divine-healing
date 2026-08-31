@@ -94,6 +94,11 @@ jobs:
           disable-animations: true
           emulator-boot-timeout: 900
           ram-size: 4096M
+          # The action defaults to 2, and the emulator says so itself:
+          # "AVD 'test' will run more smoothly with 4 CPU cores". With 2
+          # it installed the app and then hung — 'detected a hanging
+          # thread QEMU2 main loop' — and took the run down with it.
+          cores: 4
           disk-size: 8G
           # No emulator-options override. The action's defaults are the
           # combination it is tested against; the custom set produced an
