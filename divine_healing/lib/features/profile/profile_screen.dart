@@ -10,6 +10,8 @@ import '../../providers/subscription_providers.dart';
 import '../../config/support.dart';
 import '../../theme.dart';
 import '../../providers/content_providers.dart';
+import '../../providers/account_providers.dart';
+import '../../services/account_deletion_service.dart';
 import '../../services/purchases_service.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -159,6 +161,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               subtitle: 'The agreement you are on',
               onTap: () => context.push('/terms'),
             ),
+            // Both stores require this for any app with sign-in, and it is last
+            // on the list on purpose — nobody should reach it while aiming for
+            // something else.
+            if (user != null)
+              _accountTile(
+                icon: Icons.person_remove_outlined,
+                title: 'Delete Account',
+                subtitle: 'Permanently remove your account and data',
+                onTap: () => _confirmDeleteAccount(context),
+              ),
             const SizedBox(height: 32),
           ],
         ),
@@ -343,6 +355,56 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           context,
           'Payment received. Your access will appear in a moment — pull '
           'down to refresh.');
+    }
+  }
+
+  /// Two taps, and the second one spells out what goes. Reviewers check
+  /// that deletion is reachable; the confirmation is for the person who
+  /// reached it by accident.
+  Future<void> _confirmDeleteAccount(BuildContext context) async {
+    final service = ref.read(accountDeletionServiceProvider);
+    if (service == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete your account?'),
+        content: const Text(
+          'This removes your account, your journal entries, your '
+          'manifestation answers, your saved affirmations and your progress. '
+          'It cannot be undone.\n\n'
+          'If you have a subscription, cancel it in the App Store or Play '
+          'Store as well. Deleting your account here does not stop the '
+          'billing they hold.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Keep my account'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(
+              foregroundColor: DHColors.strawberryBlush,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    final outcome = await service.deleteCurrentAccount();
+    if (!context.mounted) return;
+    switch (outcome) {
+      case DeletionOutcome.deleted:
+        _say(context, 'Your account has been deleted.');
+        context.go('/');
+      case DeletionOutcome.notSignedIn:
+        break;
+      case DeletionOutcome.failed:
+        _say(context, service.lastError ??
+            'Could not delete the account. Please try again.');
     }
   }
 

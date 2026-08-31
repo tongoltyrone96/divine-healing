@@ -122,31 +122,26 @@ and there is no microphone permission in the Android manifest.
 
 ---
 
-## ⚠️ Blocker: account deletion is not implemented
+## Account deletion — built 2026-08-31
 
-Both stores require it, and neither is optional:
+Answer **Yes** to the deletion question. All three pieces exist:
 
-- **Google Play**: an app that lets people create an account must offer an
-  in-app route to delete it, *and* a web URL that works without installing
-  the app. Enforced since 2023.
-- **Apple**: App Review Guideline 5.1.1(v), enforced since June 2022.
+1. **In the app**: Profile → Account → Delete Account, behind a
+   confirmation that spells out what goes.
+2. **Server**: the `delete-account` Edge Function removes the rows from all
+   five user tables and then the login. It takes the caller from their JWT
+   and has no user id parameter, so a forged request can only delete the
+   account it already authenticated as. Deployed *with* JWT verification,
+   unlike the webhooks — and verified to refuse the anon key, which is
+   itself a valid JWT and would otherwise have been enough to reach it.
+3. **Public page**: https://divine-healing-iota.vercel.app/delete-account —
+   reachable without signing in or installing anything, which is what Play
+   asks for. It also names the support address, for someone who has already
+   uninstalled.
 
-The app has sign-in but no way to delete an account. Answering "Yes" above
-before that exists would be a false declaration, and answering "No" fails
-the review anyway.
-
-What it needs:
-
-1. A "Delete account" row on the Profile screen, behind a confirmation.
-2. A Supabase Edge Function that removes the auth user and their rows from
-   `sh_subscribers`, `sh_content_progress`, `sh_affirmation_favourites`,
-   `sh_manifestation_responses` and `sh_shadow_work_responses`.
-3. A public page at the same address as the privacy policy, so the URL can
-   go in both store listings.
-
----
+Deletion is immediate and total. There is no soft-delete and no recovery
+window, which is what makes "Yes" a truthful answer.
 
 ## Data deletion URL
 
-`https://divine-healing-iota.vercel.app/delete-account` — to be built with
-the above.
+`https://divine-healing-iota.vercel.app/delete-account`

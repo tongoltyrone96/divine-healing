@@ -21,6 +21,7 @@ import 'features/content_detail/content_detail_screen.dart';
 import 'features/shadow_work/shadow_work_screen.dart';
 import 'features/auth/sign_in_screen.dart';
 import 'features/booking/booking_screen.dart';
+import 'features/legal/delete_account_screen.dart';
 import 'features/legal/privacy_policy_screen.dart';
 import 'features/legal/terms_of_service_screen.dart';
 
@@ -151,6 +152,13 @@ GoRouter buildRouter() {
       GoRoute(
         path: '/terms',
         builder: (_, __) => const TermsOfServiceScreen(),
+      ),
+      // Outside the shell and outside any sign-in check, on purpose: Play
+      // requires an address that works for someone who has already
+      // uninstalled the app.
+      GoRoute(
+        path: '/delete-account',
+        builder: (_, __) => const DeleteAccountScreen(),
       ),
     ],
   );
