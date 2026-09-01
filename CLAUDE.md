@@ -426,6 +426,35 @@ has already uninstalled. The function takes the caller from their JWT and
 accepts no user id, and was checked against the anon key — which is itself
 a valid JWT and would otherwise have been enough to reach it.
 
+### Play store listing (2026-09-01)
+
+All eleven dashboard items are done: listing copy, screenshots (phone
+1080x1920 and tablet 1440x2560, both required), feature graphic, icon,
+content rating, target audience, Data safety, health declaration, category
+and contact details. Nothing is submitted — the app is still a draft and
+`Send app for review` stays disabled until a release exists.
+
+Two answers worth remembering:
+
+- **Sign in details: Yes.** The subscription makes part of the app
+  restricted, so Play requires reviewer credentials. It also forbids
+  reviewers creating accounts, using their own, or taking a free trial.
+- **Health features: stress management and relaxation only.** Not "mental
+  and behavioural health", which is the clinical category and pulls in
+  medical-app policy. Google then confirmed no regional requirements apply.
+
+**Reviewer account**: `appreview@divinehealing.app`, password in the store
+consoles. The app had no way for a reviewer to sign in — Google, Apple and
+a magic link are all unusable by someone who cannot read the inbox — so
+password sign-in was added to `AuthService`, and
+`data/23_make_review_account.js` creates the account with an active
+`sh_subscribers` row. Written rather than bought, because Play forbids the
+alternative. Verified: it signs in, `sh_has_full_access` is true for it,
+and it can sign a paid track while a signed-out caller still cannot.
+
+Nothing in the app *sets* a password, so the magic link remains the only
+way an ordinary person gets an account.
+
 ### Next
 
 1. **Android purchases.** Everything is built; it needs a Play service
