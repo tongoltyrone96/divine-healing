@@ -228,6 +228,73 @@ const [, , command, ...args] = process.argv;
       break;
     }
 
+    case 'review-details': {
+      // What App Review reads before opening the app: who to contact, and
+      // how to get past the paywall. Without a working demo account they
+      // see three free sessions and a locked library, which is a rejection.
+      const app = await api('GET',
+        '/v1/apps?filter[bundleId]=' + encodeURIComponent(BUNDLE_ID));
+      const versions = await api('GET',
+        '/v1/apps/' + app.data[0].id + '/appStoreVersions?limit=1');
+      const versionId = versions.data[0].id;
+
+      const attributes = {
+        contactFirstName: 'Tyrone Jher',
+        contactLastName: 'Tongol',
+        contactPhone: '+63 999 000 0000',
+        contactEmail: 'tongoltyrone84@gmail.com',
+        demoAccountName: 'appreview@divinehealing.app',
+        demoAccountPassword: process.env.APPSTORE_DEMO_PASSWORD || '',
+        demoAccountRequired: true,
+        notes:
+          'Signing in is optional for browsing: the library and three free '
+          + 'sessions work without an account. The demo account above '
+          + 'unlocks the remaining sessions.\n\n'
+          + 'To sign in, tap "Continue with Email" on the sign-in screen, '
+          + 'enter the email and password above, then tap "Sign in".\n\n'
+          + 'The subscription on that account was granted for review. No '
+          + 'purchase was made and no free trial was used.\n\n'
+          + 'Audio plays in the background and on the lock screen. Booking '
+          + 'a session opens an external booking page in Safari; those are '
+          + 'real one-to-one sessions with a person, not digital content, '
+          + 'so they fall outside in-app purchase.',
+      };
+      if (!attributes.demoAccountPassword) {
+        throw new Error(
+          'Set APPSTORE_DEMO_PASSWORD before running this — the demo '
+          + 'password is not stored in the repo.',
+        );
+      }
+
+      const existing = await api('GET', '/v1/appStoreVersions/' + versionId +
+        '/appStoreReviewDetail?fields[appStoreReviewDetails]=contactEmail');
+      if (existing.data) {
+        await api('PATCH', '/v1/appStoreReviewDetails/' + existing.data.id, {
+          data: {
+            type: 'appStoreReviewDetails',
+            id: existing.data.id,
+            attributes,
+          },
+        });
+        console.log('Review details updated.');
+      } else {
+        await api('POST', '/v1/appStoreReviewDetails', {
+          data: {
+            type: 'appStoreReviewDetails',
+            attributes,
+            relationships: {
+              appStoreVersion: {
+                data: { type: 'appStoreVersions', id: versionId },
+              },
+            },
+          },
+        });
+        console.log('Review details created.');
+      }
+      console.log('  demo account  ' + attributes.demoAccountName);
+      break;
+    }
+
     case 'configure-subscriptions': {
       // Fills in what create-subscriptions deliberately left out: the
       // display name and description reviewers and customers see, the CAD
