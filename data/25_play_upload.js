@@ -3,6 +3,11 @@
 //   node data/25_play_upload.js                 # shows what it would do
 //   node data/25_play_upload.js --apply
 //   node data/25_play_upload.js --apply --track alpha
+//   node data/25_play_upload.js --apply --track alpha --promote 5
+//
+// --promote puts a bundle Play already holds onto another track. Play never
+// reuses a version code, so re-uploading the same build to a second track is
+// refused; the bundle only has to be uploaded once.
 //
 // Play's publishing API works through an "edit": open one, make changes,
 // commit. Nothing is visible until the commit, and an abandoned edit costs
@@ -28,8 +33,10 @@ const BASE = 'https://androidpublisher.googleapis.com';
 const APPLY = process.argv.includes('--apply');
 const trackFlag = process.argv.indexOf('--track');
 const TRACK = trackFlag !== -1 ? process.argv[trackFlag + 1] : 'internal';
+const promoteFlag = process.argv.indexOf('--promote');
+const PROMOTE = promoteFlag !== -1 ? process.argv[promoteFlag + 1] : null;
 
-for (const f of [KEY, AAB]) {
+for (const f of PROMOTE ? [KEY] : [KEY, AAB]) {
   if (!fs.existsSync(f)) {
     console.error('Missing: ' + f);
     process.exit(1);
@@ -98,9 +105,13 @@ async function api(method, url, body, contentType) {
 }
 
 (async () => {
-  const size = fs.statSync(AAB).size;
   console.log(APPLY ? 'Applying.' : 'Dry run — the edit is discarded.');
-  console.log(`  bundle   ${path.relative(ROOT, AAB)}  ${(size / 1e6).toFixed(1)} MB`);
+  if (PROMOTE) {
+    console.log(`  promote  versionCode ${PROMOTE}, already uploaded`);
+  } else {
+    const size = fs.statSync(AAB).size;
+    console.log(`  bundle   ${path.relative(ROOT, AAB)}  ${(size / 1e6).toFixed(1)} MB`);
+  }
   console.log(`  package  ${PACKAGE}`);
   console.log(`  track    ${TRACK}`);
   console.log('');
@@ -117,30 +128,58 @@ async function api(method, url, body, contentType) {
     return;
   }
 
-  console.log('  uploading…       (66 MB, slow on a throttled link)');
-  const bundle = await api(
-    'POST',
-    `${BASE}/upload/androidpublisher/v3/applications/${PACKAGE}/edits/${edit.id}/bundles?uploadType=media`,
-    fs.readFileSync(AAB),
-    'application/octet-stream',
-  );
-  console.log('  uploaded         versionCode ' + bundle.versionCode);
+  let versionCode = PROMOTE;
+  if (!PROMOTE) {
+    console.log('  uploading…       (66 MB, slow on a throttled link)');
+    const bundle = await api(
+      'POST',
+      `${BASE}/upload/androidpublisher/v3/applications/${PACKAGE}/edits/${edit.id}/bundles?uploadType=media`,
+      fs.readFileSync(AAB),
+      'application/octet-stream',
+    );
+    versionCode = bundle.versionCode;
+    console.log('  uploaded         versionCode ' + versionCode);
+  }
 
-  await api(
-    'PUT',
-    `/androidpublisher/v3/applications/${PACKAGE}/edits/${edit.id}/tracks/${TRACK}`,
-    JSON.stringify({
-      track: TRACK,
-      releases: [{ versionCodes: [String(bundle.versionCode)], status: 'completed' }],
-    }),
-    'application/json',
-  );
-  console.log('  assigned         ' + TRACK);
+  // An app that has never been published is a draft, and Play accepts only
+  // draft releases on a closed track until it has been reviewed — internal
+  // testing is the exception, which is why that track took 'completed'.
+  const assign = (status) =>
+    api(
+      'PUT',
+      `/androidpublisher/v3/applications/${PACKAGE}/edits/${edit.id}/tracks/${TRACK}`,
+      JSON.stringify({
+        track: TRACK,
+        releases: [{ versionCodes: [String(versionCode)], status }],
+      }),
+      'application/json',
+    );
 
-  await api('POST', `/androidpublisher/v3/applications/${PACKAGE}/edits/${edit.id}:commit`);
-  console.log('  committed');
+  const commit = () =>
+    api('POST', `/androidpublisher/v3/applications/${PACKAGE}/edits/${edit.id}:commit`);
+
+  // The refusal comes from the commit, not from the assignment, so the track
+  // has to be rewritten inside the same edit and committed again.
+  let status = 'completed';
+  await assign(status);
+  try {
+    await commit();
+  } catch (e) {
+    if (!/status draft may be created on draft app/i.test(e.message)) throw e;
+    status = 'draft';
+    await assign(status);
+    await commit();
+  }
+  console.log('  committed        ' + TRACK + '  (' + status + ')');
   console.log('');
-  console.log('Live on the ' + TRACK + ' track. Testers get it within minutes.');
+  if (status === 'draft') {
+    console.log('The app has never been published, so Play will only take a');
+    console.log('draft release on this track. Testers cannot install it until');
+    console.log('the app itself has been through review: Play Console ->');
+    console.log('Publishing overview -> Send app for review.');
+  } else {
+    console.log('Live on the ' + TRACK + ' track. Testers get it within minutes.');
+  }
 })().catch((e) => {
   console.error(e.message || e);
   process.exit(1);

@@ -96,7 +96,15 @@ Stripe.
 
 RevenueCat uses a device identifier to tie a purchase to a device and to
 detect duplicate or fraudulent transactions. Not used for advertising — the
-app has no advertising SDK and no advertising ID access.
+app shows none and integrates no ad network.
+
+It does reach the advertising ID, though. RevenueCat's Android SDK pulls in
+`com.google.android.gms.permission.AD_ID`, which is in the bundle whether or
+not the app ever reads it, so Play's separate advertising ID declaration is
+answered **Yes**, with **Fraud prevention, security, and compliance** as the
+only reason. Answering No there is checked against the manifest and fails.
+Play blocks the whole submission on that declaration — it was the last thing
+standing between the closed test and review.
 
 ### Not collected
 

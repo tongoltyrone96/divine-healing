@@ -474,11 +474,61 @@ deployed (version 5, verified against the deployed body):
   whole library while paying nothing. Pause is also switched off in Play
   Console now; the code no longer depends on that.
 
+### Closed testing, submitted 2026-09-03
+
+The app is in review. Getting there turned up three things worth keeping:
+
+- **A closed track will not take a live release while the app is a draft.**
+  Play answers `Only releases with status draft may be created on draft
+  app` — and it answers it on the *commit*, after the track assignment has
+  already succeeded. Internal testing is the exception, which is why that
+  track took a completed release without complaint. So the closed test
+  cannot start until the app itself has been reviewed, which puts review
+  ahead of the fourteen days rather than after them.
+- **Play never reuses a version code**, so the same build cannot be
+  uploaded to a second track. `--promote <versionCode>` assigns a bundle
+  Play already holds.
+- **The advertising ID declaration blocked the whole submission.**
+  `purchases_flutter` pulls in `com.google.android.gms.permission.AD_ID`,
+  so the honest answer is Yes with Fraud prevention as the only reason —
+  Play checks that answer against the manifest. `data/store/play_data_safety.md`
+  had claimed the app had no advertising ID access; it was wrong.
+
+**Zero testers have opted in.** Being on the email list is not opting in,
+and the dashboard counts only the latter. Five addresses are on the list,
+three of which look like the client's own accounts.
+
+### Android purchases, unfinished on device
+
+The wiring is verified as far as the store: the app configures RevenueCat,
+reaches BillingClient and is refused there, not in our code. What has never
+run is an actual purchase, so the webhook writing a row, the `plan_name`
+fix and the audio unlocking are all still unproven.
+
+Tyrone's Motorola cannot finish it: `BILLING_UNAVAILABLE`, because
+**Google Play billing is not offered in the SIM's region**. Play Store and
+Play services are current, the app was installed by Play, and the account
+is a licence tester — region is the only explanation left. **One of the
+twelve testers has to be an Android user in a country where Play billing
+works.**
+
+Two device-level things cost an hour each and are worth remembering:
+
+- A sideloaded build cannot purchase at all. `installer=null` means Play
+  did not install it, and Play Billing refuses.
+- **Google sign-in hangs on this phone.** The code is right —
+  `LaunchMode.inAppBrowserView` — but Motorola ships `com.zui.browser` as
+  the Custom Tabs provider, and it holds the `com.divinehealing.app://`
+  callback at its own "deeplink check" instead of handing it back. Making
+  Firefox the default browser fixed it. Real users on Motorola and Lenovo
+  hardware will hit this, so the proper fix is native Google sign-in
+  through `signInWithIdToken`, the way Apple sign-in already works on iOS.
+
 ### Next
 
-1. Real-device check of the Android purchase flow. The tester's Google
-   account has to be on Play Console's License testing list, or the trial
-   charges for real.
+1. Wait for Play's review. Nothing else can start until it passes.
+2. Seven more testers, from other people. Twelve must opt in — not just be
+   listed — before the fourteen days begin.
 2. Real-device checks, waiting on the client's wife's Apple ID: Sign in
    with Apple should show the system sheet rather than a browser, and the
    trial should open Apple's payment sheet.
