@@ -294,6 +294,27 @@ with `com.divinehealing.app` as an authorised client ID; until then the
 button reaches Apple and fails on the way back. Dashboard only — there is
 no management token in `.env`.
 
+### TestFlight, public link (2026-09-04)
+
+Two App Store Connect invitations to the client's daughter were issued —
+Apple's side showed both as pending, so they were sent — and neither
+arrived, spam checked. An internal group cannot avoid this: internal
+testers must be App Store Connect users, and becoming one starts with an
+email that has to be delivered.
+
+`node data/20_appstore_api.js external-group` builds the way around it:
+an external group with a public link that anyone can open.
+
+  https://testflight.apple.com/join/qBPUu1PD
+
+The link is issued immediately but serves nothing until Beta App Review
+approves the build, which is the price of an external group. That review
+needs three things the App Store review details do not cover, all
+separate resources: `betaAppReviewDetail` (contact and demo account),
+a `betaAppLocalization` (the description on the TestFlight card), and
+the build submitted as a `betaAppReviewSubmission`. Build 12 went in on
+2026-09-04.
+
 ### TestFlight
 
 Internal group **Internal Testers**, `hasAccessToAllBuilds`, with

@@ -910,6 +910,142 @@ const [, , command, ...args] = process.argv;
       break;
     }
 
+    case 'external-group': {
+      // A TestFlight group anyone can join from a URL, with no invitation
+      // email and no App Store Connect account.
+      //
+      //   APPSTORE_DEMO_PASSWORD=... node data/20_appstore_api.js external-group
+      //
+      // Internal groups are faster — they skip Beta App Review — but they
+      // take App Store Connect users only, which means an invitation email
+      // that has to arrive. Two of those vanished into a tester's mailbox,
+      // and a link that can be forwarded does not have that failure mode.
+      //
+      // The cost is Beta App Review, which needs contact details, a demo
+      // account and a beta description first. Those are separate resources
+      // from the App Store review details that `review-details` writes.
+      const app = await api('GET',
+        '/v1/apps?filter[bundleId]=' + encodeURIComponent(BUNDLE_ID));
+      const appId = app.data[0].id;
+
+      const password = process.env.APPSTORE_DEMO_PASSWORD || '';
+      if (!password) {
+        throw new Error(
+          'Set APPSTORE_DEMO_PASSWORD before running this — the demo '
+          + 'password is not stored in the repo.',
+        );
+      }
+
+      // 1. Who Beta App Review contacts, and how they get past the paywall.
+      const detail = await api('GET', '/v1/apps/' + appId
+        + '/betaAppReviewDetail?fields[betaAppReviewDetails]=contactEmail');
+      await api('PATCH', '/v1/betaAppReviewDetails/' + detail.data.id, {
+        data: {
+          type: 'betaAppReviewDetails',
+          id: detail.data.id,
+          attributes: {
+            contactFirstName: 'Tyrone Jher',
+            contactLastName: 'Tongol',
+            contactPhone: '+63 999 000 0000',
+            contactEmail: 'tongoltyrone84@gmail.com',
+            demoAccountName: 'appreview@divinehealing.app',
+            demoAccountPassword: password,
+            demoAccountRequired: true,
+            notes:
+              'Browsing works without an account: the library and three '
+              + 'free sessions are open. The demo account unlocks the rest.'
+              + '\n\nTo sign in, tap "Continue with Email" on the sign-in '
+              + 'screen, enter the email and password above, then tap '
+              + '"Sign in".\n\nThe subscription on that account was granted '
+              + 'for review. No purchase was made and no trial was used.',
+          },
+        },
+      });
+      console.log('  review details   set');
+
+      // 2. What a tester reads on the TestFlight card. Beta App Review
+      //    refuses a build with no description.
+      const locales = await api('GET', '/v1/apps/' + appId
+        + '/betaAppLocalizations?fields[betaAppLocalizations]=locale');
+      const attributes = {
+        description:
+          'Guided meditation, shadow work, chakra healing and Reiki. '
+          + 'Twenty-two audio sessions with background playback, plus '
+          + 'journaling, affirmations and breathwork.\n\n'
+          + 'Please try signing in, play a session with the screen locked, '
+          + 'and tell us anything that felt slow or unclear.',
+        feedbackEmail: 'tongoltyrone84@gmail.com',
+        marketingUrl: 'https://divine-healing-iota.vercel.app',
+        privacyPolicyUrl: 'https://divine-healing-iota.vercel.app/privacy',
+      };
+      const existing = locales.data.find((l) => l.attributes.locale === 'en-US');
+      if (existing) {
+        await api('PATCH', '/v1/betaAppLocalizations/' + existing.id, {
+          data: { type: 'betaAppLocalizations', id: existing.id, attributes },
+        });
+        console.log('  beta listing     updated');
+      } else {
+        await api('POST', '/v1/betaAppLocalizations', {
+          data: {
+            type: 'betaAppLocalizations',
+            attributes: { ...attributes, locale: 'en-US' },
+            relationships: { app: { data: { type: 'apps', id: appId } } },
+          },
+        });
+        console.log('  beta listing     created');
+      }
+
+      // 3. The group itself.
+      const groupName = 'Public Link';
+      const groups = await api('GET', '/v1/betaGroups?limit=200');
+      let group = groups.data.find((g) => g.attributes.name === groupName);
+      if (!group) {
+        const created = await api('POST', '/v1/betaGroups', {
+          data: {
+            type: 'betaGroups',
+            attributes: {
+              name: groupName,
+              isInternalGroup: false,
+              publicLinkEnabled: true,
+              publicLinkLimitEnabled: false,
+              hasAccessToAllBuilds: true,
+            },
+            relationships: { app: { data: { type: 'apps', id: appId } } },
+          },
+        });
+        group = created.data;
+        console.log('  group created    ' + groupName);
+      } else {
+        console.log('  group exists     ' + groupName);
+      }
+
+      // 4. Submit the newest build. Apple holds an external group's first
+      //    build until this passes, usually within a day.
+      const builds = await api('GET', '/v1/builds?filter[app]=' + appId
+        + '&sort=-version&limit=1');
+      const build = builds.data[0];
+      console.log('  build            ' + build.attributes.version
+        + '  ' + build.attributes.processingState);
+      try {
+        await api('POST', '/v1/betaAppReviewSubmissions', {
+          data: {
+            type: 'betaAppReviewSubmissions',
+            relationships: { build: { data: { type: 'builds', id: build.id } } },
+          },
+        });
+        console.log('  submitted        Beta App Review');
+      } catch (e) {
+        // Already submitted, or already approved. Neither is a problem.
+        console.log('  beta review      ' + e.message);
+      }
+
+      const fresh = await api('GET', '/v1/betaGroups/' + group.id);
+      console.log('');
+      console.log('Public link: ' + (fresh.data.attributes.publicLink
+        || '(appears once Beta App Review approves the build)'));
+      break;
+    }
+
     case 'invite-user': {
       // An internal TestFlight group takes App Store Connect users only, so a
       // tester who is not on the team is rejected with a bare 409 that names
