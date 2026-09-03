@@ -524,11 +524,41 @@ Two device-level things cost an hour each and are worth remembering:
   hardware will hit this, so the proper fix is native Google sign-in
   through `signInWithIdToken`, the way Apple sign-in already works on iOS.
 
+### The fourteen days, running since 2026-09-03
+
+Google approved the closed test fifteen minutes after it was submitted,
+and twelve testers opted in the same afternoon, so the clock runs to about
+**2026-09-17**. Fourteen addresses are on the list to leave two spare.
+
+`data/store/play_production_access.md` holds Google's requirements and,
+more usefully, what has to be *collected* while the clock runs. Meeting
+the count is not the same as passing: the application asks what feedback
+came back and what changed because of it, and Google refuses applications
+for "insufficient tester engagement". That record cannot be written
+afterwards.
+
+The count is fragile in one specific way. **Revisiting the opt-in link
+after joining shows a `Leave the program` button where `Become a tester`
+used to be** — same URL, same position. One tester checking whether it
+worked can drop the count below twelve and restart the fourteen days, so
+the link must not be resent to anyone who has already joined.
+
+The client has full access on both `gstsaver@gmail.com` and
+`gstsaver@me.com` — `sh_subscribers` rows with `store: 'owner'`, active to
+2031. She had never signed into the app, so the row that already existed
+for `gstsaver@me.com` had never been used; Google sign-in on Android gives
+the gmail address, which is why both are set.
+
 ### Next
 
-1. Wait for Play's review. Nothing else can start until it passes.
-2. Seven more testers, from other people. Twelve must opt in — not just be
-   listed — before the fourteen days begin.
+1. Collect tester feedback in writing, and fix something with it. Check
+   Monitor and improve → Ratings and reviews → Testing feedback as well as
+   the client's inbox — the closed track's feedback channel points at her.
+2. Get one tester in a country where Play billing works to complete a
+   purchase. It is the only part of the app never proven end to end.
+3. Run the pre-launch report before applying.
+4. Decide with the client about the Reiki "less likely to get sick" line
+   before the production application, not after a rejection.
 2. Real-device checks, waiting on the client's wife's Apple ID: Sign in
    with Apple should show the system sheet rather than a browser, and the
    trial should open Apple's payment sheet.
