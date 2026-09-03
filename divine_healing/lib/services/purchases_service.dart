@@ -120,10 +120,11 @@ class PurchasesService {
     lastError = null;
     if (!isAvailable) return PurchaseOutcome.failed;
     try {
-      // purchasePackage returns the CustomerInfo itself in 8.x, not a
-      // result object wrapping it.
-      final info = await Purchases.purchasePackage(package);
-      return _entitled(info)
+      // purchase(PurchaseParams) replaced purchasePackage in 10.x, and
+      // returns the transaction alongside the customer info rather than the
+      // info on its own.
+      final result = await Purchases.purchase(PurchaseParams.package(package));
+      return _entitled(result.customerInfo)
           ? PurchaseOutcome.purchased
           : PurchaseOutcome.failed;
     } on PlatformException catch (e) {

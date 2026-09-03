@@ -179,6 +179,12 @@ function statusFor(event: RevenueCatEvent): string | null {
       return 'canceled';
     case 'EXPIRATION':
       return 'canceled';
+    case 'SUBSCRIPTION_PAUSED':
+      // Play lets a subscriber pause for up to three months. Nothing is
+      // charged in that window, so nothing should be unlocked either.
+      // Pause is switched off in Play Console today; this is here so that
+      // turning it back on does not silently hand out free access.
+      return 'canceled';
     case 'BILLING_ISSUE':
       // Apple and Google keep retrying the card for a while. past_due still
       // grants access, matching how Stripe behaves.
@@ -188,9 +194,15 @@ function statusFor(event: RevenueCatEvent): string | null {
   }
 }
 
+/// Apple's identifiers are com.divinehealing.app.annual; Play's are
+/// divine_healing_annual, and RevenueCat may append the base plan as
+/// divine_healing_annual:annual. Matching on the word rather than on a
+/// dotted suffix covers all three, and 'annual' is checked first because
+/// neither identifier contains the other.
 function planName(productId?: string): string | null {
   if (!productId) return null;
-  if (productId.endsWith('.annual')) return 'Annual';
-  if (productId.endsWith('.monthly')) return 'Monthly';
+  const id = productId.toLowerCase();
+  if (id.includes('annual')) return 'Annual';
+  if (id.includes('monthly')) return 'Monthly';
   return productId;
 }

@@ -455,12 +455,30 @@ and it can sign a paid track while a signed-out caller still cannot.
 Nothing in the app *sets* a password, so the magic link remains the only
 way an ordinary person gets an account.
 
+### Android purchases (2026-09-03)
+
+**Done, and live on the internal track as versionCode 5.** The whole chain
+is wired: Cloud project `divine-healing-506710`, service account, Pub/Sub
+topic `play-rtdn` with Play confirmed publishing to it, RevenueCat's Play
+app on valid credentials, both products attached to `full_access` and to
+the `default` offering's packages beside the Apple ones.
+
+Two defects surfaced in the webhook while wiring it, both fixed and
+deployed (version 5, verified against the deployed body):
+
+- `planName()` matched `endsWith('.annual')`, which is Apple's shape. Play
+  sends `divine_healing_annual`, so every Play subscriber would have been
+  stored under the raw product id.
+- `SUBSCRIPTION_PAUSED` fell through to "no status change". Play lets a
+  subscriber pause for up to three months, so they would have kept the
+  whole library while paying nothing. Pause is also switched off in Play
+  Console now; the code no longer depends on that.
+
 ### Next
 
-1. **Android purchases.** Everything is built; it needs a Play service
-   account JSON, which needs `Admin (all permissions)` on the Play account.
-   The client said she granted it, but `/api-access` still redirects away,
-   so it did not take. See the Android section under Working Notes.
+1. Real-device check of the Android purchase flow. The tester's Google
+   account has to be on Play Console's License testing list, or the trial
+   charges for real.
 2. Real-device checks, waiting on the client's wife's Apple ID: Sign in
    with Apple should show the system sheet rather than a browser, and the
    trial should open Apple's payment sheet.
@@ -490,14 +508,36 @@ way an ordinary person gets an account.
   every upload; currently at `1.0.0+3`.
 - Content edits go to Supabase, not to the old Glide admin — Glide no longer
   feeds this app. The client needs walking through the Table Editor.
-- **Android purchases, to finish.** RevenueCat needs a Play service account
-  JSON to verify Android receipts: Play Console → API access → create a
-  service account in Google Cloud → grant it Financial data and Manage
-  orders → download the JSON → RevenueCat → new Play Store app with package
-  `com.divinehealing.app`. Then `REVENUECAT_ANDROID_KEY` goes in `.env`
-  (`run_local.ps1` and `automation/wsl/03_build_android.sh` already forward
-  it), bump `version:` in pubspec, build the AAB in WSL and upload. The Play
-  products and offering are already made; only the credential is missing.
+- **Play Console has no API access page any more.** Every guide still sends
+  you to Setup → API access to link a Google Cloud project. It is gone from
+  this account: the direct URL redirects to the app list for the account
+  owner as well as for an Admin (all permissions), and the client spent an
+  hour looking for it. Google's own current documentation no longer mentions
+  linking at all — a service account made in *any* Cloud project works once
+  it is invited under Users and permissions. That path needs nothing from
+  the account owner, which is what unblocked this.
+- **Play service account.** `revenuecat-play@divine-healing-506710.iam.gserviceaccount.com`,
+  key at `divine_healing/.signing/play-service-account.json` (gitignored),
+  invited with View financial data + Manage orders and subscriptions, no
+  access expiry — an expiry would silently kill receipt validation one day.
+  `node data/24_verify_play_credential.js <key.json>` checks it against the
+  Play Developer API and names the missing permission on failure; do that
+  before RevenueCat, which only ever says "invalid credentials".
+- **Play product IDs differ from Apple's**: `divine_healing_monthly` and
+  `divine_healing_annual`, against `com.divinehealing.app.monthly` / `.annual`
+  on iOS. The app matches on `identifier.contains('monthly'|'annual')`, so
+  both stores resolve without a per-platform branch.
+- **Play rejects Billing Library below 8.0.0.** `purchases_flutter ^8.2.1`
+  carried Billing 7.1.1 and the commit failed — the upload and the track
+  assignment both succeeded first, so the bundle looked fine right up to the
+  last call. `^10.10.1` fixes it; `purchasePackage` is deprecated there and
+  `purchase(PurchaseParams.package(pkg))` returns a `PurchaseResult` rather
+  than the `CustomerInfo` directly.
+- **`node data/25_play_upload.js`** opens an edit, uploads, assigns a track
+  and commits, with a dry run that opens an edit and throws it away. The
+  service account needs `Release apps to testing tracks` on the app, which
+  is not among the permissions RevenueCat asks for — Play answers 403 for
+  that and for a rejected artifact alike.
 - **Never trust the App Store Connect API's `state` on subscriptions.** It
   reported MISSING_METADATA on records the web UI showed as complete and
   ready. Check the browser before hunting for missing fields.

@@ -910,6 +910,65 @@ const [, , command, ...args] = process.argv;
       break;
     }
 
+    case 'invite-user': {
+      // An internal TestFlight group takes App Store Connect users only, so a
+      // tester who is not on the team is rejected with a bare 409 that names
+      // no cause. This invites them first; testflight-setup then works.
+      //
+      //   node data/20_appstore_api.js invite-user someone@example.com
+      //
+      // Marketing is the least-privileged role Apple accepts for an internal
+      // tester — it cannot upload builds, touch signing, or see agreements —
+      // and access is scoped to this app alone. Re-running is safe: a pending
+      // invitation is reported rather than duplicated.
+      const email = args[0];
+      if (!email) throw new Error('Pass an email address.');
+      const first = args[1] || 'Divine';
+      const last = args[2] || 'Healing Tester';
+
+      const app = await api('GET',
+        '/v1/apps?filter[bundleId]=' + encodeURIComponent(BUNDLE_ID));
+      if (!app.data.length) throw new Error('No app record for ' + BUNDLE_ID);
+      const appId = app.data[0].id;
+
+      const users = await api('GET', '/v1/users?limit=200');
+      if (users.data.some(
+        (u) => (u.attributes.username || '').toLowerCase() === email.toLowerCase()
+      )) {
+        console.log('Already a team member: ' + email);
+        break;
+      }
+      const pending = await api('GET', '/v1/userInvitations?limit=200');
+      if (pending.data.some(
+        (u) => (u.attributes.email || '').toLowerCase() === email.toLowerCase()
+      )) {
+        console.log('Invitation already pending: ' + email);
+        console.log('They have to accept it before TestFlight will take them.');
+        break;
+      }
+
+      await api('POST', '/v1/userInvitations', {
+        data: {
+          type: 'userInvitations',
+          attributes: {
+            email,
+            firstName: first,
+            lastName: last,
+            roles: ['MARKETING'],
+            allAppsVisible: false,
+            provisioningAllowed: false,
+          },
+          relationships: {
+            visibleApps: { data: [{ type: 'apps', id: appId }] },
+          },
+        },
+      });
+      console.log('Invited ' + email + ' as Marketing on ' + BUNDLE_ID + '.');
+      console.log('Apple has emailed them. Once they accept, run:');
+      console.log('  node data/20_appstore_api.js testflight-setup ' + email);
+      break;
+    }
+
     case 'testflight-setup': {
       // Internal testing, not external: internal groups take App Store Connect
       // users only, but they skip Beta App Review, which for an external group
