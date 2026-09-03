@@ -296,11 +296,19 @@ no management token in `.env`.
 
 ### TestFlight, public link (2026-09-04)
 
-Two App Store Connect invitations to the client's daughter were issued —
-Apple's side showed both as pending, so they were sent — and neither
-arrived, spam checked. An internal group cannot avoid this: internal
-testers must be App Store Connect users, and becoming one starts with an
-email that has to be delivered.
+Two App Store Connect invitations to the client's daughter were issued and
+neither arrived. Apple's side showed both as pending, which reads as a
+delivery failure and sent us looking at spam filters for two days. The
+address was simply misspelled: `cosmicremembrance@gmail.com` for
+`cosmicrememberance@gmail.com`. Apple accepts any syntactically valid
+address and reports the invitation as pending whether or not a mailbox
+exists, so nothing on this side ever contradicted it. **An address the
+client typed once, in a chat message, is worth reading back to them
+before it costs two days.**
+
+The public link is worth having regardless: internal testers must be App
+Store Connect users, so reaching one always starts with an email that has
+to be delivered and accepted.
 
 `node data/20_appstore_api.js external-group` builds the way around it:
 an external group with a public link that anyone can open.
