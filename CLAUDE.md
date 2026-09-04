@@ -289,10 +289,15 @@ Apple rejects the capability without a configuration — "Please select at
 least one configuration for Sign In with Apple" — so the request sends
 `APPLE_ID_AUTH_APP_CONSENT: PRIMARY_APP_CONSENT`.
 
-**Not yet working at runtime.** Supabase needs the Apple provider enabled
-with `com.divinehealing.app` as an authorised client ID; until then the
-button reaches Apple and fails on the way back. Dashboard only — there is
-no management token in `.env`.
+Supabase's Apple provider is enabled with `com.divinehealing.app` in
+Client IDs, checked 2026-09-04. That entry is what the flow depends on:
+the identity token's `aud` is the bundle ID, and Supabase rejects a token
+whose audience it does not recognise, which looks like the button
+reaching Apple and failing on the way back. The Secret Key field is
+empty and should stay that way — it belongs to the web OAuth flow.
+
+Only the dashboard shows this. The management token in `.env` gets 403
+on `/config/auth`.
 
 ### TestFlight, public link (2026-09-04)
 
