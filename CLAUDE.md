@@ -378,6 +378,22 @@ Two API quirks: Apple rejects `limit` on singleton relationships, while the
 VPN stalls on a bare path, so those calls carry a `fields` parameter
 instead.
 
+**Subscriptions cannot be attached to a version through the API.**
+`reviewSubmissionItems` accepts an app version, a custom product page, an
+app event or an experiment — there is no subscription relationship, and
+the attempt answers `ENTITY_ERROR.RELATIONSHIP.UNKNOWN`. That is what
+`Add for Review` does in the browser, and the browser is the only way.
+The `MISSING_METADATA` both subscriptions report is the same thing seen
+from the other side: localizations, prices, availability and review
+screenshots are all set and complete, and the records stay incomplete
+until they are attached to the first version.
+
+Creating a `reviewSubmission` to try it leaves one behind — DELETE
+answers 403 and cancelling answers "not in cancellable state", because
+only a submitted one can be cancelled. An empty one in READY_FOR_REVIEW
+appears to be the container the console fills, so it is probably
+harmless, but it cannot be undone from here.
+
 **Worth a lawyer's eye before submission.** The Reiki page says balanced
 energy makes you "less likely to get sick". App Review rejects health
 claims it considers unsubstantiated, and this is the client's own wording,
