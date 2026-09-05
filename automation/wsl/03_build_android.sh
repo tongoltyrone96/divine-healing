@@ -41,6 +41,11 @@ cd "$PROJECT"
 # operating systems cannot share one, and it is gitignored, so each side
 # regenerates it. Cheap once the packages are cached.
 echo "Resolving packages for this platform"
+# `pub get` alone is not enough: it sees a config that matches the lockfile
+# and leaves the Windows paths in place, and the build then fails a minute
+# later reading /C:/Users/... from inside WSL. Deleting it first forces the
+# rewrite. It is gitignored and costs nothing once packages are cached.
+rm -f "$PROJECT/.dart_tool/package_config.json"
 flutter pub get
 
 # Same contract as run_local.ps1 on the Windows side: forward only the keys
