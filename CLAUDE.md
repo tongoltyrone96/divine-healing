@@ -397,6 +397,14 @@ re-running finished the job.
 Note that the derived prices are Apple's, not a straight conversion:
 monthly is CAD 19.00, USD 12.99, AUD 22.00.
 
+**The subscription group's display name still reads "Divine Healing".**
+It is the label a subscriber sees in iOS Settings under Subscriptions,
+and it did not follow the rename. Editing it means removing the group
+from the review submission first — App Store Connect locks anything
+already added for review, and the localization dialog opens read-only
+with nothing clickable. Not worth disturbing a correctly staged
+submission for; fix it as its own submission once the app is approved.
+
 **Subscriptions cannot be attached to a version through the API.**
 `reviewSubmissionItems` accepts an app version, a custom product page, an
 app event or an experiment — there is no subscription relationship, and
