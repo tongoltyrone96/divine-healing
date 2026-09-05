@@ -71,18 +71,26 @@ jobs:
           UDID=$(xcrun simctl list devices available \
             | grep -F "$WANTED (" | head -1 \
             | grep -oE '[0-9A-F]{8}-[0-9A-F-]{27}' || true)
+          # Apple wants a 13-inch iPad set as well as the 6.9" iPhone one, so
+          # the fallbacks have to stay inside whichever family was asked for.
+          # Falling back from an iPad to an iPhone would produce screenshots
+          # that upload cleanly and are then rejected for their dimensions.
+          case "$WANTED" in
+            iPad*) FAMILY=iPad; PREFERRED='iPad Pro.*(13|12.9)-inch' ;;
+            *)     FAMILY=iPhone; PREFERRED='iPhone.*Pro Max' ;;
+          esac
           if [ -z "$UDID" ]; then
-            echo "::warning::$WANTED not available; looking for any Pro Max"
+            echo "::warning::$WANTED not available; looking for $PREFERRED"
             UDID=$(xcrun simctl list devices available \
-              | grep -E '^\s+iPhone.*Pro Max' | tail -1 \
+              | grep -E "^[[:space:]]+$PREFERRED" | tail -1 \
               | grep -oE '[0-9A-F]{8}-[0-9A-F-]{27}' || true)
           fi
           if [ -z "$UDID" ]; then
-            echo "::warning::no Pro Max either; screenshots will be the wrong"
-            echo "::warning::size for the App Store, but the run still proves"
-            echo "::warning::the app launches"
+            echo "::warning::nothing preferred either; screenshots will be the"
+            echo "::warning::wrong size for the App Store, but the run still"
+            echo "::warning::proves the app launches"
             UDID=$(xcrun simctl list devices available \
-              | grep -E '^\s+iPhone' | tail -1 \
+              | grep -E "^[[:space:]]+$FAMILY" | tail -1 \
               | grep -oE '[0-9A-F]{8}-[0-9A-F-]{27}' || true)
           fi
           [ -n "$UDID" ] || { xcrun simctl list devices available; exit 1; }
