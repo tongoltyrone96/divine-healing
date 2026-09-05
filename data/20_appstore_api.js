@@ -910,6 +910,88 @@ const [, , command, ...args] = process.argv;
       break;
     }
 
+    case 'price-all-territories': {
+      // Gives every subscription a price in each territory it is sold in.
+      //
+      //   node data/20_appstore_api.js price-all-territories
+      //
+      // create-subscriptions set one CAD price and left it there, which the
+      // API reports only as MISSING_METADATA and the browser as "You must add
+      // a subscription price" — a subscription available in 175 territories
+      // and priced in one is incomplete, and neither message says which of
+      // the two numbers is wrong. The console has a flow for this that ends
+      // in Keep the calculated prices; it did not create anything here.
+      //
+      // Apple will do the conversion itself: the equalizations of a price
+      // point are the matching price points elsewhere, and they are the same
+      // figures the console shows.
+      const app = await api('GET',
+        '/v1/apps?filter[bundleId]=' + encodeURIComponent(BUNDLE_ID));
+      const groups = await api('GET', '/v1/apps/' + app.data[0].id
+        + '/subscriptionGroups?limit=10&fields[subscriptionGroups]=referenceName');
+
+      for (const group of groups.data) {
+        const subs = await api('GET', '/v1/subscriptionGroups/' + group.id
+          + '/subscriptions?limit=20&fields[subscriptions]=productId,state');
+        for (const sub of subs.data) {
+          console.log(sub.attributes.productId + '  ' + sub.attributes.state);
+
+          const prices = await api('GET', '/v1/subscriptions/' + sub.id
+            + '/prices?limit=200&include=territory,subscriptionPricePoint');
+          const priced = new Set(
+            (prices.included || [])
+              .filter((x) => x.type === 'territories')
+              .map((x) => x.id),
+          );
+          const base = (prices.included || [])
+            .find((x) => x.type === 'subscriptionPricePoints');
+          if (!base) {
+            console.log('  no price at all — set one in the browser first');
+            continue;
+          }
+          console.log('  priced in ' + priced.size + ', base '
+            + base.attributes.customerPrice);
+
+          const eq = await api('GET', '/v1/subscriptionPricePoints/'
+            + encodeURIComponent(base.id)
+            + '/equalizations?limit=200&include=territory');
+          const territoryOf = new Map(
+            (eq.included || []).map((t) => [t.id, t.id]),
+          );
+          let made = 0;
+          let skipped = 0;
+          for (const point of eq.data) {
+            // The territory is carried in the price point's relationship, and
+            // the id itself encodes it; the relationship is the documented way.
+            const tid = point.relationships
+              && point.relationships.territory
+              && point.relationships.territory.data
+              && point.relationships.territory.data.id;
+            if (tid && priced.has(tid)) { skipped += 1; continue; }
+            await api('POST', '/v1/subscriptionPrices', {
+              data: {
+                type: 'subscriptionPrices',
+                attributes: { preserveCurrentPrice: false },
+                relationships: {
+                  subscription: {
+                    data: { type: 'subscriptions', id: sub.id },
+                  },
+                  subscriptionPricePoint: {
+                    data: { type: 'subscriptionPricePoints', id: point.id },
+                  },
+                },
+              },
+            });
+            made += 1;
+          }
+          void territoryOf;
+          console.log('  added ' + made + ' territories, ' + skipped
+            + ' already priced');
+        }
+      }
+      break;
+    }
+
     case 'external-group': {
       // A TestFlight group anyone can join from a URL, with no invitation
       // email and no App Store Connect account.

@@ -378,6 +378,25 @@ Two API quirks: Apple rejects `limit` on singleton relationships, while the
 VPN stalls on a bare path, so those calls carry a `fields` parameter
 instead.
 
+**A subscription priced in one territory and sold in 175 is incomplete.**
+`create-subscriptions` set a single CAD price and stopped. The API called
+that `MISSING_METADATA` and the browser called it "You must add a
+subscription price", and neither says which of the two numbers is wrong —
+the price exists, so the message reads as false. The console has a flow
+for it, ending in "Keep the calculated prices for all countries or
+regions"; clicking through it created nothing.
+
+`node data/20_appstore_api.js price-all-territories` fixes it. A price
+point's **equalizations** are Apple's own conversions of it into every
+other territory — the same figures the console previews — so the 174
+missing rows come straight from the API. Both subscriptions went from
+MISSING_METADATA to READY_TO_SUBMIT. It is idempotent; the first run
+died partway with a spurious 404 on a subscription it had just read, and
+re-running finished the job.
+
+Note that the derived prices are Apple's, not a straight conversion:
+monthly is CAD 19.00, USD 12.99, AUD 22.00.
+
 **Subscriptions cannot be attached to a version through the API.**
 `reviewSubmissionItems` accepts an app version, a custom product page, an
 app event or an experiment — there is no subscription relationship, and
