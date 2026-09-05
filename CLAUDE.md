@@ -21,7 +21,23 @@ Freelancer.com project (ID: 40666970). Rebuilding a Glide no-code app into a nat
 
 ## App Details
 
-- **App name (new)**: Divine Healing by Strawberry Hope
+- **Store name**: **Divine Awakening**, from 2026-09-05. The client found
+  another app called Divine Healing on both stores and chose to rename
+  rather than differentiate. Only the store name changed: the logo, the
+  in-app text, the launcher label and every identifier stayed as they were,
+  at her instruction.
+  - `com.divinehealing.app` and the product IDs are permanent. A bundle ID
+    and a package name cannot be changed after the first upload, so the
+    Play listing URL will read `id=com.divinehealing.app` for the life of
+    the app.
+  - Apple accepted the new name, which is the only proof of availability
+    there — App Store names are unique and the API refuses a taken one.
+  - The Play title has to be changed in the console: the service account
+    has `Release apps to testing tracks` but not `Manage store presence`,
+    and the listings endpoint answers 403 without it.
+  - Listing copy and the in-app legal screens still say "Divine Healing".
+    They read as inconsistent with the new name and are worth revisiting
+    before the store listings are final.
 - **App name (Glide original)**: Spiritual Healing
 - **Glide URL**: https://p7d350073-spiritual-healing--gstsaver.glideos.app
 - **Admin access**: Glide admin invite has been sent to tongoltyrone84@gmail.com.
