@@ -36,7 +36,7 @@ class DivineHealingApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Divine Healing',
+      title: 'Divine Awakening',
       theme: buildDivineHealingTheme(),
       routerConfig: buildRouter(),
       debugShowCheckedModeBanner: false,

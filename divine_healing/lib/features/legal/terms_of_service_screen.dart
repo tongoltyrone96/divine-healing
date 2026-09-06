@@ -38,21 +38,21 @@ class TermsOfServiceScreen extends StatelessWidget {
                   style: DHTypography.body(size: 12, color: DHColors.secondary)),
               const SizedBox(height: 20),
               _p(
-                'Welcome to Divine Healing. These Terms of Service ("Terms") '
-                'govern your use of the Divine Healing app and website '
+                'Welcome to Divine Awakening. These Terms of Service ("Terms") '
+                'govern your use of the Divine Awakening app and website '
                 '(collectively, the "Service") operated by Strawberry Hope. '
                 'By using the Service you agree to these Terms.',
               ),
               _h('1. About the Service'),
               _p(
-                'Divine Healing offers guided meditations, shadow work '
+                'Divine Awakening offers guided meditations, shadow work '
                 'sessions, chakra healing, Reiki, and related wellness '
                 'content. Some content is free; the rest requires an active '
                 'subscription.',
               ),
               _h('2. Your account'),
               _p(
-                'You need a Divine Healing account to access most features. '
+                'You need a Divine Awakening account to access most features. '
                 'You are responsible for keeping your sign-in method secure '
                 'and for all activity on your account. Notify us at '
                 '$_contactEmail if you suspect unauthorised use.',
@@ -73,7 +73,7 @@ class TermsOfServiceScreen extends StatelessWidget {
                   'request one.'),
               _h('4. Health and medical disclaimer'),
               _p(
-                'Divine Healing is a wellness tool, not medical advice. Our '
+                'Divine Awakening is a wellness tool, not medical advice. Our '
                 'content is not intended to diagnose, treat, cure, or '
                 'prevent any medical or mental-health condition. Consult a '
                 'qualified professional for any health concern. If you are '

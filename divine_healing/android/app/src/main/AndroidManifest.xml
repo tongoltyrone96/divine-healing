@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
     <application
-        android:label="Divine Healing"
+        android:label="Divine Awakening"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity

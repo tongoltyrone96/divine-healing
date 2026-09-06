@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Divine Healing</string>
+	<string>Divine Awakening</string>
 	<key>CFBundleIconName</key>
 	<string>AppIcon</string>
 	<key>CFBundleExecutable</key>
@@ -57,7 +57,7 @@
 	     ITMS-90683 discarded builds 5 and 6 for its absence. iOS shows
 	     this text only if permission is ever requested, which it is not. -->
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Divine Healing plays guided meditations and never records audio. The audio framework it uses requires this permission to be declared.</string>
+	<string>Divine Awakening plays guided meditations and never records audio. The audio framework it uses requires this permission to be declared.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>UIBackgroundModes</key>

@@ -131,7 +131,7 @@ class DivineHealingAudioHandler extends BaseAudioHandler with SeekHandler {
       MediaItem(
         id: session.contentBody,
         title: session.title,
-        artist: 'Divine Healing',
+        artist: 'Divine Awakening',
         album: _categoryLabel(session.category),
         duration: Duration(minutes: session.durationMinutes),
         artUri: artUri,

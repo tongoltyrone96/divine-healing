@@ -318,7 +318,10 @@ class _ContentDetailScreenState extends ConsumerState<ContentDetailScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              context.push(signedIn ? '/profile' : '/sign-in');
+              // go, not push: /profile lives inside the tab shell, and
+              // pushing a branch route on top of the shell renders the
+              // bar with nothing above it. home_screen has always used go.
+              context.go(signedIn ? '/profile' : '/sign-in');
             },
             child: Text(signedIn ? 'Start free trial' : 'Sign in'),
           ),

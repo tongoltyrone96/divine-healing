@@ -41,7 +41,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   style: DHTypography.body(size: 12, color: DHColors.secondary)),
               const SizedBox(height: 20),
               _p(
-                'Divine Healing (the "App") is operated by Strawberry Hope '
+                'Divine Awakening (the "App") is operated by Strawberry Hope '
                 '("we", "us", "our"). We respect your privacy and are '
                 'committed to protecting your personal data. This policy '
                 'explains what we collect, why, and how we handle it.',
@@ -95,7 +95,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
               ),
               _h('6. Children'),
               _p(
-                'Divine Healing is not intended for children under 13. We do '
+                'Divine Awakening is not intended for children under 13. We do '
                 'not knowingly collect data from anyone under 13. If we '
                 'discover we have, we delete it immediately.',
               ),

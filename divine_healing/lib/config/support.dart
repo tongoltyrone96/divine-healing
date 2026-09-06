@@ -10,7 +10,7 @@ class Support {
 
   /// A pre-addressed mail link. The subject names the app so an enquiry that
   /// lands in a personal inbox is recognisable as coming from it.
-  static Uri mailto({String subject = 'Divine Healing app'}) => Uri(
+  static Uri mailto({String subject = 'Divine Awakening app'}) => Uri(
         scheme: 'mailto',
         path: email,
         query: 'subject=${Uri.encodeComponent(subject)}',

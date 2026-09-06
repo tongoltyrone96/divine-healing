@@ -522,7 +522,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       );
 
   Widget _activeSubscriptionCard(SubscriptionStatus s, int? sessionCount) {
-    final planLine = s.planName ?? 'Divine Healing';
+    final planLine = s.planName ?? 'Divine Awakening';
     final trialDays = s.trialDaysLeft;
     String statusLine;
     if (s.isTrialing && trialDays != null) {

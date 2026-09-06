@@ -1,4 +1,4 @@
-// Divine Healing brand theme.
+// Divine Awakening brand theme.
 // Source: client's brand system message (Strawberry Hope).
 //
 // Move this to `lib/theme.dart` when Flutter project is created:

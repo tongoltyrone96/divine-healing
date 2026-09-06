@@ -1,4 +1,4 @@
-/// How to delete a Divine Healing account.
+/// How to delete a Divine Awakening account.
 ///
 /// This page exists because both stores require it. Google Play asks for a
 /// web address that works without installing the app, so somebody who has
@@ -47,7 +47,7 @@ class DeleteAccountScreen extends StatelessWidget {
                         size: 26, weight: FontWeight.w600),
                   ),
                   const SizedBox(height: 20),
-                  _p('You can delete your Divine Healing account at any '
+                  _p('You can delete your Divine Awakening account at any '
                       'time. Deletion is permanent and cannot be undone.'),
                   _h('In the app'),
                   _p('Open Profile, scroll to Account, and tap Delete '
