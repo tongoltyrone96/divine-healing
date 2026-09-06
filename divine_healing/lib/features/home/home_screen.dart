@@ -54,6 +54,10 @@ class _Hero extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final displayName = ref.watch(userDisplayNameProvider);
+    // A subscriber has nothing to subscribe to. The first pass at this
+    // caught the two sections lower down and missed the button up here,
+    // which is the one the client noticed second.
+    final selling = !ref.watch(hasFullAccessProvider);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
@@ -97,13 +101,15 @@ class _Hero extends ConsumerWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => context.go('/profile'),
-                  child: const Text('Subscribe'),
+              if (selling) ...[
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => context.go('/profile'),
+                    child: const Text('Subscribe'),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
+                const SizedBox(width: 12),
+              ],
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () => context.push('/booking'),
