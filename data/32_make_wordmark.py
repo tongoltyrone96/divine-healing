@@ -41,6 +41,21 @@ OLD_WIDTH = 1035                      # 111..1145, centred on the canvas
 APPLY = "--apply" in sys.argv
 
 
+def _is_ink(pixel):
+    """Dark and actually drawn.
+
+    The logo is artwork on transparency, so RGB alone is meaningless where
+    nothing was painted: a fully transparent pixel can hold any colour.
+    """
+    if len(pixel) == 4:
+        r, g, b, a = pixel
+        if a < 100:
+            return False
+    else:
+        r, g, b = pixel
+    return r < 170 and g < 170
+
+
 def ink_extent(im, top, bottom):
     """Bounding box of the dark pixels in a horizontal band."""
     px = im.load()
@@ -48,8 +63,7 @@ def ink_extent(im, top, bottom):
     xs, ys = [], []
     for y in range(top, bottom + 1):
         for x in range(w):
-            r, g, b = px[x, y][:3]
-            if r < 170 and g < 170:
+            if _is_ink(px[x, y]):
                 xs.append(x)
                 ys.append(y)
     if not xs:
@@ -65,7 +79,7 @@ def ink_colour(im, top, bottom):
         px[x, y][:3]
         for y in range(top, bottom + 1)
         for x in range(w)
-        if sum(px[x, y][:3]) < 220
+        if _is_ink(px[x, y]) and sum(px[x, y][:3]) < 220
     ]
     n = len(core)
     return tuple(sum(c[i] for c in core) // n for i in range(3))
@@ -93,7 +107,11 @@ def measure(font, text, tracking, colour, size):
 
 def main():
     src = Image.open(BACKUP if os.path.exists(BACKUP) else LOGO)
-    im = src.convert("RGB")
+    # RGBA throughout. Flattening to RGB fills the transparent surround with
+    # the file's own near-white, and the logo then sits on the app's blush
+    # background as a visible pale rectangle — which is exactly what the
+    # first version of this script shipped.
+    im = src.convert("RGBA")
     w, h = im.size
 
     box = ink_extent(im, BAND_TOP, BAND_BOTTOM)
@@ -109,9 +127,9 @@ def main():
         )
 
     colour = ink_colour(im, BAND_TOP, BAND_BOTTOM)
-    background = im.getpixel((2, 2))
+    corner = im.getpixel((2, 2))
     print(f"  ink colour       {colour}")
-    print(f"  background       {background}")
+    print(f"  corner alpha     {corner[3]}")
 
     cap_height = y1 - y0 + 1
     centre_x = (x0 + x1) / 2
@@ -146,13 +164,13 @@ def main():
 
     out = im.copy()
     d = ImageDraw.Draw(out)
-    d.rectangle([0, CLEAR_TOP, w, CLEAR_BOTTOM], fill=background)
-    render(d, font, TEXT, tracking, colour, centre_x, baseline)
+    d.rectangle([0, CLEAR_TOP, w, CLEAR_BOTTOM], fill=(0, 0, 0, 0))
+    render(d, font, TEXT, tracking, colour + (255,), centre_x, baseline)
 
     # Everything outside the erased band has to be untouched. Checking it is
     # cheap and catches a mis-measured band before it reaches the client.
     a, b = im.tobytes(), out.tobytes()
-    row = w * 3
+    row = w * 4
     changed = [
         y for y in range(h)
         if a[y * row:(y + 1) * row] != b[y * row:(y + 1) * row]
@@ -172,7 +190,7 @@ def main():
     if not os.path.exists(BACKUP):
         src.save(BACKUP)
         print(f"  original kept    {os.path.relpath(BACKUP, ROOT)}")
-    out.convert(src.mode).save(LOGO)
+    out.save(LOGO)
     print(f"  written          {os.path.relpath(LOGO, ROOT)}")
 
 
