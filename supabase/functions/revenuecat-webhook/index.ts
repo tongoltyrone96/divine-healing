@@ -76,11 +76,6 @@ Deno.serve(async (req) => {
 
   console.log(`▶ ${event.type}  id=${event.id}  store=${event.store}`);
 
-  // Sandbox purchases would otherwise unlock the real library for a tester.
-  if (event.environment === 'SANDBOX') {
-    console.log('Sandbox event, not recorded.');
-    return ok();
-  }
   if (event.type === 'TEST') return ok();
 
   try {
@@ -110,11 +105,19 @@ Deno.serve(async (req) => {
       // the future, so this is only set while the trial is the current period.
       trial_ends_at: event.period_type === 'TRIAL' ? expiry : null,
       current_period_end: expiry,
-      store: event.store === 'APP_STORE'
+      // Sandbox purchases are recorded, not dropped. Only licence testers
+      // and the two stores' reviewers can make one, and dropping them meant
+      // a tester could buy, be told by Google they were subscribed, and
+      // still find the library locked — which is what happened. A reviewer
+      // hitting the same wall is a rejection. The environment is kept in
+      // `store` so real revenue is still distinguishable; nothing reads it,
+      // sh_has_full_access() goes by status and expiry alone.
+      store: (event.store === 'APP_STORE'
         ? 'app_store'
         : event.store === 'PLAY_STORE'
         ? 'play_store'
-        : (event.store ?? '').toLowerCase() || null,
+        : (event.store ?? '').toLowerCase() || 'unknown') +
+        (event.environment === 'SANDBOX' ? '_sandbox' : ''),
       store_transaction_id:
         event.original_transaction_id ?? event.transaction_id ?? null,
       updated_at: new Date().toISOString(),
