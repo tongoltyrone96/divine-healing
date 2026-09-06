@@ -36,9 +36,20 @@ OUT="$(cd "$(dirname "$0")/.." && pwd)/store/play"
 
 DEVICE="${1:-$("$ADB" devices | awk 'NR>1 && $2=="device" {print $1; exit}')}"
 if [ -z "$DEVICE" ]; then
-  echo "No device. Connect one, or pass its id: $0 <serial>" >&2
+  echo "No device. Connect one, or pass its id: $0 <serial> [phone|tablet]" >&2
   exit 1
 fi
+
+# The tablet pass used to be described here and done by hand, which meant the
+# tablet set quietly went stale while the phone set was regenerated. Both are
+# 9:16, so the taps are the phone ones scaled by a single factor.
+FORM="${2:-phone}"
+case "$FORM" in
+  phone)  WIDTH=1080; HEIGHT=1920; DENSITY=420; SCALE=1 ;;
+  tablet) WIDTH=1440; HEIGHT=2560; DENSITY=320; SCALE=1.3333; OUT="$OUT/tablet" ;;
+  *) echo "Unknown form '$FORM'. Use phone or tablet." >&2; exit 1 ;;
+esac
+at() { awk -v v="$1" -v s="$SCALE" 'BEGIN{printf "%d", v*s}'; }
 
 shot() {
   # exec-out streams the PNG to stdout. Pulling from /sdcard instead means
@@ -51,10 +62,10 @@ shot() {
 tap() { "$ADB" -s "$DEVICE" shell input tap "$1" "$2"; sleep "${3:-6}"; }
 
 mkdir -p "$OUT"
-echo "Device: $DEVICE"
+echo "Device: $DEVICE   form: $FORM  ${WIDTH}x${HEIGHT}"
 
-"$ADB" -s "$DEVICE" shell wm size 1080x1920
-"$ADB" -s "$DEVICE" shell wm density 420
+"$ADB" -s "$DEVICE" shell wm size "${WIDTH}x${HEIGHT}"
+"$ADB" -s "$DEVICE" shell wm density "$DENSITY"
 trap '"$ADB" -s "$DEVICE" shell wm size reset; "$ADB" -s "$DEVICE" shell wm density reset' EXIT
 
 # The Play build is signed with the upload key and this one is not, so an
@@ -70,16 +81,16 @@ shot 01-home
 
 # Coordinates, not widget lookups: the bottom bar is three even columns at
 # y=1855, and the first session card sits at y=925 on the Library.
-tap 540 1855 8
+tap "$(at 540)" "$(at 1855)" 8
 shot 02-library
 
-tap 900 1855 6
+tap "$(at 900)" "$(at 1855)" 6
 shot 04-profile
 
 # The session screen is last. It sits outside the tab shell, so ending here
 # means no back navigation is needed.
-tap 540 1855 5
-tap 540 925 7
+tap "$(at 540)" "$(at 1855)" 5
+tap "$(at 540)" "$(at 925)" 7
 shot 03-session
 
-echo "Written to store/play/"
+echo "Written to ${OUT#*/Glide_app/}"
