@@ -5,16 +5,23 @@ import 'package:go_router/go_router.dart';
 import '../../models/content_session.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/content_providers.dart';
+import '../../providers/subscription_providers.dart';
 import '../../theme.dart';
 
 /// Home screen — matches Glide app landing:
 ///   Hero (logo + pill + h1 + p + CTAs) → "What's included" (8 category cards)
 ///   → "Try these free sessions" (3 preview cards) → "Unlock the full library" CTA
-class HomeScreen extends StatelessWidget {
+///
+/// The last two are dropped once the viewer has full access.
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Both of the sections below are written at someone who has not paid:
+    // one offers three free sessions with no sign-in, the other sells the
+    // subscription. A subscriber was still being shown both, and said so.
+    final selling = !ref.watch(hasFullAccessProvider);
     return Scaffold(
       backgroundColor: DHColors.sageMist,
       body: SafeArea(
@@ -26,9 +33,11 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 12),
               _WhatsIncluded(),
               const SizedBox(height: 32),
-              const _FreePreviewSection(),
-              const SizedBox(height: 40),
-              _UnlockCta(),
+              if (selling) ...[
+                const _FreePreviewSection(),
+                const SizedBox(height: 40),
+                _UnlockCta(),
+              ],
               const SizedBox(height: 48),
             ],
           ),
