@@ -642,6 +642,23 @@ The client has full access on both `gstsaver@gmail.com` and
 for `gstsaver@me.com` had never been used; Google sign-in on Android gives
 the gmail address, which is why both are set.
 
+### Decided, and waiting for the first update after launch
+
+- **Shadow work entries stay private to each person.** The client's own
+  words, 2026-09-06. She does not want to read them. Nothing to build for
+  that, but the privacy policy says nothing either way and should say so
+  plainly in the next release.
+- **A history screen for shadow work.** Every save already writes its own
+  row — `saveShadowWorkResponses` inserts rather than upserts — so the
+  past answers are all there and only the most recent is ever shown.
+  What is missing is somewhere to read them back. Agreed as the first
+  thing after the stores.
+- **The Play developer name is still "Divine Healing".** It sits under
+  the app title on every Play page and is account-level, so the Play
+  Developer API cannot touch it: Play Console → Developer account →
+  Account details. Strawberry Hope reads better than repeating the app
+  name.
+
 ### Next
 
 1. Collect tester feedback in writing, and fix something with it. Check
