@@ -642,6 +642,29 @@ The client has full access on both `gstsaver@gmail.com` and
 for `gstsaver@me.com` had never been used; Google sign-in on Android gives
 the gmail address, which is why both are set.
 
+### Android payments, proven end to end (2026-09-06)
+
+`shawtyathug03@gmail.com  active  play_store_sandbox  Monthly` — a
+licence-test purchase went through Play, reached RevenueCat, was
+delivered to the webhook and wrote the row that Storage RLS reads. The
+last unverified part of the app is closed.
+
+Two things had to be fixed to get there, and neither was in our code:
+
+- **The RevenueCat webhook was set to "Production only".** Every
+  licence-test purchase is a sandbox event, so nothing was ever
+  delivered — the Webhook Events table was empty, which also meant the
+  Authorization value had never once been proven correct. It is now
+  Both Production and Sandbox, and a test event returns 200.
+- **The handler had been dropping sandbox events on purpose**, to stop a
+  tester unlocking the real library. Nobody else can produce one, and it
+  made the purchase path impossible to verify — an App Review reviewer
+  buying in sandbox would have hit the same wall.
+
+Finding it took reading the customer in RevenueCat, where the renewals
+were plainly there every five minutes: search by the Supabase user id,
+not the email — the app sets that as the App User ID.
+
 ### Decided, and waiting for the first update after launch
 
 - **Shadow work entries stay private to each person.** The client's own
