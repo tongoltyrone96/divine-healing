@@ -95,7 +95,10 @@ class _Hero extends ConsumerWidget {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () => context.go('/library'),
-              child: const Text('Explore Free Content'),
+              // "Explore Free Content" is an offer, and it stops being true
+              // the moment someone pays — the client read it as the app not
+              // knowing she had subscribed.
+              child: Text(selling ? 'Explore Free Content' : 'Open the Library'),
             ),
           ),
           const SizedBox(height: 12),
