@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -171,6 +172,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 subtitle: 'Permanently remove your account and data',
                 onTap: () => _confirmDeleteAccount(context),
               ),
+            const SizedBox(height: 24),
+            const _VersionLine(),
             const SizedBox(height: 32),
           ],
         ),
@@ -835,6 +838,34 @@ class _SignedInCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// The build actually running, at the foot of the profile.
+///
+/// Every round of "it's fixed" / "it still isn't" in testing came down to a
+/// phone quietly holding an older build, and Android shows the user no way to
+/// tell: the app info screen gives the version name, which never changes, and
+/// not the build number, which does. Read from the platform rather than passed
+/// in at build time, so it cannot disagree with what is installed.
+class _VersionLine extends StatelessWidget {
+  const _VersionLine();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<PackageInfo>(
+      future: PackageInfo.fromPlatform(),
+      builder: (context, snapshot) {
+        final info = snapshot.data;
+        if (info == null) return const SizedBox.shrink();
+        return Center(
+          child: Text(
+            '${info.appName}  ${info.version} (${info.buildNumber})',
+            style: DHTypography.caption(color: DHColors.secondary),
+          ),
+        );
+      },
     );
   }
 }

@@ -5,7 +5,7 @@ description: Divine Awakening — guided meditations, shadow work, reiki (Strawb
 publish_to: 'none'
 # versionName+versionCode, both consumed by android/app/build.gradle.kts.
 # Bump the +N for every Play Store upload; the dotted part is the marketing version.
-version: 1.0.0+11
+version: 1.0.0+12
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -53,6 +53,11 @@ dependencies:
 
   # --- Utilities ---
   intl: ^0.19.0
+  # Reads the version the platform actually installed. Passing it in at build
+  # time would mean three build scripts kept in step with pubspec, and a single
+  # missed one puts a wrong number on screen — which is the confusion this is
+  # meant to end.
+  package_info_plus: ^10.2.1
   url_launcher: ^6.3.1             # for Booking → Zoom/Square link
   webview_flutter: ^4.10.0         # if Booking is embedded rather than launched externally
   cached_network_image: ^3.4.1
