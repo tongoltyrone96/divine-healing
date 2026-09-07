@@ -316,7 +316,10 @@ class _SessionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = session;
-    final isFree = s.isPreview;
+    // FREE marks what someone can hear without paying. To a subscriber it
+    // says nothing — everything is open — and reads as the app not knowing
+    // they have paid, which is how the client read it.
+    final isFree = s.isPreview && !hasFullAccess;
     final iconInfo = _iconForCategory(s.category);
 
     return InkWell(
