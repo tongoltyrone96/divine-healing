@@ -677,6 +677,39 @@ when you last touched it. Builds 19, 20 and 21 had gone up while 18 sat
 attached, and the submission would have carried a fortnight-old binary
 without a word of complaint.
 
+### Rejected under 3.1.2, and what it took to fix (2026-09-09)
+
+> The submission offers auto-renewable subscriptions ... but does not
+> include a functional link to the Terms of Use (EULA) in the app metadata
+> that appears on the app's App Store product page.
+
+Metadata only — the binary was never opened. The mail says so outright:
+*"This is an automated message. The review of this submission cannot
+proceed."* So nothing about the app itself has been vetted yet.
+
+The description now carries the subscription disclosure 3.1.2 asks for
+and three links: Apple's standard EULA (no custom agreement was ever
+uploaded, so that is the one in force), our terms, and our privacy
+policy.
+
+Two things the API will not do:
+
+- **A REJECTED version is editable**, and `store-metadata` was refusing
+  it. App Review's own page says "You can make edits to your app version
+  below". The guard now allows REJECTED alongside the other editable
+  states.
+- **Resubmitting is console-only.** A submission in UNRESOLVED_ISSUES
+  refuses to have items added or removed and refuses `submitted: true`,
+  all with a bare 409. The `Resubmit to App Review` button is the only
+  way back in.
+
+Still unvetted, and the likeliest thing to be raised when a human does
+look: `assets/content/reiki.json` says balanced energy leaves you "less
+likely to get sick". A scan of all eleven bundled content files and the
+23 Supabase rows turned up nothing else — the one other hit, spiritual
+awakening on physical symptoms as a signal, claims no treatment. Being a
+bundled asset, changing it means a new build.
+
 ### Decided, and waiting for the first update after launch
 
 - **Shadow work entries stay private to each person.** The client's own

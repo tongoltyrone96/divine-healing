@@ -861,8 +861,13 @@ const [, , command, ...args] = process.argv;
       const versions = await api('GET',
         '/v1/apps/' + appId + '/appStoreVersions?limit=1');
       if (!versions.data.length) throw new Error('No app store version yet');
+      // REJECTED is editable, and is exactly when the copy needs changing:
+      // App Review's own page says so — "You can make edits to your app
+      // version below". Refusing it turned a metadata fix into a puzzle.
       const state = versions.data[0].attributes.appStoreState;
-      if (state !== 'PREPARE_FOR_SUBMISSION') {
+      const editableStates = ['PREPARE_FOR_SUBMISSION', 'REJECTED',
+        'DEVELOPER_REJECTED', 'METADATA_REJECTED', 'INVALID_BINARY'];
+      if (!editableStates.includes(state)) {
         throw new Error('Version is ' + state + ', not editable');
       }
       // The limit is not optional: without a query string the request stalls
