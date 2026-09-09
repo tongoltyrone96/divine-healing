@@ -665,6 +665,18 @@ Finding it took reading the customer in RevenueCat, where the renewals
 were plainly there every five minutes: search by the Supabase user id,
 not the email — the app sets that as the App User ID.
 
+### Submitted to App Review (2026-09-09)
+
+Version 1.0 with build 21, both subscriptions and the subscription group,
+all four in one submission — Apple holds the first in-app purchase until
+it can review it beside a version. Release is set to manual, so approval
+does not put it on sale.
+
+A trap worth remembering: the version keeps whatever build was attached
+when you last touched it. Builds 19, 20 and 21 had gone up while 18 sat
+attached, and the submission would have carried a fortnight-old binary
+without a word of complaint.
+
 ### Decided, and waiting for the first update after launch
 
 - **Shadow work entries stay private to each person.** The client's own
