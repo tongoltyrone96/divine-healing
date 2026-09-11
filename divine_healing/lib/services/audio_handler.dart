@@ -148,7 +148,18 @@ class DivineHealingAudioHandler extends BaseAudioHandler with SeekHandler {
   // the UI, so all playback control routes through them.
 
   @override
-  Future<void> play() => _player.play();
+  Future<void> play() {
+    // The OS routes a Bluetooth device's AVRCP "play" command here — some
+    // headsets and every car head unit send one the moment they connect, to
+    // resume whatever was last playing. The media session exists from app
+    // launch (see initAudioHandler's comment), so before anyone has ever
+    // chosen a session this fires with nothing loaded, and honouring it
+    // starts the foreground notification and brings the app forward with no
+    // audio to show for it. That is what looked like the app opening itself
+    // on Bluetooth connect. Ignore it until there is a track.
+    if (_currentSessionId == null) return Future.value();
+    return _player.play();
+  }
 
   @override
   Future<void> pause() => _player.pause();
