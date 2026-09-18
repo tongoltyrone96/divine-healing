@@ -17,13 +17,30 @@ final authStateStreamProvider = StreamProvider<AuthState>((ref) {
   return svc.onAuthStateChange;
 });
 
-/// The currently signed-in user, or null if signed out (or M1 mode).
-final currentUserProvider = Provider<User?>((ref) {
+/// The raw auth session, which is an anonymous one for anyone who has not
+/// signed in. Use it when what matters is "is there a uid to attach things
+/// to" — a purchase, a signed audio URL. For "has this person an account",
+/// which is what the UI almost always means, use [currentUserProvider].
+final authUserProvider = Provider<User?>((ref) {
   final svc = ref.watch(authServiceProvider);
   if (svc == null) return null;
   // Force this provider to rebuild when auth state changes.
   ref.watch(authStateStreamProvider);
   return svc.currentUser;
+});
+
+/// The user's account, or null when they are browsing anonymously.
+///
+/// Every guest holds an anonymous Supabase session from launch, so the raw
+/// user is almost never null and cannot stand in for "signed in" any more.
+/// App Review's 5.1.1(v) rejection is why the anonymous session exists: a
+/// subscription that unlocks the same library for everyone is not
+/// account-based content, so registering has to stay optional, and an
+/// anonymous uid is what gives a guest something to buy against.
+final currentUserProvider = Provider<User?>((ref) {
+  final user = ref.watch(authUserProvider);
+  if (user == null || user.isAnonymous) return null;
+  return user;
 });
 
 /// Convenience: is the user currently signed in?

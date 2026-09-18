@@ -35,8 +35,35 @@ class AuthService {
 
   String? get _redirectTo => kIsWeb ? Uri.base.origin : _mobileRedirect;
 
-  /// Current auth user, or null if not signed in.
+  /// Current auth user. This is an anonymous session for anyone who has not
+  /// signed in, so it is not the same question as "has an account" — see
+  /// currentUserProvider.
   User? get currentUser => _client.auth.currentUser;
+
+  /// Gives a guest a uid without asking them for anything.
+  ///
+  /// Apple's guideline 5.1.1(v) forbids requiring registration to buy a
+  /// subscription that is not account-based, and ours is not — it opens the
+  /// same library for everyone. But the paywall is enforced in Storage RLS,
+  /// which needs an authenticated caller to check, so a guest still has to
+  /// be *somebody*. An anonymous session is that: a real uid, no email, no
+  /// personal information, and nothing the person has to do.
+  ///
+  /// Signing in properly later keeps the same uid — Supabase promotes the
+  /// anonymous user rather than creating another — so a subscription bought
+  /// as a guest survives the upgrade with nothing to migrate.
+  ///
+  /// Needs "Allow anonymous sign-ins" in the Supabase dashboard. Failure is
+  /// swallowed: the app works signed out, it just cannot sell anything, and
+  /// crashing on launch over it would be worse.
+  Future<void> ensureSession() async {
+    if (_client.auth.currentSession != null) return;
+    try {
+      await _client.auth.signInAnonymously();
+    } catch (_) {
+      // Offline, or the provider is off. Both recover on the next launch.
+    }
+  }
 
   /// Broadcasts on sign-in / sign-out / token refresh.
   Stream<AuthState> get onAuthStateChange => _client.auth.onAuthStateChange;

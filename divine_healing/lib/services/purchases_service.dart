@@ -67,15 +67,21 @@ class PurchasesService {
       ? Env.revenueCatKeyIos
       : Env.revenueCatKeyAndroid;
 
-  /// Ties purchases to the signed-in account.
+  /// Ties purchases to the Supabase session, account or not.
   ///
   /// [userId] is the Supabase user id rather than the email: RevenueCat's
   /// app user id is permanent and public-ish, and an email is neither. The
-  /// email goes across as an attribute so the webhook can find the
-  /// `sh_subscribers` row, which is keyed on it.
+  /// webhook keys the `sh_subscribers` row on this id.
+  ///
+  /// [email] is absent for a guest, who has an anonymous session and no
+  /// address. That is the ordinary case rather than an error — Apple's
+  /// guideline 5.1.1(v) requires that buying works without registering — and
+  /// the webhook writes a synthetic address for those rows. Passing one when
+  /// it is known still helps: it is how a purchase reconciles with an
+  /// account someone made later.
   Future<void> configure({
     required String userId,
-    required String email,
+    String? email,
   }) async {
     if (!isAvailable) return;
     if (!_configured) {
@@ -89,7 +95,7 @@ class PurchasesService {
       // would attach to whoever signed in first.
       await Purchases.logIn(userId);
     }
-    await Purchases.setEmail(email);
+    if (email != null && email.isNotEmpty) await Purchases.setEmail(email);
   }
 
   /// Called on sign-out so the next person starts clean.

@@ -211,6 +211,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         // Otherwise the next person to sign in on this device inherits
         // the previous account's entitlement.
         await PurchasesService.instance.signOut();
+        // Back to being a guest rather than to having no session at all:
+        // buying and restoring both need a uid, and waiting for the next
+        // launch to get one would make Subscribe do nothing.
+        await svc.ensureSession();
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Signed out.')),
@@ -226,29 +230,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     String? email, {
     required bool annual,
   }) async {
-    // Guests must sign in first so the purchase can be associated with a
-    // real user record in Supabase.
-    if (email == null || email.isEmpty) {
-      final go = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Sign in first'),
-          content: const Text(
-              'Please sign in so we can link your subscription to your '
-              'account. Your 7-day trial will start after checkout.'),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Not now')),
-            ElevatedButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Sign in')),
-          ],
-        ),
-      );
-      if (go == true && context.mounted) context.push('/sign-in');
-      return;
-    }
+    // No sign-in gate. App Review rejected build 23 under guideline
+    // 5.1.1(v): a subscription that opens the same library for everyone is
+    // not account-based content, so registering to buy it cannot be
+    // compulsory. Guests hold an anonymous Supabase session and buy against
+    // that uid; signing in later keeps it and carries the subscription over.
+    //
     // On a phone this has to go through the store. Apple and Google both
     // forbid taking payment for in-app digital goods any other way, and a
     // browser link is exactly what they reject for. The web build keeps
@@ -261,13 +248,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     await launchUrl(url, mode: LaunchMode.externalApplication);
   }
 
-  /// Signs the current user into RevenueCat before any purchase or restore,
-  /// so what they buy attaches to their account rather than the device.
+  /// Hands RevenueCat the Supabase uid before any purchase or restore, so
+  /// what they buy attaches to the person rather than to the device.
+  ///
+  /// The session is anonymous until they sign in, and that is enough: the
+  /// uid is what the webhook writes and what Storage RLS checks. Requiring
+  /// an email here is what made buying impossible without registering, which
+  /// is the 5.1.1(v) rejection.
   Future<bool> _ensurePurchasesReady() async {
     final user = ref.read(authServiceProvider)?.currentUser;
-    final email = user?.email;
-    if (user == null || email == null) return false;
-    await PurchasesService.instance.configure(userId: user.id, email: email);
+    if (user == null) return false;
+    await PurchasesService.instance.configure(
+      userId: user.id,
+      email: user.email,
+    );
     return true;
   }
 
@@ -320,7 +314,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _restorePurchases(BuildContext context) async {
     if (!await _ensurePurchasesReady()) {
-      if (context.mounted) _say(context, 'Sign in first to restore.');
+      // Not "sign in first" any more: restoring works for a guest. Reaching
+      // here means there is no session at all, which is a connection problem.
+      if (context.mounted) {
+        _say(context, 'Could not reach the server. Please try again.');
+      }
       return;
     }
     final service = PurchasesService.instance;
@@ -760,10 +758,18 @@ class _SignedOutCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Sign in',
+                  Text('Sign in (optional)',
                       style: DHTypography.heading(size: 16)),
                   const SizedBox(height: 2),
-                  Text('Sync your favourites, journal, and progress.',
+                  // Says what an account is *for*, because it is no longer
+                  // needed to subscribe — guideline 5.1.1(v). Apple's own
+                  // wording for the rejection suggests telling people that
+                  // registering is what carries a subscription across their
+                  // devices, so that is what this says.
+                  Text(
+                      'Not needed to subscribe. Signing in syncs your '
+                      'favourites, journal and subscription across your '
+                      'devices.',
                       style: DHTypography.caption(color: DHColors.secondary)),
                 ],
               ),

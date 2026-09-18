@@ -6,6 +6,7 @@ import 'config/env.dart';
 import 'providers/audio_providers.dart';
 import 'router.dart';
 import 'services/audio_handler.dart';
+import 'services/auth_service.dart';
 import 'theme.dart';
 
 Future<void> main() async {
@@ -16,6 +17,10 @@ Future<void> main() async {
       url: Env.supabaseUrl,
       anonKey: Env.supabaseAnonKey,
     );
+    // Before any screen can ask whether this person may hear a paid session.
+    // Storage RLS answers that for a uid, and a guest has to have one to be
+    // able to buy at all — see AuthService.ensureSession.
+    await AuthService(Supabase.instance.client).ensureSession();
   }
 
   // Claiming the OS media session is async and has to finish before any

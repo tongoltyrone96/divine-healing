@@ -79,11 +79,19 @@ Deno.serve(async (req) => {
   if (event.type === 'TEST') return ok();
 
   try {
-    const email = await resolveEmail(event);
-    if (!email) {
-      // Acknowledged rather than retried: without an email there is no row to
-      // write, and RevenueCat replaying it will not produce one.
-      console.warn(`No email for app_user_id=${event.app_user_id}`);
+    // The app user id is the Supabase auth uid — the app sets it that way,
+    // for anonymous sessions as much as for real accounts. It is the only
+    // identifier a guest purchase carries, so it leads now and the email
+    // follows.
+    const userId = uuidOrNull(event.app_user_id) ??
+      uuidOrNull(event.original_app_user_id);
+    const email = await resolveEmail(event) ??
+      (userId ? `${userId}@anonymous.divinehealing.app` : null);
+
+    if (!userId && !email) {
+      // Acknowledged rather than retried: with neither identifier there is no
+      // row to write, and RevenueCat replaying it will not produce one.
+      console.warn(`No identity for app_user_id=${event.app_user_id}`);
       return ok();
     }
 
@@ -98,6 +106,7 @@ Deno.serve(async (req) => {
       : null;
 
     const row = {
+      user_id: userId,
       user_email: email,
       subscription_status: status,
       plan_name: planName(event.product_id),
@@ -123,12 +132,19 @@ Deno.serve(async (req) => {
       updated_at: new Date().toISOString(),
     };
 
-    const { error } = await supabase
-      .from('sh_subscribers')
-      .upsert(row, { onConflict: 'user_email' });
-    if (error) throw error;
+    // Match on the uid before the address. An upsert keyed on user_email —
+    // which is what this did — writes a second row the moment an anonymous
+    // buyer signs in and starts resolving to a real address, and the
+    // abandoned first row keeps saying `active` forever. Cancelling would
+    // then mark only the new one, and access would never actually end.
+    const written = await updateWhere(row, 'user_id', userId) ||
+      await updateWhere(row, 'user_email', email);
+    if (!written) {
+      const { error } = await supabase.from('sh_subscribers').insert(row);
+      if (error) throw error;
+    }
 
-    console.log(`✔ ${email}  status=${status}  plan=${row.plan_name}`);
+    console.log(`✔ ${userId ?? email}  status=${status}  plan=${row.plan_name}`);
   } catch (e) {
     // A 500 makes RevenueCat retry, which is what we want for a transient
     // database problem.
@@ -146,12 +162,40 @@ function ok() {
   });
 }
 
-/// sh_subscribers is keyed on email, and RevenueCat identifies people by the
-/// app user id the app configured — the Supabase auth user id.
+/// Updates the existing row matching one identifier, and says whether it
+/// found one. Returns false for a null identifier so the callers can chain.
+async function updateWhere(
+  row: Record<string, unknown>,
+  column: string,
+  value: string | null,
+): Promise<boolean> {
+  if (!value) return false;
+  const { data, error } = await supabase
+    .from('sh_subscribers')
+    .update(row)
+    .eq(column, value)
+    .select('user_email');
+  if (error) throw error;
+  return (data?.length ?? 0) > 0;
+}
+
+/// RevenueCat's app user id is whatever the app passed to configure(). It is
+/// a Supabase uid here, but a device-scoped `$RCAnonymousID:…` if a purchase
+/// somehow happened before configure() ran, and that is not a uid.
+function uuidOrNull(id?: string): string | null {
+  if (!id) return null;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      .test(id)
+    ? id
+    : null;
+}
+
+/// The real address, when the buyer has one.
 ///
 /// The email attribute is set by the app at sign-in and is the fast path.
 /// The lookup behind it covers a purchase made before that attribute synced,
-/// which RevenueCat does asynchronously.
+/// which RevenueCat does asynchronously. Anonymous buyers have neither, and
+/// the caller falls back to a synthetic address for them.
 async function resolveEmail(event: RevenueCatEvent): Promise<string | null> {
   const attribute = event.subscriber_attributes?.['$email']?.value;
   if (attribute) return attribute;

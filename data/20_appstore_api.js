@@ -247,11 +247,16 @@ const [, , command, ...args] = process.argv;
         demoAccountPassword: process.env.APPSTORE_DEMO_PASSWORD || '',
         demoAccountRequired: true,
         notes:
-          'Signing in is optional for browsing: the library and three free '
-          + 'sessions work without an account. The demo account above '
-          + 'unlocks the remaining sessions.\n\n'
-          + 'To sign in, tap "Continue with Email" on the sign-in screen, '
-          + 'enter the email and password above, then tap "Sign in".\n\n'
+          'No account is required anywhere in this app, including to '
+          + 'subscribe. Browsing, the three free sessions, and starting a '
+          + 'subscription all work without registering (guideline '
+          + '5.1.1(v)). Signing in is offered only so that favourites, '
+          + 'journal entries and an existing subscription follow the person '
+          + 'to their other devices.\n\n'
+          + 'The demo account below is provided so you can see the paid '
+          + 'library without making a purchase. To use it, tap "Continue '
+          + 'with Email" on the sign-in screen, enter the email and password '
+          + 'above, then tap "Sign in".\n\n'
           + 'The subscription on that account was granted for review. No '
           + 'purchase was made and no free trial was used.\n\n'
           + 'Audio plays in the background and on the lock screen. Booking '

@@ -146,6 +146,19 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
   String _friendly(Object e) {
     final s = e.toString().toLowerCase();
+    // Named before the generic fallback for a reason. App Review tapped
+    // Sign in with credentials that no longer matched an account, and this
+    // fell through to "Something went wrong" — which reads as a broken app
+    // rather than a wrong password, and cost build 23 a 2.1(a) rejection.
+    if (s.contains('invalid login credentials') ||
+        s.contains('invalid_credentials')) {
+      return 'That email and password do not match an account. Check the '
+          'password, or leave it blank and we will send a sign-in link.';
+    }
+    if (s.contains('email not confirmed')) {
+      return 'That account has not been confirmed yet. Use the sign-in link '
+          'instead.';
+    }
     if (s.contains('over_email_send_rate_limit') ||
         s.contains('email rate limit')) {
       return 'Too many attempts. Please wait a few minutes before trying again.';
