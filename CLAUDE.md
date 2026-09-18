@@ -710,6 +710,66 @@ likely to get sick". A scan of all eleven bundled content files and the
 awakening on physical symptoms as a signal, claims no treatment. Being a
 bundled asset, changing it means a new build.
 
+### Rejected again on 2026-09-18, and what it actually meant
+
+Build 23 went to a human reviewer — the first time one opened the binary —
+and came back with two findings.
+
+**2.1(a): "an error message was displayed when we tapped on login button."**
+`appreview@divinehealing.app` had stopped existing in Supabase auth.
+`23_make_review_account.js` reported `would create`, not `would reset`, which
+is how we know. The credentials in both store consoles were the old ones, so
+the reviewer got `Invalid login credentials` — and `_friendly()` in the
+sign-in screen had no branch for that, so it rendered as *"Something went
+wrong. Please try again in a moment."* A wrong password looked like a broken
+app.
+
+Nothing had ever checked that the reviewer's own path worked.
+`data/27_verify_review_login.js` does now: the password grant, then
+`sh_has_full_access()`, then signing a paid session's audio, all over the
+anon key so it exercises the real path. **Run it before every submission
+that carries reviewer credentials**, and re-run `review-details` with the
+new password afterwards.
+
+**5.1.1(v): registration cannot be required to buy.** The subscription opens
+the same 23 sessions for everyone, so it is not account-based content, and
+Apple is right that forcing an account first is not allowed.
+
+The UI gate on the Profile screen was the visible half. The real obstacle
+was that the paywall is enforced in Storage RLS and `sh_has_full_access()`
+matched on `auth.email()`, which is null for anyone without an account — so
+a guest could have paid and still been refused the audio. Weakening the RLS
+was the obvious shortcut and the wrong one; it is the actual paywall, and
+`data/04_verify_paywall.js` exists to keep it that way.
+
+**Guests now hold an anonymous Supabase session from launch.** A real
+`auth.uid()`, no email, no personal information, nothing the person does.
+Purchases attach to that uid. Signing in later *keeps the same uid* —
+Supabase promotes the anonymous user rather than making another — so a
+subscription bought as a guest survives the upgrade with nothing to migrate.
+
+Consequences worth knowing:
+
+- `currentUserProvider` means "has an account" now, not "has a session".
+  Every guest has a session, so the old meaning would have reported everyone
+  as signed in. The raw session is `authUserProvider`, and only the two
+  places that need a uid use it.
+- `sh_has_full_access()` accepts the uid **alongside** the address, not
+  instead of it. Every row written before today, and everything Stripe
+  writes, is keyed on the address alone.
+- The webhook matches on uid before address. It used to upsert on
+  `user_email`, which would have written a second row the moment an
+  anonymous buyer signed in and started resolving to a real address — and
+  the abandoned row would have kept saying `active` forever, so cancelling
+  would never actually have ended access.
+- An anonymous buyer's row carries `<uid>@anonymous.divinehealing.app`.
+  It is not a mailbox. It marks the row as bought without an account.
+
+**Two things must be done outside the repo before this ships**, and the app
+degrades quietly without them rather than loudly:
+`data/migrations/20260919_01_anonymous_purchase.sql` has to be applied, and
+**Authentication → Providers → Allow anonymous sign-ins** has to be on.
+
 ### Decided, and waiting for the first update after launch
 
 - **Shadow work entries stay private to each person.** The client's own
