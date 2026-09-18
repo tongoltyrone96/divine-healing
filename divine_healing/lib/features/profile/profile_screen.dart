@@ -269,7 +269,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     BuildContext context, {
     required bool annual,
   }) async {
-    if (!await _ensurePurchasesReady()) return;
+    if (!await _ensurePurchasesReady()) {
+      // A guest reaches here only if the anonymous session never came up —
+      // offline, or anonymous sign-ins switched off in Supabase. Returning
+      // quietly would leave Subscribe looking like a dead button.
+      if (context.mounted) {
+        _say(context,
+            'Could not reach the server. Please check your connection and '
+            'try again.');
+      }
+      return;
+    }
     final service = PurchasesService.instance;
 
     final packages = await service.plans();
