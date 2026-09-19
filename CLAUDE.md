@@ -199,9 +199,24 @@ Splash / Home / Module page / Meditation player / Journaling screen — detailed
 
 ## Booking
 
-Confirmed by the client 2026-08-28: **https://divine-healing-106774.square.site**
-Recovered from the Glide bundle before she confirmed it; wired into
-`booking_screen.dart`.
+**https://calendly.com/cosmicrememberance**, given by the client
+2026-09-19 and wired into `booking_screen.dart`, which is the only place
+the URL appears — every booking button in the app routes to `/booking`.
+
+It replaces `https://divine-healing-106774.square.site`, recovered from
+the Glide bundle and confirmed 2026-08-28. Square removed its "online"
+location option in Canada, after which every booking demanded either a
+physical business address or the customer's own address as a mobile
+callout — neither of which fits a remote session. Payment for bookings
+is handled manually by the client from here on. Nothing in the app
+changes for that: it opens whatever URL this constant holds, and
+one-to-one sessions with a person are outside in-app purchase either way.
+
+**Mind the spelling.** `cosmicrememberance`, the same as her address.
+`cosmicremembrance` is a live Calendly 404 rather than an error, so a
+slip would send every booking to an empty page and look like nothing at
+all was wrong. This is the second time that spelling has cost something
+— see the TestFlight invitations that never arrived.
 
 ## Live Deployment (M1 Preview)
 

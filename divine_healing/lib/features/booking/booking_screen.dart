@@ -4,16 +4,24 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../theme.dart';
 
-/// Booking — sends the visitor to Strawberry Hope's Square site, which is
-/// where the original Glide app pointed ("Zoom Sessions Only"). Once payment
-/// is enabled in Square, a private Zoom link follows the confirmation email.
+/// Booking — sends the visitor to Strawberry Hope's public Calendly page,
+/// which carries her event types, her availability and the Zoom-enabled
+/// sessions. Payment for those is handled separately, outside the app: they
+/// are one-to-one sessions with a person rather than digital content, so
+/// they sit outside in-app purchase.
 class BookingScreen extends StatelessWidget {
   const BookingScreen({super.key});
 
-  /// Recovered from the original Glide bundle, where this same URL backed the
-  /// "Book a Zoom Session" button. Until now the app shipped a literal
-  /// PLACEHOLDER path, so the button opened a Square 404.
-  static const bookingUrl = 'https://divine-healing-106774.square.site';
+  /// Given by the client on 2026-09-19, replacing the Square site the
+  /// original Glide app pointed at. Square dropped its "online" location
+  /// option in Canada, so every booking then demanded either a physical
+  /// address or the customer's own as a mobile one — unworkable for remote
+  /// sessions.
+  ///
+  /// Note the spelling: rememberance, matching her address. The near-miss
+  /// `cosmicremembrance` is a live 404 rather than an error, so a typo here
+  /// would silently send everyone to an empty page.
+  static const bookingUrl = 'https://calendly.com/cosmicrememberance';
 
   Future<void> _openBooking(BuildContext context) async {
     final uri = Uri.parse(bookingUrl);
