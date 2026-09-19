@@ -32,7 +32,15 @@ function token() {
   const unsigned =
     b64url({ alg: 'ES256', kid: KEY_ID, typ: 'JWT' }) +
     '.' +
-    b64url({ iss: ISSUER, iat: now, exp: now + 1200, aud: 'appstoreconnect-v1' });
+    b64url({
+      iss: ISSUER,
+      iat: now,
+      // Apple caps this at 20 minutes and rejects the boundary: exactly 1200
+      // came back as "credentials are missing or invalid", which reads as a
+      // bad key rather than as a clock.
+      exp: now + 15 * 60,
+      aud: 'appstoreconnect-v1',
+    });
   const sig = crypto
     .createSign('SHA256')
     .update(unsigned)
