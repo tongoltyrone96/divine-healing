@@ -784,6 +784,30 @@ Consequences worth knowing:
 degrades quietly without them rather than loudly:
 `data/migrations/20260919_01_anonymous_purchase.sql` has to be applied, and
 **Authentication → Providers → Allow anonymous sign-ins** has to be on.
+Both were done on 2026-09-19, the migration through `22_run_migration.js`
+and the provider through `PATCH /v1/projects/{ref}/config/auth` with
+`external_anonymous_users_enabled`. That endpoint answers 403 in the note
+further up this file; it did not here, so the old 403 was an expired
+management token rather than a missing scope.
+
+Resubmitted 2026-09-19 with build 24, verified in the binary rather than
+in the source — the IPA comes down from the workflow run's artifact and
+the strings are read straight out of `App.framework/App`. Worth doing
+whenever a fix has to be *known* to have shipped; it is what caught build
+22 going out without the support-email change. Beware `grep -c`, which
+prints `0` **and** exits 1 when it finds nothing, so `$(grep -c … || echo 0)`
+yields `0\n0` and every absence test inverts. Use `grep -q` and the exit
+status.
+
+Three scripts now bracket the change, and all of them run without a store
+transaction: `27_verify_review_login.js` (the reviewer's own path),
+`28_verify_anonymous_purchase.js` (a guest is refused the paid audio),
+`29_verify_guest_unlock.js` (paying unlocks it, and removing the row locks
+it again), and `30_verify_webhook_guest_event.js`, which posts the payload
+RevenueCat would post at the live function and reads the row back.
+
+Android carries the same work as versionCode 15, on both the internal and
+closed tracks, plus the Calendly booking link that build 24 predates.
 
 ### Decided, and waiting for the first update after launch
 
@@ -835,10 +859,47 @@ degrades quietly without them rather than loudly:
   downloader without retry logic dies on it, so SDK packages, the Gradle
   distribution and the Flutter engine artifacts are prefetched by the
   numbered scripts in `automation/wsl/`.
+- **Rebuilding WSL costs four prefetches, and only the first one looks like
+  a download problem.** After the 2026-09-19 machine reinstall the Android
+  build needed, in the order it hit them: the Gradle distribution, the NDK,
+  platform SDKs 34 and 35, and CMake 3.22.1. Do them up front rather than
+  one failure at a time:
+
+  ```
+  04_prefetch_gradle.sh
+  05_prefetch_sdk_packages.sh ndk/28.2.13676358
+  05_prefetch_sdk_packages.sh platforms/android-34
+  05_prefetch_sdk_packages.sh platforms/android-35
+  05_prefetch_sdk_packages.sh cmake/3.22.1
+  ```
+
+  The plugins pin three different `compileSdk` versions, so read them out
+  of the pub cache instead of guessing:
+
+  ```
+  grep -rhoE "compileSdk(Version)?[ =]+[0-9]+" \
+    ~/.pub-cache/hosted/pub.dev/*/android/build.gradle* |
+    grep -oE "[0-9]+$" | sort -n | uniq -c
+  ```
+
+  How each one fails is worth knowing, because only one of them says what
+  it wants. The **NDK** simply stops: no error, no progress, a build that
+  sits forever — one had been hanging seven hours before anyone looked, and
+  two concurrent builds then blocked each other on the same half-downloaded
+  file. Read the tail of `~/.gradle/daemon/*/daemon-*.out.log` when a build
+  stalls; the URL it is stuck on is the last line. A missing **platform
+  SDK** fails in three seconds with `Failed to find target with hash string
+  'android-NN'`, which names the SDK rather than the plugin that asked for
+  it. **CMake** is the only one that says what it wants outright, and it
+  only surfaces once everything before it is in place, because `package:jni`
+  compiles `dartjni.c` and nothing reaches that step otherwise.
+
+  A failure arriving *sooner* than the last one is progress, not a
+  regression: infinite hang → 3s → 2s → 3m55s → built.
 - `.dart_tool/package_config.json` holds absolute paths, so Windows and WSL
   cannot share one. Both build scripts run `flutter pub get` first.
 - **Play never reuses a versionCode.** Bump `version:` in pubspec before
-  every upload; currently at `1.0.0+3`.
+  every upload; currently at `1.0.0+15`.
 - Content edits go to Supabase, not to the old Glide admin — Glide no longer
   feeds this app. The client needs walking through the Table Editor.
 - **Play Console has no API access page any more.** Every guide still sends
