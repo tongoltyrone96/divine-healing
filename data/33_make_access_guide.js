@@ -47,12 +47,22 @@ function h2(text) {
 
 // A field row: name | value, with an optional note underneath.
 function fieldRows() {
+  // Every box in the panel, in the order it appears, so there is never a
+  // question about one that isn't mentioned.
   const rows = [
+    ['id', null, 'The database numbers the row itself.'],
     ['user_email', 'their@email.com', 'All lowercase. This has to be the address they sign in with.'],
+    ['created_at', null, 'Filled in automatically.'],
+    ['updated_at', null, 'Filled in automatically.'],
+    ['stripe_customer_id', null, null],
+    ['stripe_subscription_id', null, null],
     ['subscription_status', 'active', null],
-    ['plan_name', 'Annual', null],
-    ['current_period_end', '2031-12-31', 'Any date far enough ahead. Access ends on this date.'],
+    ['plan_name', 'Annual', 'Just a label. It does not change what they get.'],
+    ['trial_ends_at', null, null],
+    ['current_period_end', '2031-12-31', 'Access ends on this date. Any date far enough ahead will do.'],
     ['store', 'gift', 'Marks the row as a gift rather than a real payment, so it is easy to find later.'],
+    ['store_transaction_id', null, null],
+    ['user_id', null, null],
   ];
 
   const cell = (children, width, shading) => new TableCell({
@@ -72,7 +82,11 @@ function fieldRows() {
 
   const out = [header];
   for (const [name, value, note] of rows) {
-    const right = [new Paragraph({ children: [mono(value)] })];
+    const right = [new Paragraph({
+      children: [value === null
+        ? new TextRun({ text: 'leave blank', font: 'Calibri', size: 21, color: SOFT, italics: true })
+        : mono(value)],
+    })];
     if (note) {
       right.push(new Paragraph({
         spacing: { before: 60 },
@@ -174,7 +188,7 @@ const doc = new Document({
         'Open supabase.com/dashboard/project/buzdtsupgmytqokgfsbn — the same place you edit the sessions. Go straight to that address rather than hunting for the project by name.',
         'In the left sidebar choose Table Editor, then the table sh_subscribers.',
         'Click Insert, then Insert row.',
-        'Fill in the five boxes below. Leave every other box empty — including id, created_at and updated_at, which the database fills in for you.',
+        'Fill in the boxes below. Five of them take a value; the rest stay empty, including id, which the database numbers itself.',
       ].map((t) => new Paragraph({
         numbering: { reference: 'steps', level: 0 },
         spacing: { after: 120, line: 300 },
@@ -220,6 +234,20 @@ const doc = new Document({
       callout('Only delete rows marked gift', [
         'Rows with anything else in the store column belong to people who actually paid — through the App Store, Google Play or Stripe. Deleting one of those takes away what they bought while their store keeps charging them.',
       ]),
+
+      h2('Two questions you might have'),
+
+      new Paragraph({
+        spacing: { after: 60 },
+        children: [new TextRun({ text: 'Is this the only table I touch?', font: 'Calibri', size: 22, bold: true, color: INK })],
+      }),
+      body('Yes. Only sh_subscribers. Nothing else in the database needs changing, and nothing needs deploying or updating in the app.', { after: 200 }),
+
+      new Paragraph({
+        spacing: { after: 60 },
+        children: [new TextRun({ text: 'Do they have to sign up first?', font: 'Calibri', size: 22, bold: true, color: INK })],
+      }),
+      body('No. You can add the row before they have ever opened the app. It sits there doing nothing until someone signs in with that address, and then it opens the library for them. Adding it afterwards works just as well — they may need to close and reopen the app to see the change.', { after: 200 }),
 
       h2('Worth knowing'),
 
