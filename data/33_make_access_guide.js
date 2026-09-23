@@ -174,7 +174,7 @@ const doc = new Document({
         'Open supabase.com/dashboard/project/buzdtsupgmytqokgfsbn — the same place you edit the sessions. Go straight to that address rather than hunting for the project by name.',
         'In the left sidebar choose Table Editor, then the table sh_subscribers.',
         'Click Insert, then Insert row.',
-        'Fill in the five boxes below and leave every other box empty.',
+        'Fill in the five boxes below. Leave every other box empty — including id, created_at and updated_at, which the database fills in for you.',
       ].map((t) => new Paragraph({
         numbering: { reference: 'steps', level: 0 },
         spacing: { after: 120, line: 300 },
@@ -197,7 +197,10 @@ const doc = new Document({
         rows: fieldRows(),
       }),
 
-      new Paragraph({ spacing: { after: 160 }, children: [] }),
+      new Paragraph({
+        spacing: { before: 140, after: 200 },
+        children: [new TextRun({ text: 'Most of these sit under Optional Fields — scroll down in the panel to reach them.', font: 'Calibri', size: 20, color: SOFT, italics: true })],
+      }),
 
       new Paragraph({
         numbering: { reference: 'steps', level: 0 },
