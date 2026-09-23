@@ -171,7 +171,7 @@ const doc = new Document({
       h2('Adding someone'),
 
       ...[
-        'Sign in at supabase.com and open the Divine Healing project — the same place you edit the sessions.',
+        'Open supabase.com/dashboard/project/buzdtsupgmytqokgfsbn — the same place you edit the sessions. Go straight to that address rather than hunting for the project by name.',
         'In the left sidebar choose Table Editor, then the table sh_subscribers.',
         'Click Insert, then Insert row.',
         'Fill in the five boxes below and leave every other box empty.',
