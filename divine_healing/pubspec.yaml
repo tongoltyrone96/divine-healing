@@ -36,7 +36,7 @@ dependencies:
 
   # --- Auth providers ---
   google_sign_in: ^6.2.2
-  sign_in_with_apple: ^6.1.3      # iOS-required for App Store approval when Google is present
+  sign_in_with_apple: ^8.2.0      # iOS-required for App Store approval when Google is present
   crypto: ^3.0.6                  # hashes the Sign in with Apple nonce
 
   # --- Audio player (M2) ---

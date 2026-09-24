@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
 
 import '../../config/env.dart';
 import '../../providers/auth_providers.dart';
@@ -43,10 +44,28 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     try {
       await svc.signInWithApple();
     } catch (e) {
-      _showError(_friendly(e));
+      // Deliberately not _friendly(). Two people tried Sign in with Apple,
+      // Face ID and then their passcode, and saw nothing at all — the
+      // generic message hid which step Apple refused, and there was no way
+      // to tell from the outside. Whatever comes back here is shown.
+      _showError(_appleError(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  /// Apple's own words where we have them, and something identifiable where
+  /// we do not — never a bare "something went wrong".
+  String _appleError(Object e) {
+    final text = e is AuthException ? e.message : e.toString();
+    if (text.toLowerCase().contains('apple could not sign you in')) return text;
+    if (text.toLowerCase().contains('nonce')) {
+      return 'Apple rejected the sign-in for a security check. Please try '
+          'again, or use email.';
+    }
+    final trimmed = text.replaceAll(RegExp(r'\s+'), ' ').trim();
+    return 'Sign in with Apple failed: '
+        '${trimmed.length > 120 ? '${trimmed.substring(0, 120)}…' : trimmed}';
   }
 
   Future<void> _handleGoogle() async {

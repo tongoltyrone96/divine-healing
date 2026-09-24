@@ -138,11 +138,19 @@ class AuthService {
       );
       return true;
     } on SignInWithAppleAuthorizationException catch (e) {
-      // Dismissing the sheet is a decision, not a failure. Reporting it as an
-      // error would put a red banner in front of someone who just changed
-      // their mind.
+      // Dismissing the sheet is a decision, not a failure, and a red banner
+      // in front of someone who changed their mind would be wrong.
+      //
+      // Everything else has to speak up. Two people could not sign in with
+      // Apple and saw *nothing at all* — no error, no progress — and with
+      // Apple's own code swallowed there was no way to tell a cancel from a
+      // refusal from a misconfigured device. Apple's message is carried
+      // through verbatim: it is the only thing that says which.
       if (e.code == AuthorizationErrorCode.canceled) return false;
-      rethrow;
+      throw AuthException(
+        'Apple could not sign you in (${e.code.name}).'
+        '${e.message.isNotEmpty ? ' ${e.message}' : ''}',
+      );
     }
   }
 
