@@ -1277,8 +1277,10 @@ const [, , command, ...args] = process.argv;
       }
       const bundleDbId = bundle.data[0].id;
 
-      const caps = await api('GET',
-        '/v1/bundleIds/' + bundleDbId + '/bundleIdCapabilities');
+      // The fields parameter is not decoration: the VPN stalls on this path
+      // when it is bare, and the call fails after four retries.
+      const caps = await api('GET', '/v1/bundleIds/' + bundleDbId +
+        '/bundleIdCapabilities?fields[bundleIdCapabilities]=capabilityType');
       const have = caps.data.map((c) => c.attributes.capabilityType);
       if (have.includes(capability)) {
         console.log(capability + ' already enabled.');
