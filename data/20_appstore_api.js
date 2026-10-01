@@ -242,7 +242,7 @@ const [, , command, ...args] = process.argv;
         contactFirstName: 'Tyrone Jher',
         contactLastName: 'Tongol',
         contactPhone: '+63 999 000 0000',
-        contactEmail: 'tongoltyrone84@gmail.com',
+        contactEmail: 'tyronejhert@gmail.com',
         demoAccountName: 'appreview@divinehealing.app',
         demoAccountPassword: process.env.APPSTORE_DEMO_PASSWORD || '',
         demoAccountRequired: true,
@@ -1039,7 +1039,7 @@ const [, , command, ...args] = process.argv;
             contactFirstName: 'Tyrone Jher',
             contactLastName: 'Tongol',
             contactPhone: '+63 999 000 0000',
-            contactEmail: 'tongoltyrone84@gmail.com',
+            contactEmail: 'tyronejhert@gmail.com',
             demoAccountName: 'appreview@divinehealing.app',
             demoAccountPassword: password,
             demoAccountRequired: true,
@@ -1066,7 +1066,7 @@ const [, , command, ...args] = process.argv;
           + 'journaling, affirmations and breathwork.\n\n'
           + 'Please try signing in, play a session with the screen locked, '
           + 'and tell us anything that felt slow or unclear.',
-        feedbackEmail: 'tongoltyrone84@gmail.com',
+        feedbackEmail: 'tyronejhert@gmail.com',
         marketingUrl: 'https://divine-healing-iota.vercel.app',
         privacyPolicyUrl: 'https://divine-healing-iota.vercel.app/privacy',
       };
