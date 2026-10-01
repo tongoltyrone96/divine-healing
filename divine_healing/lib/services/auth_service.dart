@@ -138,8 +138,8 @@ class AuthService {
       );
       return true;
     } on SignInWithAppleAuthorizationException catch (e) {
-      // Dismissing the sheet is a decision, not a failure, and a red banner
-      // in front of someone who changed their mind would be wrong.
+      // A dismissed sheet is returned as false rather than thrown, so the
+      // screen can word it as something other than a failure.
       //
       // Everything else has to speak up. Two people could not sign in with
       // Apple and saw *nothing at all* — no error, no progress — and with

@@ -42,7 +42,15 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     if (svc == null) return;
     setState(() => _busy = true);
     try {
-      await svc.signInWithApple();
+      final completed = await svc.signInWithApple();
+      // Apple reports a closed sheet as `canceled`, and that is also what
+      // comes back when Face ID and then the passcode fail and the person
+      // gives up. Staying silent on it is why two failed attempts looked
+      // like nothing had happened at all, so a cancel leaves a trace too.
+      if (!completed) {
+        _showError('Sign in with Apple did not finish '
+            '(Apple reported: canceled).');
+      }
     } catch (e) {
       // Deliberately not _friendly(). Two people tried Sign in with Apple,
       // Face ID and then their passcode, and saw nothing at all — the
