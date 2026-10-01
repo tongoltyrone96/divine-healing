@@ -49,6 +49,14 @@ if (!emails.length) {
 const db = createClient(URL, ADMIN, { auth: { persistSession: false } });
 const EXPIRES = new Date(Date.now() + 5 * 365 * 24 * 3600 * 1000).toISOString();
 
+// The same test sh_has_full_access() applies, so "has access" here means
+// what it means in the app.
+function grantsAccess(row) {
+  if (['trialing', 'active', 'past_due'].includes(row.subscription_status)) return true;
+  return row.subscription_status === 'canceled' && row.current_period_end
+    && new Date(row.current_period_end) > new Date();
+}
+
 (async () => {
   console.log(APPLY ? 'Applying.' : 'Dry run — nothing is written.');
   console.log('');
@@ -82,12 +90,20 @@ const EXPIRES = new Date(Date.now() + 5 * 365 * 24 * 3600 * 1000).toISOString();
       continue;
     }
 
-    if (existing && existing.store !== 'gift') {
+    // A purchase row is left alone only while it still grants access. This
+    // used to check the store alone, so the client's daughter, whose
+    // TestFlight sandbox subscription had lapsed, was reported as "already
+    // has access" while the app was locked for her. An expired purchase
+    // takes nothing away when it becomes a gift.
+    if (existing && existing.store !== 'gift' && grantsAccess(existing)) {
       console.log(`  ${email.padEnd(38)} already has access via '${existing.store}' — left alone`);
       continue;
     }
+    const action = !existing ? 'grant'
+      : existing.store === 'gift' ? 'refresh'
+      : `convert expired '${existing.store}' row to a gift`;
     if (!APPLY) {
-      console.log(`  ${email.padEnd(38)} ${existing ? 'would refresh' : 'would grant'} until ${EXPIRES.slice(0, 10)}`);
+      console.log(`  ${email.padEnd(38)} would ${action} until ${EXPIRES.slice(0, 10)}`);
       continue;
     }
 
