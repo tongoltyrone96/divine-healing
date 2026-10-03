@@ -28,9 +28,11 @@ const supabase = createClient(
 const WEBHOOK_SECRET = Deno.env.get('REVENUECAT_WEBHOOK_SECRET')!;
 
 /// RevenueCat's event types, mapped onto the four states sh_has_full_access()
-/// understands. Anything not listed is acknowledged and ignored: RevenueCat
-/// sends transfers, alias changes and test pings that carry no entitlement
-/// change, and returning an error for those would have it retry forever.
+/// understands. TRANSFER is handled separately, because it moves a
+/// subscription between people rather than changing its state. Anything else
+/// not listed is acknowledged and ignored: alias changes and test pings
+/// carry no entitlement change, and returning an error for those would have
+/// it retry forever.
 const GRANTS = new Set([
   'INITIAL_PURCHASE',
   'RENEWAL',
@@ -53,6 +55,8 @@ interface RevenueCatEvent {
   transaction_id?: string;
   original_transaction_id?: string;
   subscriber_attributes?: Record<string, { value?: string }>;
+  transferred_from?: string[];
+  transferred_to?: string[];
 }
 
 Deno.serve(async (req) => {
@@ -77,6 +81,16 @@ Deno.serve(async (req) => {
   console.log(`▶ ${event.type}  id=${event.id}  store=${event.store}`);
 
   if (event.type === 'TEST') return ok();
+
+  if (event.type === 'TRANSFER') {
+    try {
+      await handleTransfer(event);
+    } catch (e) {
+      console.error('Transfer error:', e);
+      return new Response(`Handler error: ${e.message}`, { status: 500 });
+    }
+    return ok();
+  }
 
   try {
     // The app user id is the Supabase auth uid — the app sets it that way,
@@ -196,20 +210,106 @@ function uuidOrNull(id?: string): string | null {
 /// The lookup behind it covers a purchase made before that attribute synced,
 /// which RevenueCat does asynchronously. Anonymous buyers have neither, and
 /// the caller falls back to a synthetic address for them.
+///
+/// Lower-cased, because the table is: 20260924_01 lowered every stored
+/// address and put a unique index on lower(user_email). An address arriving
+/// with a capital would miss its own row in updateWhere and then collide
+/// with it on insert, and the 500 would have RevenueCat retry forever.
 async function resolveEmail(event: RevenueCatEvent): Promise<string | null> {
   const attribute = event.subscriber_attributes?.['$email']?.value;
-  if (attribute) return attribute;
+  if (attribute) return attribute.toLowerCase();
 
   for (const id of [event.app_user_id, event.original_app_user_id]) {
     if (!id) continue;
-    const { data, error } = await supabase.auth.admin.getUserById(id);
-    if (error) {
-      console.warn(`Lookup failed for ${id}: ${error.message}`);
-      continue;
-    }
-    if (data.user?.email) return data.user.email;
+    const email = await emailOf(id);
+    if (email) return email;
   }
   return null;
+}
+
+/// The account's own address, lower-cased, or null for an anonymous one.
+async function emailOf(uid: string): Promise<string | null> {
+  const { data, error } = await supabase.auth.admin.getUserById(uid);
+  if (error) {
+    console.warn(`Lookup failed for ${uid}: ${error.message}`);
+    return null;
+  }
+  return data.user?.email ? data.user.email.toLowerCase() : null;
+}
+
+/// Moves a subscription to the account RevenueCat moved it to.
+///
+/// A guest who buys and then signs in ends up with a different Supabase
+/// uid: signing in does not promote the anonymous user, it replaces it. The
+/// row still names the anonymous uid, so the person who paid finds the
+/// library locked. Restore Purchases makes RevenueCat transfer the purchase
+/// to the new app user id and report a TRANSFER, which carries no status, so
+/// this used to drop it. The library then stayed locked until a renewal
+/// happened to arrive under the new id, up to a year for an annual plan.
+async function handleTransfer(event: RevenueCatEvent): Promise<void> {
+  const from = (event.transferred_from ?? [])
+    .map(uuidOrNull)
+    .filter((id): id is string => id !== null);
+  const to = (event.transferred_to ?? [])
+    .map(uuidOrNull)
+    .find((id): id is string => id !== null) ?? null;
+  if (!from.length || !to) {
+    console.warn(`TRANSFER without usable ids: from=${event.transferred_from} to=${event.transferred_to}`);
+    return;
+  }
+
+  const { data: sources, error } = await supabase
+    .from('sh_subscribers')
+    .select('*')
+    .in('user_id', from)
+    .order('updated_at', { ascending: false })
+    .limit(1);
+  if (error) throw error;
+  const source = sources?.[0];
+  if (!source) {
+    console.log(`TRANSFER ${from.join(',')} -> ${to}: no row to move.`);
+    return;
+  }
+
+  const email = await emailOf(to) ?? `${to}@anonymous.divinehealing.app`;
+  const moved = {
+    user_id: to,
+    user_email: email,
+    subscription_status: source.subscription_status,
+    plan_name: source.plan_name,
+    trial_ends_at: source.trial_ends_at,
+    current_period_end: source.current_period_end,
+    store: source.store,
+    store_transaction_id: source.store_transaction_id,
+    updated_at: new Date().toISOString(),
+  };
+
+  // The receiving account may already have a row of its own, by uid or by
+  // address if Stripe or a gift wrote it. The purchase lands on that row
+  // rather than beside it: two rows for one person is the state the
+  // uid-first matching above exists to prevent, and the next renewal would
+  // update only one of them.
+  const { data: existing, error: findError } = await supabase
+    .from('sh_subscribers')
+    .select('id')
+    .or(`user_id.eq.${to},user_email.eq."${email}"`)
+    .neq('id', source.id)
+    .limit(1);
+  if (findError) throw findError;
+
+  if (existing?.length) {
+    const { error: updateError } = await supabase
+      .from('sh_subscribers').update(moved).eq('id', existing[0].id);
+    if (updateError) throw updateError;
+    const { error: deleteError } = await supabase
+      .from('sh_subscribers').delete().eq('id', source.id);
+    if (deleteError) throw deleteError;
+  } else {
+    const { error: moveError } = await supabase
+      .from('sh_subscribers').update(moved).eq('id', source.id);
+    if (moveError) throw moveError;
+  }
+  console.log(`✔ TRANSFER ${source.user_id} -> ${to}  status=${moved.subscription_status}`);
 }
 
 /// The vocabulary here has to match what the Stripe webhook writes, because
