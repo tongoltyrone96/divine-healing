@@ -98,13 +98,27 @@ RevenueCat uses a device identifier to tie a purchase to a device and to
 detect duplicate or fraudulent transactions. Not used for advertising — the
 app shows none and integrates no ad network.
 
-It does reach the advertising ID, though. RevenueCat's Android SDK pulls in
-`com.google.android.gms.permission.AD_ID`, which is in the bundle whether or
-not the app ever reads it, so Play's separate advertising ID declaration is
-answered **Yes**, with **Fraud prevention, security, and compliance** as the
-only reason. Answering No there is checked against the manifest and fails.
-Play blocks the whole submission on that declaration — it was the last thing
-standing between the closed test and review.
+Play's separate advertising ID declaration is answered **No**, as of
+2026-10-03. It has been answered both ways, and both were right at the time,
+because Play checks the answer against the manifest of every active
+artifact:
+
+- **Yes, until versionCode 15.** `purchases_flutter` 8.x pulled in
+  `com.google.android.gms.permission.AD_ID`, so the bundle carried it
+  whether or not the app ever read it. The answer was Yes, with **Fraud
+  prevention, security, and compliance** as the only reason, and saying No
+  failed the check. It was the last thing standing between the closed test
+  and review.
+- **No, from versionCode 15.** `purchases_flutter` ^10.10.1, which Play's
+  Billing 8 requirement forced, no longer merges `AD_ID`. The first
+  production release then failed the same check from the other side: the
+  declaration said Yes and the bundle had no permission. The merged
+  manifest and the `.aab` were both checked before changing the answer.
+
+Before answering again after a dependency upgrade, read the merged manifest
+(`build/app/intermediates/bundle_manifest/release/.../AndroidManifest.xml`)
+rather than this note. The Device or other IDs row above is unaffected: that
+is RevenueCat's own device identifier, not the advertising ID.
 
 ### Not collected
 
