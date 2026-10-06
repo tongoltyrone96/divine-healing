@@ -64,14 +64,30 @@ Any static server on `site/`. Headless Chrome cannot be trusted below about
 screenshots are crops of a wider page. Put the page in a 390px iframe to
 see a real phone width.
 
-Desktop Chrome is not the bar. The first version used a frosted
-`backdrop-filter` header and cards that faded in on scroll. It was flawless
-on desktop and smeared, half-painted cards on an Android phone, because
-some mobile browsers drop compositor layers when graphics memory is short.
-Both effects are gone, and the cards and header are opaque. Keep it that
-way: no backdrop filters, no scroll-triggered transforms, no translucent
-surfaces over the page gradient. Check every change on a real Android
-phone.
+Desktop Chrome is not the bar. On the client's family Huawei MGA-LX3
+(Android 10, Chrome 149) the "What the app helps with" cards rendered as a
+smeared stack of copies of themselves, while desktop was flawless.
+
+**The cause was translucent borders on rounded boxes**, `border: 1px solid
+rgba(...)` together with `border-radius`. That was found by bisecting on the
+device over Chrome DevTools: reload, jump to the same scroll position,
+screenshot, with one CSS override at a time. The original page corrupted
+every time. Opaque borders, no borders, or square corners were each clean
+every time. Shadows, gradients, fonts, the sticky header, images and the
+rotated phone made no difference.
+
+So: **every border colour is opaque** (`--border: #EAD6DA` is rose gold at
+35% over white). Never put an `rgba()` colour in a border. The phone
+frame's rim is an inset box-shadow in the same opaque colour.
+
+Earlier guesses removed the frosted header, the scroll-reveal animation and
+the translucent card fills before the real cause was known. Those changes
+stayed because they cost nothing, but they were not the fix.
+
+To test on a device: `adb reverse tcp:4173 tcp:4173` to serve the local
+page, `adb forward tcp:9222 localabstract:chrome_devtools_remote` to drive
+Chrome. A tab in the background does not run `requestAnimationFrame`, so
+activate it (`/json/activate/<id>`) before scripting it.
 
 ## Caching
 

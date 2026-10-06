@@ -42,15 +42,20 @@
   --text: #4A3550;
   --text-muted: #7A5A7C;
   --surface: #FFFFFF;
-  --border: rgba(196, 139, 149, 0.35);
+  /* Opaque, and the same colour rose gold at 35% makes over white. A
+     translucent border on a rounded box is what a Huawei MGA-LX3 (Android
+     10, Chrome 149) drew as a stack of smeared copies of the cards while
+     scrolling. Bisected on the device: opaque or no borders were clean,
+     the rgba border corrupted every time. Keep every border opaque. */
+  --border: #EAD6DA;
 
   --serif: "Playfair Display", Georgia, "Times New Roman", serif;
   --sans: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
   --radius: 20px;
   --radius-lg: 28px;
-  --shadow: 0 1px 2px rgba(91, 58, 94, 0.06), 0 12px 32px rgba(91, 58, 94, 0.08);
-  --shadow-lg: 0 2px 4px rgba(91, 58, 94, 0.06), 0 24px 60px rgba(91, 58, 94, 0.14);
+  --shadow: 0 1px 2px rgba(91, 58, 94, 0.06), 0 4px 12px rgba(91, 58, 94, 0.07);
+  --shadow-lg: 0 2px 6px rgba(91, 58, 94, 0.08), 0 10px 24px rgba(91, 58, 94, 0.12);
 
   --gutter: 20px;
   --max: 1120px;
@@ -75,10 +80,7 @@ body {
   font-size: 1.0625rem;
   line-height: 1.65;
   color: var(--text);
-  background:
-    radial-gradient(60rem 40rem at 85% -10%, rgba(233, 213, 234, 0.75), transparent 60%),
-    radial-gradient(50rem 36rem at -10% 20%, rgba(245, 212, 217, 0.55), transparent 60%),
-    var(--blush-mist);
+  background: var(--blush-mist);
 }
 
 img { display: block; max-width: 100%; height: auto; }
@@ -131,7 +133,7 @@ a { color: var(--plum); }
   top: 0;
   z-index: 10;
   background: var(--blush-mist);
-  border-bottom: 1px solid rgba(196, 139, 149, 0.22);
+  border-bottom: 1px solid #F0DEE2;
   box-shadow: 0 1px 12px rgba(91, 58, 94, 0.05);
 }
 
@@ -183,13 +185,18 @@ a { color: var(--plum); }
 }
 .section__title--left { text-align: left; margin-bottom: 16px; }
 
+/* A pair of buttons is always one size. On a phone they stack at the same
+   full width; from 640px they sit side by side in equal columns, each as
+   wide as the longer label needs, which is what 1fr does in a grid that
+   sizes itself to its content. */
 .actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 12px;
+  width: 100%;
+  max-width: 360px;
   margin-top: 28px;
 }
-.actions--center { justify-content: center; }
+.actions .btn { width: 100%; }
 
 .btn {
   display: inline-flex;
@@ -212,9 +219,9 @@ a { color: var(--plum); }
 .btn--primary {
   background: var(--plum);
   color: #fff;
-  box-shadow: 0 8px 22px rgba(91, 58, 94, 0.28);
+  box-shadow: 0 4px 12px rgba(91, 58, 94, 0.26);
 }
-.btn--primary:hover { background: var(--plum-deep); box-shadow: 0 10px 26px rgba(91, 58, 94, 0.34); }
+.btn--primary:hover { background: var(--plum-deep); }
 
 .btn--secondary {
   background: #fff;
@@ -234,13 +241,18 @@ a { color: var(--plum); }
 }
 
 /* Phone frame round the app screenshots */
+/* The rim is an inset shadow in an opaque colour: a translucent rim is
+   the thing that corrupted rendering on the Huawei (see --border). */
 .phone {
   position: relative;
   aspect-ratio: 1320 / 2868;
   padding: 8px;
   border-radius: 38px;
   background: linear-gradient(160deg, #ffffff, #f3e6ee);
-  box-shadow: var(--shadow-lg), inset 0 0 0 1px rgba(196, 139, 149, 0.35);
+  box-shadow:
+    0 2px 4px rgba(91, 58, 94, 0.06),
+    0 24px 60px rgba(91, 58, 94, 0.14),
+    inset 0 0 0 1px var(--border);
 }
 .phone img {
   width: 100%;
@@ -251,7 +263,15 @@ a { color: var(--plum); }
 
 /* ---------- 1. Hero ---------- */
 
-.hero { padding-block: 40px 64px; }
+/* The page used to sit on two viewport-sized radial gradients. On a
+   budget Android phone Chrome could not re-raster them as fast as a
+   fling scrolls, and showed stale tiles from other scroll positions
+   instead, the "smeared cards". The colour wash now lives only here, as a
+   plain linear gradient, and everything below sits on a flat colour. */
+.hero {
+  padding-block: 40px 64px;
+  background: linear-gradient(180deg, #F6E8F1 0%, var(--blush-mist) 100%);
+}
 
 /* minmax(0, 1fr) rather than the implicit auto track: an auto track grows
    to its widest child, which pushed the lead paragraph past the edge of a
@@ -263,6 +283,13 @@ a { color: var(--plum); }
   align-items: center;
 }
 .hero__inner > * { min-width: 0; }
+
+/* Centred while the hero is a single column, which is every phone and
+   tablet. From 900px the copy sits beside the phone and reads better
+   aligned left. */
+.hero__copy { text-align: center; }
+.hero__copy .lead,
+.hero__copy .actions { margin-inline: auto; }
 
 .hero h1 {
   font-size: clamp(2.1rem, 8vw, 3.5rem);
@@ -347,7 +374,6 @@ a { color: var(--plum); }
   padding: 32px 24px;
   border-radius: var(--radius-lg);
   background:
-    radial-gradient(30rem 20rem at 100% 0%, rgba(233, 213, 234, 0.9), transparent 70%),
     linear-gradient(135deg, #fff 0%, var(--sandstone) 100%);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
@@ -450,7 +476,7 @@ a { color: var(--plum); }
 
 /* ---------- 5. About ---------- */
 
-.about { background: linear-gradient(180deg, transparent, rgba(233, 213, 234, 0.35), transparent); }
+.about { background: #F8ECF3; }
 
 .about__inner {
   display: grid;
@@ -465,8 +491,9 @@ a { color: var(--plum); }
   border-radius: 50%;
   padding: 22px;
   background:
-    radial-gradient(circle at 30% 25%, #fff, var(--sandstone) 70%);
-  box-shadow: var(--shadow-lg), inset 0 0 0 1px rgba(196, 139, 149, 0.35);
+    #fff;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
 }
 .about__photo img { width: 100%; height: 100%; object-fit: contain; }
@@ -562,8 +589,7 @@ a { color: var(--plum); }
   text-align: center;
   border-radius: var(--radius-lg);
   background:
-    radial-gradient(26rem 18rem at 50% 0%, rgba(245, 212, 217, 0.9), transparent 70%),
-    #fff;
+    linear-gradient(180deg, var(--sandstone) 0%, #fff 55%);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
 }
@@ -604,7 +630,7 @@ a { color: var(--plum); }
 
 .site-footer {
   padding-block: 40px 48px;
-  border-top: 1px solid rgba(196, 139, 149, 0.25);
+  border-top: 1px solid #EFDDE1;
   background: #FDF8FA;
   font-size: 0.92rem;
   color: var(--text-muted);
@@ -621,9 +647,6 @@ a { color: var(--plum); }
   color: var(--plum);
 }
 .site-footer__brand span { font-style: italic; color: var(--rose-purple); }
-.site-footer__links { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 22px; }
-.site-footer__links a { color: var(--text-muted); text-underline-offset: 3px; }
-.site-footer__links a:hover { color: var(--plum); }
 .site-footer__disclaimer { max-width: 36rem; font-size: 0.85rem; }
 .site-footer__copy { font-size: 0.85rem; }
 
@@ -646,6 +669,13 @@ a { color: var(--plum); }
   .features__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
   .pricing__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .free__card { padding: 44px; }
+
+  .actions {
+    width: max-content;
+    max-width: 100%;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+  }
 }
 
 @media (min-width: 900px) {
@@ -653,6 +683,9 @@ a { color: var(--plum); }
   .hero { padding-block: 72px 96px; }
   .hero__inner { grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 56px; }
   .phone--hero { width: 280px; }
+  .hero__copy { text-align: left; }
+  .hero__copy .lead,
+  .hero__copy .actions { margin-inline: 0; }
 
   .free__card {
     grid-template-columns: 1.3fr 1fr;
