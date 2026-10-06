@@ -28,22 +28,4 @@
 
   var year = document.querySelector('[data-year]');
   if (year) year.textContent = String(new Date().getFullYear());
-
-  // Sections ease in as they arrive. Content is never hidden from anyone
-  // without IntersectionObserver or with reduced motion: the CSS only hides
-  // .reveal under .js, and reveals everything when motion is reduced.
-  var items = document.querySelectorAll('.reveal');
-  if (!('IntersectionObserver' in window)) {
-    for (var j = 0; j < items.length; j++) items[j].classList.add('is-visible');
-    return;
-  }
-  var observer = new IntersectionObserver(function (entries) {
-    entries.forEach(function (entry) {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('is-visible');
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
-  for (var k = 0; k < items.length; k++) observer.observe(items[k]);
 })();
