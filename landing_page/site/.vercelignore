@@ -1,0 +1,4 @@
+# Never part of the published site.
+.env*
+.gitignore
+.vercelignore

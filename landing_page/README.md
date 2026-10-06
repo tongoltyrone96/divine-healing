@@ -64,6 +64,29 @@ Any static server on `site/`. Headless Chrome cannot be trusted below about
 screenshots are crops of a wider page. Put the page in a 390px iframe to
 see a real phone width.
 
+## Deploying
+
+Vercel project **strawberryhope** in the `tyrone-jher-tongols-projects`
+scope, deployed from `site/` with the CLI (no Git integration):
+
+```
+cd landing_page/site
+npx vercel deploy --prod --yes --scope tyrone-jher-tongols-projects
+```
+
+Live at https://strawberryhope.vercel.app until the domain is pointed here.
+
+`vercel link` writes a `.env.local` holding a `VERCEL_OIDC_TOKEN` into this
+folder. A static site needs none of it, so delete it. `.vercelignore` keeps
+`.env*` out of every upload regardless, which is checked by
+`/.env.local` answering 404 on the live site.
+
+That scope is on the **Hobby** plan, which Vercel's terms limit to
+non-commercial use. It is fine for the client to review the page. Running
+paid ads to it needs Vercel Pro or another host. Cloudflare Pages is free
+and allows commercial use, and since the site is plain files, it moves
+without changes.
+
 ## Domain
 
 `strawberryhope.com` is registered at GoDaddy (nameservers
