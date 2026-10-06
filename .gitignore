@@ -79,3 +79,9 @@ divine_healing/.signing/
 # and the substance ends up in CLAUDE.md; the files themselves are large,
 # arrive in duplicate, and are no more ours to publish than the mail is.
 feedback/
+
+# The landing page brief arrived as WhatsApp screenshots of a Copilot chat.
+# What it asks for is built into landing_page/site; the images stay local.
+landing_page/*.jpeg
+# Vercel's link to the project, written by `vercel deploy`.
+landing_page/site/.vercel/
