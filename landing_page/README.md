@@ -126,11 +126,17 @@ without changes.
 Website Builder page: a tagline, a contact form and an email sign-up.
 Pointing the domain here replaces that page, so the client has to agree first.
 
-At GoDaddy → DNS, once the Vercel project has the domain added:
+Both `strawberryhope.com` and `www.strawberryhope.com` were added to the
+Vercel project on 2026-10-07. At GoDaddy → DNS, these are the records
+Vercel asked for (`vercel domains verify <domain>`), replacing the Website
+Builder ones (A `76.223.105.230` and `13.248.243.5`, CNAME www → @):
 
 | Type | Name | Value |
 |---|---|---|
-| A | @ | 76.76.21.21 |
-| CNAME | www | cname.vercel-dns.com |
+| A | @ | 216.198.79.1 |
+| A | @ | 64.29.17.1 |
+| CNAME | www | 4589ee7747605a2f.vercel-dns-017.com |
 
-Leave MX and any other records alone; email does not depend on these two.
+The domain has no MX records, so no email depends on it. Leave the NS
+records alone. Re-run `vercel domains verify` afterwards. The certificate
+is issued automatically once the records resolve.
