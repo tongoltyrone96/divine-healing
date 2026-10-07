@@ -85,3 +85,5 @@ feedback/
 landing_page/*.jpeg
 # Vercel's link to the project, written by `vercel deploy`.
 landing_page/site/.vercel/
+# Hand-off copies of the site sent to the client. Rebuilt from site/ on request.
+landing_page/*.zip
