@@ -185,6 +185,16 @@ a { color: var(--plum); }
 }
 .section__title--left { text-align: left; margin-bottom: 16px; }
 
+/* A short paragraph under a centred title. The title gives up most of its
+   bottom margin so the two read as one block. */
+.section__intro {
+  max-width: 40rem;
+  margin: -20px auto 32px;
+  text-align: center;
+  font-size: 1.08rem;
+  color: var(--text-muted);
+}
+
 /* A pair of buttons is always one size. On a phone they stack at the same
    full width; from 640px they sit side by side in equal columns, each as
    wide as the longer label needs, which is what 1fr does in a grid that
