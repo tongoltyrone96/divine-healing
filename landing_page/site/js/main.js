@@ -28,4 +28,35 @@
 
   var year = document.querySelector('[data-year]');
   if (year) year.textContent = String(new Date().getFullYear());
+
+  // Meta Pixel events for the two things the page exists to get people to
+  // do. Measured on the click, by where the link goes, so every Download and
+  // Book button counts whichever section it sits in. A Download button on a
+  // computer only scrolls to the badges, so it is the badge click that
+  // counts there, not the button.
+  //
+  //   DownloadApp (custom)  store: 'app_store' | 'google_play'
+  //   Lead (standard)       a click through to the Calendly booking page
+  //
+  // Neither is a completed install or booking: those happen in the stores
+  // and on Calendly, which the pixel cannot see.
+  document.addEventListener('click', function (event) {
+    if (typeof window.fbq !== 'function') return;
+    var link = event.target.closest && event.target.closest('a[href]');
+    if (!link) return;
+    var href = link.href;
+    var where = link.closest('section');
+    var section = where ? where.id : '';
+    if (href.indexOf(APP_STORE) === 0 || href.indexOf(GOOGLE_PLAY) === 0) {
+      window.fbq('trackCustom', 'DownloadApp', {
+        store: href.indexOf(APP_STORE) === 0 ? 'app_store' : 'google_play',
+        section: section,
+      });
+    } else if (href.indexOf('https://calendly.com/') === 0) {
+      window.fbq('track', 'Lead', {
+        content_name: 'Remote Reiki session',
+        section: section,
+      });
+    }
+  });
 })();

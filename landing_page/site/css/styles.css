@@ -660,6 +660,31 @@ a { color: var(--plum); }
 .site-footer__disclaimer { max-width: 36rem; font-size: 0.85rem; }
 .site-footer__copy { font-size: 0.85rem; }
 
+.site-footer__copy a { color: inherit; text-underline-offset: 3px; }
+.site-footer__copy a:hover { color: var(--plum); }
+
+/* ---------- Privacy page ---------- */
+
+.legal__inner { max-width: 720px; }
+.legal h1 {
+  font-size: clamp(2rem, 7vw, 2.8rem);
+  margin-bottom: 6px;
+}
+.legal__updated {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 28px;
+}
+.legal h2 {
+  font-size: 1.35rem;
+  margin: 32px 0 10px;
+}
+.legal p,
+.legal li { margin-bottom: 12px; }
+.legal ul { padding-left: 1.2em; margin: 0; }
+.legal a:not(.btn) { color: var(--rose-purple); text-underline-offset: 3px; }
+.legal__back { margin-top: 36px; }
+
 /* No scroll-reveal animation. It was here, and on an Android phone the
    faded-in cards were left half-painted and smeared as the page scrolled:
    each animating card becomes its own compositor layer, and a phone short

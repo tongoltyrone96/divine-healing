@@ -27,10 +27,27 @@
 
   <link rel="preload" href="fonts/playfair-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/nunito-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=7">
-  <script src="js/main.js?v=2" defer></script>
+  <link rel="stylesheet" href="css/styles.css?v=8">
+  <script src="js/main.js?v=3" defer></script>
+
+  <!-- Meta Pixel, Strawberry Hope's own (sent by the client 2026-10-07).
+       Click events are added in js/main.js. Disclosed on /privacy. -->
+  <script>
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '1099251262520848');
+  fbq('track', 'PageView');
+  </script>
 </head>
 <body>
+  <noscript><img height="1" width="1" style="display:none" alt=""
+    src="https://www.facebook.com/tr?id=1099251262520848&amp;ev=PageView&amp;noscript=1"></noscript>
   <a class="skip-link" href="#main">Skip to content</a>
 
   <header class="site-header">
@@ -247,10 +264,10 @@
           <a class="btn btn--secondary" href="https://calendly.com/cosmicrememberance" target="_blank" rel="noopener">Book Reiki Session</a>
         </div>
         <div class="badges">
-          <a href="https://apps.apple.com/app/divine-awakening/id6806764325" aria-label="Download Divine Awakening on the App Store">
+          <a href="https://apps.apple.com/app/divine-awakening/id6806764325" target="_blank" rel="noopener" aria-label="Download Divine Awakening on the App Store">
             <img src="img/badge-app-store.svg" alt="Download on the App Store" width="144" height="48" loading="lazy">
           </a>
-          <a href="https://play.google.com/store/apps/details?id=com.divinehealing.app" aria-label="Get Divine Awakening on Google Play">
+          <a href="https://play.google.com/store/apps/details?id=com.divinehealing.app" target="_blank" rel="noopener" aria-label="Get Divine Awakening on Google Play">
             <img src="img/badge-google-play.png" alt="Get it on Google Play" width="162" height="48" loading="lazy">
           </a>
         </div>
@@ -263,7 +280,7 @@
     <div class="container site-footer__inner">
       <p class="site-footer__brand">Divine Awakening <span>by Strawberry Hope</span></p>
       <p class="site-footer__disclaimer">Divine Awakening supports relaxation and personal growth. It is not a substitute for medical or mental-health care.</p>
-      <p class="site-footer__copy">© <span data-year>2026</span> Strawberry Hope. All rights reserved.</p>
+      <p class="site-footer__copy">© <span data-year>2026</span> Strawberry Hope. All rights reserved. · <a href="/privacy">Privacy</a></p>
     </div>
   </footer>
 </body>

@@ -38,6 +38,32 @@ care. The brief does not ask for it; ads about anxiety and healing need it.
 Screenshot 03 (the Reiki page) is not used: it says balanced energy makes
 you "less likely to get sick", which is a health claim.
 
+## Meta Pixel
+
+The client's own pixel, ID `1099251262520848`, created in her Meta
+Events Manager and emailed on 2026-10-07. The base code is in the
+`<head>` of `index.html`, and the click events are in `js/main.js`:
+
+| Event | When |
+|---|---|
+| `PageView` | every visit (base code) |
+| `DownloadApp` (custom) | a tap through to either store, with `store: app_store / google_play` and the `section` it was in |
+| `Lead` (standard) | a tap through to the Calendly booking page, with the `section` |
+
+Neither event is a completed install or booking, because those happen in the
+stores and on Calendly. Store badges open in a new tab so the event is
+sent before the page goes away.
+
+Verified on the live domain by driving Chrome over DevTools and watching
+the requests to `facebook.com/tr`. **Headless Chrome sends nothing**, so
+it needs a normal user agent and `--disable-blink-features=AutomationControlled`.
+Otherwise the pixel loads and silently drops every event.
+
+Meta's terms require a site that uses the pixel to say so, which is what
+`/privacy` and the footer's "Privacy" link are for. There is no cookie
+banner, which is fine for ads in Canada, the US and Australia. One is needed
+before advertising in the EU or UK.
+
 ## Download buttons
 
 Every Download / Get / Upgrade button carries `data-app-link`. On an iPhone
