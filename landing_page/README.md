@@ -66,10 +66,26 @@ before advertising in the EU or UK.
 
 ## Download buttons
 
-Every Download / Get / Upgrade button carries `data-app-link`. On an iPhone
-or iPad `js/main.js` points it at the App Store, on Android at Google Play.
-Everywhere else, and without JavaScript, it goes to `#get-the-app`, where
-both official badges are, since neither store installs onto a computer.
+The client's brief of 2026-10-12 put downloads first: **every download
+control goes straight to a store, and nothing scrolls**.
+
+- **Hero and final section**: the two official store badges are the main
+  action, the largest tappable thing in the hero. Booking is out of the
+  hero, and in the final section it sits below the badges.
+- **Other "Download" buttons** (free meditation, both pricing cards) carry
+  `data-app-link`. An inline script in `<head>` puts `os-ios`, `os-android`
+  or `os-other` on `<html>` before the first paint, and `js/main.js` points
+  the buttons at that phone's own store. A computer has no store of its own,
+  so under `.os-other` CSS hides the button and shows the
+  `.badges--desktop` pair beside it instead.
+- On a computer, store links open in a new tab, so the pixel event is sent
+  before the page goes away. On a phone the store app takes over and the
+  page stays, so they stay in the same tab.
+- Without JavaScript the buttons fall back to `#get-the-app`, where the
+  final section's badges are.
+
+Check with a real phone viewport, not a narrow desktop window: the routing
+depends on the user agent.
 
 ## Changing images
 

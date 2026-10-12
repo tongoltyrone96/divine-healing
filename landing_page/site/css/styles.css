@@ -314,7 +314,7 @@ a { color: var(--plum); }
   margin-top: 20px;
   font-size: 1.15rem;
   color: var(--text-muted);
-  max-width: 34rem;
+  max-width: 38rem;
 }
 
 .hero__note {
@@ -636,6 +636,20 @@ a { color: var(--plum); }
 .badges a { border-radius: 10px; }
 .badges img { height: 48px; width: auto; }
 
+/* The hero's two store badges are the page's main action, so they are
+   the largest thing in it that can be tapped. They grow with the screen,
+   and at 360px still fit side by side (Apple's minimum is 40px tall). */
+.badges--hero { margin-top: 28px; }
+.badges--hero img { height: clamp(44px, 12.5vw, 60px); }
+
+/* Where a "Download" button would only scroll on a computer, these badges
+   stand in for it. A phone keeps the button, which goes to its own store. */
+.badges--desktop { display: none; margin-top: 0; }
+.os-other .badges--desktop { display: flex; }
+.os-other [data-app-link] { display: none; }
+.free__copy .badges--desktop { justify-content: flex-start; }
+.plan .badges--desktop img { height: 44px; }
+
 /* ---------- Footer ---------- */
 
 .site-footer {
@@ -721,6 +735,7 @@ a { color: var(--plum); }
   .hero__copy { text-align: left; }
   .hero__copy .lead,
   .hero__copy .actions { margin-inline: 0; }
+  .hero__copy .badges--hero { justify-content: flex-start; }
 
   .free__card {
     grid-template-columns: 1.3fr 1fr;
@@ -745,3 +760,10 @@ a { color: var(--plum); }
 
   .work__card { padding: 60px 56px; }
 }
+
+/* Final section: the store badges lead, as in the hero, and booking sits
+   below them rather than competing with them. */
+.final__book { margin-top: 22px; }
+/* Each item of the line under the hero badges stays whole, so a narrow
+   screen breaks between items rather than inside one. */
+.hero__note span { white-space: nowrap; }

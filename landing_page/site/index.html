@@ -27,8 +27,12 @@
 
   <link rel="preload" href="fonts/playfair-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/nunito-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=8">
-  <script src="js/main.js?v=3" defer></script>
+  <!-- os-ios / os-android / os-other on <html> before the first paint, so a
+       phone shows its store button and a computer shows both badges without
+       a flash of the wrong one. js/main.js reads the same class. -->
+  <script>(function(){var u=navigator.userAgent||"",o="other";if(/android/i.test(u))o="android";else if(/iPhone|iPad|iPod/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1))o="ios";document.documentElement.className+=" js os-"+o})()</script>
+  <link rel="stylesheet" href="css/styles.css?v=11">
+  <script src="js/main.js?v=4" defer></script>
 
   <!-- Meta Pixel, Strawberry Hope's own (sent by the client 2026-10-07).
        Click events are added in js/main.js. Disclosed on /privacy. -->
@@ -70,12 +74,16 @@
         <div class="hero__copy">
           <p class="eyebrow">Guided meditation &amp; Reiki healing</p>
           <h1 id="hero-title">Awakening is overwhelming — <em>you don’t have to go through it alone.</em></h1>
-          <p class="lead">A guided meditation and support app designed to help you stay grounded, calm, and connected during your spiritual awakening.</p>
-          <div class="actions">
-            <a class="btn btn--primary" data-app-link href="#get-the-app">Download Free Version</a>
-            <a class="btn btn--secondary" href="https://calendly.com/cosmicrememberance" target="_blank" rel="noopener">Book Remote Reiki Session</a>
+          <p class="lead">Free guided meditations, grounding practices &amp; Reiki support.<br>Start with the free Anxiety Release meditation — no account needed.</p>
+          <div class="badges badges--hero">
+            <a href="https://apps.apple.com/app/divine-awakening/id6806764325" aria-label="Download Divine Awakening on the App Store">
+              <img src="img/badge-app-store.svg" alt="Download on the App Store" width="144" height="48">
+            </a>
+            <a href="https://play.google.com/store/apps/details?id=com.divinehealing.app" aria-label="Get Divine Awakening on Google Play">
+              <img src="img/badge-google-play.png" alt="Get it on Google Play" width="162" height="48">
+            </a>
           </div>
-          <p class="hero__note">Free on iPhone and Android.</p>
+          <p class="hero__note"><span>Free on iPhone and Android</span> · <span>3 free sessions</span> · <span>No account required</span></p>
         </div>
         <div class="hero__visual" aria-hidden="true">
           <img class="hero__halo" src="img/emblem-280.webp" alt="" width="560" height="560">
@@ -128,6 +136,14 @@
             <h2 class="section__title section__title--left" id="free-title">Start with a free grounding meditation</h2>
             <p>The Anxiety Release meditation is free inside the Divine Awakening app. Open the app and press play — no account needed.</p>
             <a class="btn btn--primary" data-app-link href="#get-the-app">Get Your Free Meditation</a>
+            <div class="badges badges--desktop">
+            <a href="https://apps.apple.com/app/divine-awakening/id6806764325" aria-label="Download Divine Awakening on the App Store">
+              <img src="img/badge-app-store.svg" alt="Download on the App Store" width="144" height="48" loading="lazy">
+            </a>
+            <a href="https://play.google.com/store/apps/details?id=com.divinehealing.app" aria-label="Get Divine Awakening on Google Play">
+              <img src="img/badge-google-play.png" alt="Get it on Google Play" width="162" height="48" loading="lazy">
+            </a>
+          </div>
           </div>
           <div class="track" aria-hidden="true">
             <span class="track__play"><svg viewBox="0 0 24 24"><path d="M9 7.5v9l7.5-4.5Z"/></svg></span>
@@ -226,6 +242,14 @@
               <li>Booking access</li>
             </ul>
             <a class="btn btn--secondary" data-app-link href="#get-the-app">Download Free Version</a>
+            <div class="badges badges--desktop">
+            <a href="https://apps.apple.com/app/divine-awakening/id6806764325" aria-label="Download Divine Awakening on the App Store">
+              <img src="img/badge-app-store.svg" alt="Download on the App Store" width="144" height="48" loading="lazy">
+            </a>
+            <a href="https://play.google.com/store/apps/details?id=com.divinehealing.app" aria-label="Get Divine Awakening on Google Play">
+              <img src="img/badge-google-play.png" alt="Get it on Google Play" width="162" height="48" loading="lazy">
+            </a>
+          </div>
           </article>
           <article class="plan plan--premium" aria-labelledby="plan-premium">
             <h3 class="plan__name" id="plan-premium">Premium</h3>
@@ -237,6 +261,14 @@
               <li>Every new session as it’s added</li>
             </ul>
             <a class="btn btn--primary" data-app-link href="#get-the-app">Upgrade to Premium</a>
+            <div class="badges badges--desktop">
+            <a href="https://apps.apple.com/app/divine-awakening/id6806764325" aria-label="Download Divine Awakening on the App Store">
+              <img src="img/badge-app-store.svg" alt="Download on the App Store" width="144" height="48" loading="lazy">
+            </a>
+            <a href="https://play.google.com/store/apps/details?id=com.divinehealing.app" aria-label="Get Divine Awakening on Google Play">
+              <img src="img/badge-google-play.png" alt="Get it on Google Play" width="162" height="48" loading="lazy">
+            </a>
+          </div>
           </article>
         </div>
         <p class="pricing__note">Premium is purchased inside the app through the App Store or Google Play.</p>
@@ -259,18 +291,15 @@
       <div class="container final__inner">
         <img class="final__mark" src="img/emblem-280.webp" alt="" width="140" height="140" loading="lazy" decoding="async">
         <h2 class="final__title" id="final-title">Begin your awakening with peace.</h2>
-        <div class="actions">
-          <a class="btn btn--primary" data-app-link href="#get-the-app">Download Free Version</a>
-          <a class="btn btn--secondary" href="https://calendly.com/cosmicrememberance" target="_blank" rel="noopener">Book Reiki Session</a>
-        </div>
-        <div class="badges">
-          <a href="https://apps.apple.com/app/divine-awakening/id6806764325" target="_blank" rel="noopener" aria-label="Download Divine Awakening on the App Store">
+        <div class="badges badges--hero">
+          <a href="https://apps.apple.com/app/divine-awakening/id6806764325" aria-label="Download Divine Awakening on the App Store">
             <img src="img/badge-app-store.svg" alt="Download on the App Store" width="144" height="48" loading="lazy">
           </a>
-          <a href="https://play.google.com/store/apps/details?id=com.divinehealing.app" target="_blank" rel="noopener" aria-label="Get Divine Awakening on Google Play">
+          <a href="https://play.google.com/store/apps/details?id=com.divinehealing.app" aria-label="Get Divine Awakening on Google Play">
             <img src="img/badge-google-play.png" alt="Get it on Google Play" width="162" height="48" loading="lazy">
           </a>
         </div>
+        <a class="btn btn--secondary final__book" href="https://calendly.com/cosmicrememberance" target="_blank" rel="noopener">Book Reiki Session</a>
       </div>
     </section>
 
