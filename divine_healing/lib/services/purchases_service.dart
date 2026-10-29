@@ -39,6 +39,54 @@ enum PurchaseOutcome {
   failed,
 }
 
+/// What to show for one plan on the paywall, read from the store so the
+/// price, the current offer and the renewal terms are always what the person
+/// will actually be charged — never hard-coded.
+///
+/// The store returns prices already formatted for the person's country and
+/// currency (CA$149.99, A$149.99, …), so [renewalPrice] and [introPrice] are
+/// shown as-is, with no currency prefix of our own. [percentOff], the free
+/// trial and the intro phase come straight from the offer Google or Apple
+/// returned, so an ineligible customer — who the store gives no offer — sees
+/// the plain renewal price with nothing to undo.
+class PlanOffer {
+  const PlanOffer({
+    required this.annual,
+    required this.renewalPrice,
+    required this.periodLabel,
+    this.introPrice,
+    this.introPhaseLabel,
+    this.freeTrialLabel,
+    this.percentOff,
+  });
+
+  /// True for the yearly plan, false for the monthly one.
+  final bool annual;
+
+  /// The ongoing price the plan renews at, e.g. "CA$149.99".
+  final String renewalPrice;
+
+  /// "/year" or "/month".
+  final String periodLabel;
+
+  /// The discounted price during the offer, e.g. "CA$74.99", or null when the
+  /// person gets no discount.
+  final String? introPrice;
+
+  /// How long the discount lasts, e.g. "for the first 2 years".
+  final String? introPhaseLabel;
+
+  /// "7-day free trial" when the offer is a free trial rather than a discount.
+  final String? freeTrialLabel;
+
+  /// The discount as a percentage, e.g. 50, for the badge. Null when there is
+  /// no discount.
+  final int? percentOff;
+
+  bool get hasFreeTrial => freeTrialLabel != null;
+  bool get hasDiscount => introPrice != null;
+}
+
 class PurchasesService {
   PurchasesService._();
 
@@ -119,6 +167,135 @@ class PurchasesService {
     } on PlatformException catch (e) {
       lastError = e.message;
       return const [];
+    }
+  }
+
+  /// Each plan's real price and current offer, read from the store, in the
+  /// order the offering lists them. Empty when the store is unavailable (web,
+  /// or not configured), where the UI falls back to its static cards.
+  Future<List<PlanOffer>> planOffers() async {
+    final packages = await plans();
+    return packages.map(_describe).toList();
+  }
+
+  /// Reads one package's pricing. Android exposes offers through the
+  /// subscription option RevenueCat will actually buy ([defaultOption], whose
+  /// phases Google has already filtered by eligibility); iOS through
+  /// [introductoryPrice]. Reading what the store will charge means an
+  /// ineligible customer, who gets no offer, shows the plain renewal price.
+  PlanOffer _describe(Package p) {
+    final product = p.storeProduct;
+    final annual = product.identifier.toLowerCase().contains('annual');
+    final period = annual ? '/year' : '/month';
+
+    final option = product.defaultOption;
+    if (option != null) {
+      // Android.
+      final renewal = option.fullPricePhase?.price.formatted ??
+          product.priceString;
+      final free = option.freePhase;
+      if (free != null) {
+        return PlanOffer(
+          annual: annual,
+          renewalPrice: renewal,
+          periodLabel: period,
+          freeTrialLabel: _trialLabel(_periodDays(free.billingPeriod)),
+        );
+      }
+      final intro = option.introPhase;
+      if (intro != null) {
+        return PlanOffer(
+          annual: annual,
+          renewalPrice: renewal,
+          periodLabel: period,
+          introPrice: intro.price.formatted,
+          introPhaseLabel: _firstLabel(
+              intro.billingCycleCount ?? 1, intro.billingPeriod?.unit),
+          percentOff: _percentOff(
+              intro.price.amountMicros, option.fullPricePhase?.price.amountMicros),
+        );
+      }
+      return PlanOffer(
+          annual: annual, renewalPrice: renewal, periodLabel: period);
+    }
+
+    // iOS / StoreKit.
+    final intro = product.introductoryPrice;
+    if (intro != null) {
+      if (intro.price == 0) {
+        return PlanOffer(
+          annual: annual,
+          renewalPrice: product.priceString,
+          periodLabel: period,
+          freeTrialLabel: _trialLabel(
+              _unitDays(intro.periodUnit, intro.periodNumberOfUnits)),
+        );
+      }
+      return PlanOffer(
+        annual: annual,
+        renewalPrice: product.priceString,
+        periodLabel: period,
+        introPrice: intro.priceString,
+        introPhaseLabel: _firstLabel(intro.cycles, intro.periodUnit),
+        percentOff: _percentOff(
+            (intro.price * 1e6).round(), (product.price * 1e6).round()),
+      );
+    }
+    return PlanOffer(
+        annual: annual,
+        renewalPrice: product.priceString,
+        periodLabel: period);
+  }
+
+  /// The discount as a whole percentage, or null when there is none.
+  static int? _percentOff(int introMicros, int? fullMicros) {
+    if (fullMicros == null || fullMicros <= 0 || introMicros >= fullMicros) {
+      return null;
+    }
+    return ((1 - introMicros / fullMicros) * 100).round();
+  }
+
+  static String _trialLabel(int? days) =>
+      days != null ? '$days-day free trial' : 'Free trial';
+
+  /// "for the first year", "for the first 2 years", and so on.
+  static String _firstLabel(int cycles, PeriodUnit? unit) {
+    final noun = _unitNoun(unit);
+    if (noun == null) return 'for a limited time';
+    if (cycles <= 1) return 'for the first $noun';
+    return 'for the first $cycles ${noun}s';
+  }
+
+  static String? _unitNoun(PeriodUnit? unit) {
+    switch (unit) {
+      case PeriodUnit.day:
+        return 'day';
+      case PeriodUnit.week:
+        return 'week';
+      case PeriodUnit.month:
+        return 'month';
+      case PeriodUnit.year:
+        return 'year';
+      default:
+        return null;
+    }
+  }
+
+  static int? _periodDays(Period? p) =>
+      p == null ? null : _unitDays(p.unit, p.value);
+
+  static int? _unitDays(PeriodUnit unit, int value) {
+    switch (unit) {
+      case PeriodUnit.day:
+        return value;
+      case PeriodUnit.week:
+        return value * 7;
+      case PeriodUnit.month:
+        return value * 30;
+      case PeriodUnit.year:
+        return value * 365;
+      default:
+        return null;
     }
   }
 

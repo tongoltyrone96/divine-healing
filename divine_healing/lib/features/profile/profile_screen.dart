@@ -98,31 +98,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 const SizedBox(height: 12),
               ],
-              _planCard(
-                context: context,
-                sessionCount: sessionCount,
-                tag: 'ANNUAL · MOST POPULAR',
-                price: 'CAD \$149',
-                period: '/year',
-                subtitle: 'Save 35% vs monthly',
-                highlighted: true,
-                paymentLink: StripeLinks.annual,
-                annual: true,
-                email: email,
-              ),
-              const SizedBox(height: 12),
-              _planCard(
-                context: context,
-                sessionCount: sessionCount,
-                tag: 'MONTHLY',
-                price: 'CAD \$19',
-                period: '/month',
-                subtitle: 'Cancel any time',
-                highlighted: false,
-                paymentLink: StripeLinks.monthly,
-                annual: false,
-                email: email,
-              ),
+              _planSection(context, sessionCount, email),
               const SizedBox(height: 12),
               if (!hasSub) _freeForeverCard(),
             ],
@@ -450,6 +426,195 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(width: 12),
           Text(label, style: DHTypography.heading(size: 18)),
         ],
+      );
+
+  /// The plan cards. On a mobile store they show the real price and current
+  /// offer read from the store; on web, or if the store cannot be reached,
+  /// they fall back to the static cards and Stripe.
+  Widget _planSection(BuildContext context, int? sessionCount, String? email) {
+    if (!PurchasesService.isAvailable) {
+      return _staticPlanCards(context, sessionCount, email);
+    }
+    return ref.watch(storePlanOffersProvider).when(
+          data: (offers) => offers.isEmpty
+              ? _staticPlanCards(context, sessionCount, email)
+              : _dynamicPlanCards(context, offers, sessionCount, email),
+          loading: _plansLoading,
+          error: (_, __) => _staticPlanCards(context, sessionCount, email),
+        );
+  }
+
+  Widget _staticPlanCards(
+          BuildContext context, int? sessionCount, String? email) =>
+      Column(
+        children: [
+          _planCard(
+            context: context,
+            sessionCount: sessionCount,
+            tag: 'ANNUAL · BEST VALUE',
+            price: 'CAD \$149',
+            period: '/year',
+            subtitle: 'Save 35% vs monthly',
+            highlighted: true,
+            paymentLink: StripeLinks.annual,
+            annual: true,
+            email: email,
+          ),
+          const SizedBox(height: 12),
+          _planCard(
+            context: context,
+            sessionCount: sessionCount,
+            tag: 'MONTHLY',
+            price: 'CAD \$19',
+            period: '/month',
+            subtitle: 'Cancel any time',
+            highlighted: false,
+            paymentLink: StripeLinks.monthly,
+            annual: false,
+            email: email,
+          ),
+        ],
+      );
+
+  Widget _dynamicPlanCards(BuildContext context, List<PlanOffer> offers,
+      int? sessionCount, String? email) {
+    final sorted = [...offers]
+      ..sort((a, b) => a.annual == b.annual ? 0 : (a.annual ? -1 : 1));
+    return Column(
+      children: [
+        for (var i = 0; i < sorted.length; i++) ...[
+          if (i > 0) const SizedBox(height: 12),
+          _offerCard(context, sorted[i], sessionCount, email),
+        ],
+      ],
+    );
+  }
+
+  Widget _plansLoading() => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 40),
+        child: Center(
+          child: SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(strokeWidth: 2.5),
+          ),
+        ),
+      );
+
+  /// One plan card built from the store's own pricing. The big number is what
+  /// the person pays now — the discounted price when there is one — and the
+  /// line beneath spells out the renewal, which both stores require shown.
+  Widget _offerCard(BuildContext context, PlanOffer offer, int? sessionCount,
+      String? email) {
+    final highlighted = offer.annual;
+    final tag = offer.annual ? 'ANNUAL · BEST VALUE' : 'MONTHLY';
+    final bigPrice = offer.introPrice ?? offer.renewalPrice;
+
+    String subline;
+    if (offer.hasDiscount) {
+      final phase = offer.introPhaseLabel ?? 'for a limited time';
+      subline = '$phase, then ${offer.renewalPrice}${offer.periodLabel}. '
+          'Cancel anytime.';
+    } else if (offer.hasFreeTrial) {
+      subline = '${offer.freeTrialLabel}, then ${offer.renewalPrice}'
+          '${offer.periodLabel}. Cancel anytime.';
+    } else {
+      subline = 'Cancel anytime.';
+    }
+
+    final String buttonLabel;
+    if (offer.hasDiscount && offer.percentOff != null) {
+      buttonLabel = 'Get ${offer.percentOff}% off';
+    } else if (offer.hasFreeTrial) {
+      buttonLabel = 'Start ${offer.freeTrialLabel}';
+    } else {
+      buttonLabel = 'Subscribe';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(DHRadius.card),
+        border: Border.all(
+          color: highlighted
+              ? DHColors.sunlightGold
+              : DHColors.sunlightGold.withOpacity(0.3),
+          width: highlighted ? 2 : 1,
+        ),
+        boxShadow: DHShadows.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(tag,
+                    style: DHTypography.caption(color: DHColors.forestGreen)),
+              ),
+              if (offer.percentOff != null) _discountPill(offer.percentOff!),
+            ],
+          ),
+          const SizedBox(height: 6),
+          RichText(
+            text: TextSpan(
+              style: DHTypography.heading(size: 28, weight: FontWeight.w600),
+              children: [
+                TextSpan(text: bigPrice),
+                TextSpan(
+                  text: offer.periodLabel,
+                  style:
+                      DHTypography.body(size: 13, color: DHColors.secondary),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(subline,
+              style: DHTypography.body(size: 12, color: DHColors.secondary)),
+          const SizedBox(height: 12),
+          ..._benefits(sessionCount).map(
+            (b) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle_outline,
+                      size: 16, color: DHColors.mossGreen),
+                  const SizedBox(width: 8),
+                  Expanded(
+                      child: Text(b, style: DHTypography.body(size: 12))),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => _startCheckout(
+                context,
+                offer.annual ? StripeLinks.annual : StripeLinks.monthly,
+                email,
+                annual: offer.annual,
+              ),
+              child: Text(buttonLabel),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _discountPill(int percentOff) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: DHColors.strawberryBlush.withOpacity(0.18),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text('$percentOff% OFF',
+            style: DHTypography.caption(color: DHColors.strawberryBlush)
+                .copyWith(fontWeight: FontWeight.w700, letterSpacing: 0.5)),
       );
 
   Widget _planCard({
