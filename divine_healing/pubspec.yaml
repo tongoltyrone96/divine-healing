@@ -83,9 +83,11 @@ flutter:
 
   assets:
     - assets/content/                # static JSON (affirmations, chakras, etc.)
-    - assets/images/
-    - assets/icons/
     - assets/logo/
+    # assets/images/ and assets/icons/ were declared but are empty and unused,
+    # and git does not track an empty directory, so a clean CI checkout lacks
+    # them and the build fails on "unable to find directory entry". Nothing
+    # references them; the launcher icons come from flutter_launcher_icons.
     # audio NOT bundled — served from Supabase Storage to keep app size small
 
   # Bundled rather than fetched at runtime. package:google_fonts downloads from

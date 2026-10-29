@@ -73,6 +73,14 @@ jobs:
           storeFile=upload-keystore.jks
           EOF
 
+      - name: Install the CMake the native plugins need
+        # package:jni compiles dartjni.c with CMake 3.22.1, which the runner's
+        # Android SDK does not ship. Without it the build fails late with
+        # CXX1300. (The NDK, by contrast, the Android plugin downloads itself.)
+        run: |
+          SDKMGR="$(command -v sdkmanager || echo "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager")"
+          yes | "$SDKMGR" "cmake;3.22.1"
+
       - name: Install packages
         working-directory: divine_healing
         run: flutter pub get
