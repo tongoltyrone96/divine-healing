@@ -1,0 +1,109 @@
+# Builds the signed Android app bundle on a Linux runner.
+#
+# Android cannot be built on this project's Windows machine: Astrill VPN
+# registers a Winsock LSP that crashes Gradle's JVM, so local builds run in
+# WSL (automation/wsl/). A GitHub runner has no such VPN and a fast link, so
+# the whole reason WSL existed — the throttled toolchain downloads — does not
+# apply here. This is the simpler path when WSL is not set up.
+#
+# Linux runner minutes bill at 1x, unlike macOS at 10x, so this is cheap to
+# run. There is no push trigger regardless; it runs on workflow_dispatch.
+#
+# Secrets (set with `gh secret set`, never in the repo):
+#   ANDROID_KEYSTORE_BASE64   base64 of android/app/upload-keystore.jks
+#   ANDROID_STORE_PASSWORD, ANDROID_KEY_PASSWORD, ANDROID_KEY_ALIAS
+#   REVENUECAT_ANDROID_KEY    the public goog_ SDK key (ships in the bundle)
+#
+# The AAB goes to Play; the APK is for sideloading to check the UI only — a
+# sideloaded build cannot complete a purchase (Play Billing refuses an app it
+# did not install), so purchase testing is done from the Play internal track.
+
+name: Android — Build AAB
+
+on:
+  workflow_dispatch:
+    inputs:
+      notes:
+        description: What changed in this build
+        required: false
+        default: Build.
+
+env:
+  FLUTTER_VERSION: 3.47.1
+  # The publishable Supabase pair, the same public values the iOS workflow
+  # ships; they are inside the bundle either way. The Stripe secret is
+  # server-side only and must never appear here.
+  SUPABASE_URL: https://buzdtsupgmytqokgfsbn.supabase.co
+  SUPABASE_ANON_KEY: sb_publishable_7m-bk8K9-pW7CUEu-3Dnyg_dpaZWQDa
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Restore the signing keystore
+        working-directory: divine_healing/android
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 --decode > app/upload-keystore.jks
+          # build.gradle.kts resolves storeFile against android/app/, so the
+          # bare name points at the file written just above.
+          cat > key.properties <<EOF
+          storePassword=$STORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=upload-keystore.jks
+          EOF
+
+      - name: Install packages
+        working-directory: divine_healing
+        run: flutter pub get
+
+      - name: Build the app bundle (for Play)
+        working-directory: divine_healing
+        env:
+          REVENUECAT_ANDROID_KEY: ${{ secrets.REVENUECAT_ANDROID_KEY }}
+        run: |
+          flutter build appbundle --release \
+            --dart-define=SUPABASE_URL=$SUPABASE_URL \
+            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
+            --dart-define=REVENUECAT_ANDROID_KEY=$REVENUECAT_ANDROID_KEY
+
+      - name: Build an APK (UI testing only; cannot purchase)
+        working-directory: divine_healing
+        env:
+          REVENUECAT_ANDROID_KEY: ${{ secrets.REVENUECAT_ANDROID_KEY }}
+        run: |
+          flutter build apk --release \
+            --dart-define=SUPABASE_URL=$SUPABASE_URL \
+            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
+            --dart-define=REVENUECAT_ANDROID_KEY=$REVENUECAT_ANDROID_KEY
+
+      - name: Keep the build outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-${{ github.run_number }}
+          path: |
+            divine_healing/build/app/outputs/bundle/release/*.aab
+            divine_healing/build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: warn
+          retention-days: 14
