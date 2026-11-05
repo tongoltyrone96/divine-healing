@@ -5,7 +5,7 @@ description: Divine Awakening — guided meditations, shadow work, reiki (Strawb
 publish_to: 'none'
 # versionName+versionCode, both consumed by android/app/build.gradle.kts.
 # Bump the +N for every Play Store upload; the dotted part is the marketing version.
-version: 1.0.3+18
+version: 1.0.3+19
 environment:
   sdk: '>=3.4.0 <4.0.0'
   flutter: '>=3.24.0'

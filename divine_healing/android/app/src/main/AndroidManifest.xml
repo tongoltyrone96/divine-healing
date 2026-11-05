@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- Network access — Supabase, Stripe checkout, audio streaming. -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -6,6 +7,18 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
+
+    <!-- Firebase Analytics pulls in the advertising-ID permission, but this app
+         does not use the advertising ID: conversions are measured with the
+         Firebase app-instance id and attributed via the Play install referrer,
+         which needs no advertising ID. Removing it keeps the Play "advertising
+         ID" declaration at No and avoids collecting a device identifier we do
+         not need. google_analytics_adid_collection_enabled below stops the SDK
+         reading it at runtime too. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID"
+        tools:node="remove"/>
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID"
+        tools:node="remove"/>
 
     <application
         android:label="Divine Awakening"
@@ -65,6 +78,12 @@
                 <action android:name="android.intent.action.MEDIA_BUTTON"/>
             </intent-filter>
         </receiver>
+
+        <!-- Tell Firebase Analytics not to collect the advertising ID, in
+             step with removing the AD_ID permission above. -->
+        <meta-data
+            android:name="google_analytics_adid_collection_enabled"
+            android:value="false" />
 
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
