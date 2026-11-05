@@ -5,7 +5,7 @@ description: Divine Awakening — guided meditations, shadow work, reiki (Strawb
 publish_to: 'none'
 # versionName+versionCode, both consumed by android/app/build.gradle.kts.
 # Bump the +N for every Play Store upload; the dotted part is the marketing version.
-version: 1.0.2+17
+version: 1.0.3+18
 environment:
   sdk: '>=3.4.0 <4.0.0'
   flutter: '>=3.24.0'
@@ -45,6 +45,14 @@ dependencies:
 
   # --- Payments (M2 — RevenueCat wraps Apple IAP + Google Billing + Stripe) ---
   purchases_flutter: ^10.10.1
+
+  # --- Analytics (Firebase → Google Ads conversion tracking) ---
+  # Reports subscriptions back to Google so the ad campaign can optimise for
+  # subscribers instead of raw installs. Dormant until the Firebase project is
+  # wired (google-services.json); the app starts fine without it — see main.dart
+  # and services/analytics_service.dart.
+  firebase_core: ^3.8.0
+  firebase_analytics: ^11.4.0
 
   # --- Local storage & prefs ---
   shared_preferences: ^2.3.3

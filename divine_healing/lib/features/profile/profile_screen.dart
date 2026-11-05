@@ -13,6 +13,7 @@ import '../../theme.dart';
 import '../../providers/content_providers.dart';
 import '../../providers/account_providers.dart';
 import '../../services/account_deletion_service.dart';
+import '../../services/analytics_service.dart';
 import '../../services/purchases_service.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -281,10 +282,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       orElse: () => packages.first,
     );
 
+    AnalyticsService.instance.logBeginCheckout(
+      annual: annual,
+      value: package.storeProduct.price,
+      currency: package.storeProduct.currencyCode,
+    );
+
     final outcome = await service.buy(package);
     if (!context.mounted) return;
     switch (outcome) {
       case PurchaseOutcome.purchased:
+        // The conversion Google Ads optimises for — only on a genuine
+        // purchase, never a restore.
+        AnalyticsService.instance.logSubscribed(
+          annual: annual,
+          value: package.storeProduct.price,
+          currency: package.storeProduct.currencyCode,
+          productId: package.storeProduct.identifier,
+        );
+        await _waitForEntitlement(context);
       case PurchaseOutcome.restored:
         await _waitForEntitlement(context);
       case PurchaseOutcome.cancelled:

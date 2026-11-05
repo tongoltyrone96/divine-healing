@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "38106100922",
+    "project_id": "divine-awakening",
+    "storage_bucket": "divine-awakening.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:38106100922:android:4384562f090db3a23e7e83",
+        "android_client_info": {
+          "package_name": "com.divinehealing.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCM1eHsN5iB-JH3WbFM6GPRcOC_BCm5htM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

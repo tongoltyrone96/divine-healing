@@ -85,3 +85,11 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+// Firebase Analytics (Google Ads conversion tracking). The Google Services
+// plugin reads google-services.json and fails the build if it is missing, so
+// it is applied only once that file is in place. To activate analytics, drop
+// google-services.json into android/app/ — no gradle edit needed.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}

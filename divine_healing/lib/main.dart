@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -5,12 +6,25 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/env.dart';
 import 'providers/audio_providers.dart';
 import 'router.dart';
+import 'services/analytics_service.dart';
 import 'services/audio_handler.dart';
 import 'services/auth_service.dart';
 import 'theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Firebase Analytics, for Google Ads conversion tracking. Wrapped because
+  // until the Firebase project is wired there is no native config and
+  // initializeApp throws — the app must still start. Once google-services.json
+  // (Android) / GoogleService-Info.plist (iOS) are in place this activates on
+  // its own.
+  try {
+    await Firebase.initializeApp();
+    await AnalyticsService.instance.init();
+  } catch (_) {
+    // No Firebase config yet: run without analytics rather than failing.
+  }
 
   if (Env.hasSupabase) {
     await Supabase.initialize(
